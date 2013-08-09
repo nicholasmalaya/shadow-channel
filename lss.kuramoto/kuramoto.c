@@ -55,7 +55,7 @@ ddtTan(const double * u, const double * v, double * dvdt, int inhomo)
         double vm = (i > 0) ? v[i-1] : 0;
         double vmm = (i > 1) ? v[i-2] : v[i];
         double vx = (vp - vm) / (2 * dx);
-        double v2x = (up*vp - um*vm) / (2 * dx);
+        double v2x = 2 * (up*vp - um*vm) / (2 * dx);
         double vxx = (vp + vm - 2 * v[i]) / (dx * dx);
         double vxxp = (vpp + v[i] - 2 * vp) / (dx * dx);
         double vxxm = (vmm + v[i] - 2 * vm) / (dx * dx);
@@ -75,7 +75,7 @@ ddtAdj(const double * u, const double * w, double * dwdt)
         double wm = (i > 0) ? w[i-1] : 0;
         double wmm = (i > 1) ? w[i-2] : w[i];
         double wx = (wp - wm) / (2 * dx);
-        double w2x = u[i] * (wp - wm) / (2 * dx);
+        double w2x = 2 * u[i] * (wp - wm) / (2 * dx);
         double wxx = (wp + wm - 2 * w[i]) / (dx * dx);
         double wxxp = (wpp + w[i] - 2 * wp) / (dx * dx);
         double wxxm = (wmm + w[i] - 2 * wm) / (dx * dx);
@@ -182,11 +182,13 @@ stepAdjoint(const double * u0, const double * v0, double strength,
 
 
 double
-project_ddt(int i_chunk, double * v)
+project_ddt(int i_chunk, int i_step, double * v)
 {
     assert (i_chunk >= 0 && i_chunk <= N_CHUNK);
+    assert (i_step >= 0 && i_step <= N_STEP);
+    assert (i_step == 0 || i_chunk < N_CHUNK);
     double dudt[N_GRID];
-    ddt(SOLN_U[i_chunk][0], dudt);
+    ddt(SOLN_U[i_chunk][i_step], dudt);
 
     double vDotUt = cblas_ddot(N_GRID, v, 1, dudt, 1);
     double utDotUt = cblas_ddot(N_GRID, dudt, 1, dudt, 1);

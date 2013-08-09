@@ -24,10 +24,10 @@ import_array();
 
 %inline %{
     double
-    c_project_ddt(int i_chunk, double * v, int n)
+    c_project_ddt(int i_chunk, int i_step, double * v, int n)
     {
         assert (n == N_GRID);
-        return project_ddt(i_chunk, v);
+        return project_ddt(i_chunk, i_step, v);
     }
 %}
 
@@ -61,6 +61,8 @@ import_array();
     void
     c_u(int i_chunk, int i_step, double ** u_ptr, int * n_ptr)
     {
+        assert (i_chunk >= 0 && i_chunk < N_CHUNK);
+        assert (i_step >= 0 && i_step <= N_STEP);
         *n_ptr = N_GRID;
         *u_ptr = SOLN_U[i_chunk][i_step];
     }
@@ -74,6 +76,8 @@ import_array();
     void
     c_v(int i_chunk, int i_step, double ** v_ptr, int * n_ptr)
     {
+        assert (i_chunk >= 0 && i_chunk < N_CHUNK);
+        assert (i_step >= 0 && i_step < N_STEP);
         *n_ptr = N_GRID;
         *v_ptr = SOLN_V[i_chunk][i_step];
     }

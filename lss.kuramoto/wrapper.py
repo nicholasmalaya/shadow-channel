@@ -7,25 +7,24 @@ from scipy.integrate import ode
 from lssode import *
 
 class Wrapper(object):
-    def __init__(self, m, n, tan, adj, proj):
-        self.m, self.n = int(m), int(n)
+    def __init__(self, m, n, dT, tan, adj, proj):
+        self.m, self.n, self.dT = int(m), int(n), float(dT)
         self._tan, self._adj, self._proj = tan, adj, proj
 
     # ------------------ interface ------------------
     def forward(self, i, v0, inhomo):
         v1 = v0.copy()
         self._tan(i, v1, inhomo)
-        eta = self._proj(i + 1, v1)
+        eta = self._proj(i + 1, 0, v1)
         return v1, eta
         
     def backward(self, i, w0, strength):
         w1 = w0.copy()
         self._adj(i, w1, strength)
-        self._proj(i, w1)
+        self._proj(i, 0, w1)
         return w1
 
     # ------------------ KKT matvec ----------------------
-
     def matvec(self, x, inhomo=0):
         n_v = self.m * self.n
         n_w = self.m * (self.n - 1)
@@ -35,8 +34,10 @@ class Wrapper(object):
 
         R_w = zeros([self.n - 1, self.m])
         R_v = zeros([self.n, self.m])
+        self.zeta = zeros(self.n)
         for i in range(self.n):
             vip, eta = self.forward(i, v[i], inhomo)
+            self.zeta[i] = eta / self.dT
             wim = self.backward(i, w[i], strength=.01)
             if i < self.n - 1:
                 R_w[i] = v[i+1] - vip
@@ -49,9 +50,10 @@ class Wrapper(object):
 
 import kuramoto
 # c, n_grid, T0, n_chunk, t_chunk, dt_max
-kuramoto.c_init(0.5, 127, 500, 100, 2, 0.2);
+kuramoto.c_init(0.5, 127, 500, 500, 2, 0.2);
 
 pde = Wrapper(kuramoto.cvar.N_GRID, kuramoto.cvar.N_CHUNK,
+              kuramoto.cvar.DT_STEP * kuramoto.cvar.N_STEP,
               kuramoto.c_tangent, kuramoto.c_adjoint, kuramoto.c_project_ddt)
 
 # construct matrix rhs
@@ -86,17 +88,23 @@ callback(rhs * 0)
 vw, info = splinalg.minres(oper, rhs, maxiter=100, tol=1E-6,
                            callback=callback)
 
-pde.matvec(vw, -1)
+pde.matvec(vw, 1)
 
-u, v = [], []
+u, v, v0, uEnd = [], [], [], []
 for i in range(kuramoto.cvar.N_CHUNK):
     for j in range(kuramoto.cvar.N_STEP):
         u.append(kuramoto.c_u(i, j))
         v.append(kuramoto.c_v(i, j))
+        v0.append(v[-1].copy())
+        kuramoto.c_project_ddt(i, j, v0[-1])
+    uEnd.append(kuramoto.c_u(i, kuramoto.cvar.N_STEP))
 
-u = array(u)
-v = array(v)
+u, v, v0, uEnd = array(u), array(v), array(v0), array(uEnd)
 
 subplot(1,2,1); contourf(u, 100); colorbar()
-subplot(1,2,2); contourf(v, 100); colorbar()
-show()
+subplot(1,2,2); contourf(v0, 100); colorbar()
+
+du = v.mean(0) + (pde.zeta[:,newaxis] * (uEnd - u.mean(0))).mean(0)
+figure()
+plot(u.mean(0) - 0.1 * du)
+plot(u.mean(0) + 0.1 * du)
