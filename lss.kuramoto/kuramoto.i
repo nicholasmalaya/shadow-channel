@@ -11,12 +11,14 @@
 import_array();
 %}
 
+%apply (double* INPLACE_ARRAY1, int DIM1) {(double* u0, int n_grid)}
+
 %inline %{
     void
-    c_init(double c, int n_grid, double T0,
+    c_init(double c, double * u0, int n_grid, double T0,
            int n_chunk, double t_chunk, double dt_max)
     {
-        init(c, n_grid, T0, n_chunk, t_chunk, dt_max);
+        init(c, u0, n_grid, T0, n_chunk, t_chunk, dt_max);
     }
 %}
 

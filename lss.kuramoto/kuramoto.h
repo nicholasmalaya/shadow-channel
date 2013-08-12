@@ -27,7 +27,7 @@ double
 project_ddt(int i_chunk, int i_step, double * v);
 
 void
-init(double c, int n_grid, double T0,
+init(double c, double * u0, int n_grid, double T0,
      int n_chunk, double t_chunk, double dt_max);
 
 void

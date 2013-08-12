@@ -1,7 +1,16 @@
+LBITS := $(shell getconf LONG_BIT)
+ifeq ($(LBITS),64)
+    # do 64 bit stuff here, like set some CFLAGS
+    CFLAGS_FPIC = -fPIC
+else
+    # do 32 bit stuff here
+    CFLAGS_FPIC =
+endif
+
 CC = gcc
 PY_INC = /usr/include/python2.7
 #CFLAGS = -O0 -g --std=c99 -I$(PY_INC)
-CFLAGS = -O3 --std=c99 -I$(PY_INC)
+CFLAGS = -O3 $(CFLAGS_FPIC) --std=c99 -I$(PY_INC)
 SWIG = swig -python
 LD = ld -shared
 LIBS = -lm -lblas

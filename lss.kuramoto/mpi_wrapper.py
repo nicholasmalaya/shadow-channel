@@ -1,10 +1,10 @@
 import sys
-sys.path.append('/home/qiqi/git/lssode')
 from pylab import *
 from numpy import *
 from scipy.interpolate import interp1d
 from scipy.integrate import ode
-from lssode import *
+from mpi4py import MPI
+from pariter import *
 
 class Wrapper(object):
     def __init__(self, m, n, dT, tan, adj, proj):
@@ -26,47 +26,102 @@ class Wrapper(object):
 
     # ------------------ KKT matvec ----------------------
     def matvec(self, x, inhomo=0):
-        n_v = self.m * self.n
-        n_w = self.m * (self.n - 1)
-        assert x.shape == (n_v + n_w,)
-        v = x[:n_v].reshape([-1, self.m])
-        w = vstack([x[n_v:].reshape([-1, self.m]), zeros([1,self.m])])
+        mpi_comm = MPI.COMM_WORLD
+        mpi_rank = mpi_comm.Get_rank()
+        mpi_size = mpi_comm.Get_size()
+        tag_w, tag_v = 800, 801
 
-        R_w = zeros([self.n - 1, self.m])
-        R_v = zeros([self.n, self.m])
+        n_v = self.m * self.n
+
+        # print mpi_rank, mpi_size, x.shape, self.m, n_v
+        v = x[:n_v].reshape([-1, self.m])
+        w = x[n_v:].reshape([-1, self.m])
+
+        # first initiate nonblocking communication of w
+        w_requests = []
+        if mpi_rank > 0:
+            w_requests.append(mpi_comm.Isend(w[0], mpi_rank-1, tag_w))
+            w = vstack([w, zeros([1,self.m])])
+        else:
+            w = vstack([zeros([1,self.m]), w, zeros([1,self.m])])
+        assert w.shape[0] == self.n + 1
+        if mpi_rank < mpi_size - 1:
+            w_requests.append(mpi_comm.Irecv(w[-1], mpi_rank+1, tag_w))
+
+        # do computation of v while w is going over the network
+        R_w = zeros([self.n, self.m])
         self.zeta = zeros(self.n)
         for i in range(self.n):
             vip, eta = self.forward(i, v[i], inhomo)
             self.zeta[i] = eta / self.dT
-            wim = self.backward(i, w[i], strength=.01)
             if i < self.n - 1:
-                R_w[i] = v[i+1] - vip
-            if i > 0:
-                R_v[i] = w[i-1] - wim
-            else:
-                R_v[i] = - wim
+                R_w[i+1] = v[i+1] - vip
+
+        # make sure w is ready, then initiating sending the last vip
+        MPI.Request.waitall(w_requests)
+
+        v_requests = []
+        if mpi_rank < mpi_size - 1:
+            v_requests.append(mpi_comm.Isend(vip, mpi_rank+1, tag_v))
+        if mpi_rank > 0:
+            v0m = zeros(self.m)
+            v_requests.append(mpi_comm.Irecv(v0m, mpi_rank-1, tag_v))
+
+        # do computation of w while the last vip is going over the network
+        R_v = zeros([self.n, self.m])
+        for i in range(self.n):
+            wim = self.backward(i, w[i+1], strength=.01)
+            R_v[i] = w[i] - wim
+
+        # match the last vip
+        MPI.Request.waitall(v_requests)
+
+        if mpi_rank > 0:
+            R_w[0] = v[0] - v0m
+        else:
+            R_w = R_w[1:]
+
         return hstack([ravel(R_v), ravel(R_w)])
+
 
 
 import kuramoto
 # c, n_grid, T0, n_chunk, t_chunk, dt_max
+
+mpi_comm = MPI.COMM_WORLD
+mpi_rank = mpi_comm.Get_rank()
+mpi_size = mpi_comm.Get_size()
+
+T0 = 500 if mpi_rank == 0 else 0
+
 u0 = rand(127)
+if mpi_rank > 0:
+    mpi_comm.Recv(u0, mpi_rank - 1, 1)
+
 kuramoto.c_init(0.5, u0, 500, 50, 2, 0.2);
+
+if mpi_rank < mpi_size - 1:
+    mpi_comm.Send(u0, mpi_rank + 1, 1)
 
 pde = Wrapper(kuramoto.cvar.N_GRID, kuramoto.cvar.N_CHUNK,
               kuramoto.cvar.DT_STEP * kuramoto.cvar.N_STEP,
               kuramoto.c_tangent, kuramoto.c_adjoint, kuramoto.c_project_ddt)
 
 # construct matrix rhs
-x = zeros(pde.m * (2 * pde.n - 1))
+nvw = 2 * pde.n - (1 if mpi_rank == 0 else 0)
+x = zeros(pde.m * nvw)
 rhs = pde.matvec(x, -1) - pde.matvec(x, 0)
 
 # solve
 from scipy import sparse
 import scipy.sparse.linalg as splinalg
 
-w = zeros(rhs.size)
-oper = splinalg.LinearOperator((w.size, w.size), matvec=pde.matvec, dtype=float)
+vw = zeros(rhs.size)
+oper = splinalg.LinearOperator((vw.size, vw.size), matvec=pde.matvec,
+                               dtype=float)
+
+par_dot = lambda vw1, vw2: mpi_comm.allreduce(dot(vw1, vw2))
+par_norm = lambda vw : sqrt(par_dot(vw, vw))
 
 class Callback:
     'Convergence monitor'
@@ -78,19 +133,19 @@ class Callback:
     def __call__(self, x):
         self.n += 1
         if self.n == 1 or self.n % 10 == 0:
-            resnorm = norm(self.pde.matvec(x, 1))
-            print 'iter ', self.n, resnorm
+            resnorm = par_norm(self.pde.matvec(x, 1))
+            if mpi_rank == 0: print 'iter ', self.n, resnorm
             self.hist.append([self.n, resnorm])
         sys.stdout.flush()
 
 # --- solve with minres (if cg converges this should converge -#
 callback = Callback(pde)
 callback(rhs * 0)
-vw, info = splinalg.minres(oper, rhs, maxiter=100, tol=1E-6,
-                           callback=callback)
+vw, info = par_minres(oper, rhs, vw, par_dot, maxiter=100, tol=1E-6,
+                      callback=callback)
 
 pde.matvec(vw, 1)
-
+'''
 u, v, v0, uEnd = [], [], [], []
 for i in range(kuramoto.cvar.N_CHUNK):
     for j in range(kuramoto.cvar.N_STEP):
@@ -109,5 +164,4 @@ du = v.mean(0) + (pde.zeta[:,newaxis] * (uEnd - u.mean(0))).mean(0)
 figure()
 plot(u.mean(0) - 0.1 * du)
 plot(u.mean(0) + 0.1 * du)
-
-show()
+'''

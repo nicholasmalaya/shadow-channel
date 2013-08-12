@@ -234,7 +234,7 @@ alloc_space_for_big_arrays_U_and_V()
 
 
 void
-run_to_T0_with_random_initial_condition(double * u, double T0, double dt_max)
+run_up_to_T0(double * u, double T0, double dt_max)
 {
     assert(T0 > 0);
     assert(dt_max > 0);
@@ -242,11 +242,6 @@ run_to_T0_with_random_initial_condition(double * u, double T0, double dt_max)
     double dt0 = T0 / n0_steps;
 
     assert(u != 0);
-    for (int i = 0; i < N_GRID; ++ i)
-    {
-        u[i] = rand() / (double) RAND_MAX;
-    }
-
     for (int i = 0; i < n0_steps; ++ i)
     {
         stepPrimal(u, u, dt0);
@@ -255,7 +250,7 @@ run_to_T0_with_random_initial_condition(double * u, double T0, double dt_max)
 
 
 void
-init(double c, int n_grid, double T0,
+init(double c, double * u0, int n_grid, double T0,
      int n_chunk, double t_chunk, double dt_max)
 {
     C_CONST = c;
@@ -271,7 +266,8 @@ init(double c, int n_grid, double T0,
 
     alloc_space_for_big_arrays_U_and_V();
 
-    run_to_T0_with_random_initial_condition(SOLN_U[0][0], T0, dt_max);
+    run_up_to_T0(u0, T0, dt_max);
+    memmove(SOLN_U[0][0], u0, sizeof(double) * N_GRID);
 
     // run in each time chunk
     for (int i_chunk = 0; i_chunk < N_CHUNK; ++ i_chunk)
@@ -284,6 +280,8 @@ init(double c, int n_grid, double T0,
             stepPrimal(u[i], u[i+1], DT_STEP);
         }
     }
+
+    memmove(u0, SOLN_U[N_CHUNK][0], sizeof(double) * N_GRID);
 }
 
 
