@@ -7,7 +7,10 @@
 int
 main()
 {
-    init(0.5, 127, 100, 10, 2, 0.2);
+    const int n_grid = 127;
+    double u0[n_grid];
+    for (int i = 0; i < n_grid; ++ i) u0[i] = rand() / (double)RAND_MAX;
+    init(0.5, u0, n_grid, 100, 10, 2, 0.2);
 
     const int n = 10;
     double u[n][N_GRID];
