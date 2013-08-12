@@ -20,6 +20,7 @@ double RK[3][3] = {{ 1./2,  0,    0 },
 
 
 
+// KS equation right hand side, assigns f(u) to dudt
 void
 ddt(const double * u, double * dudt)
 {
@@ -41,6 +42,9 @@ ddt(const double * u, double * dudt)
 }
 
 
+// Tangent equation rhs, assigns (df/du) * v + inhomo * (df/dc) to dvdt
+// where f is the KS equation right hand side (see the ddt function)
+// and c is the parameter C_CONST in the ddt function
 void
 ddtTan(const double * u, const double * v, double * dvdt, int inhomo)
 {
@@ -65,6 +69,8 @@ ddtTan(const double * u, const double * v, double * dvdt, int inhomo)
 }
 
 
+// Adjoint equation rhs, assigns -(df/du)' * w to dwdt
+// where f is the KS equation right hand side (see the ddt function)
 void
 ddtAdj(const double * u, const double * w, double * dwdt)
 {
@@ -85,6 +91,7 @@ ddtAdj(const double * u, const double * w, double * dwdt)
 }
 
 
+// dual consistent explicit RK (See Shan Yang's thesis)
 void
 stepPrimal(const double * u0, double * u, double dt)
 {
@@ -105,6 +112,7 @@ stepPrimal(const double * u0, double * u, double dt)
 }
 
 
+// Tangent of stepPrimal
 void
 stepTangent(const double * u0, const double * v0, double * v, double dt,
             int inhomo)
@@ -137,6 +145,9 @@ stepTangent(const double * u0, const double * v0, double * v, double dt,
 }
 
 
+// Adjoint of stepPrimal, forced with strength * v0 as rhs
+// Note that the rhs is added per time-step instead of per rk-step for
+// consistency with discrete objective function evaluation
 void
 stepAdjoint(const double * u0, const double * v0, double strength,
             const double * w0, double * w, double dt)
@@ -181,6 +192,8 @@ stepAdjoint(const double * u0, const double * v0, double strength,
 }
 
 
+// projects an in-place vector v to orthogonal direction of dudt at
+// the i_chunks'th time chunk and i_step'th time step
 double
 project_ddt(int i_chunk, int i_step, double * v)
 {
@@ -198,6 +211,8 @@ project_ddt(int i_chunk, int i_step, double * v)
 }
 
 
+// It's beneficial to make sure that SOLN_U and SOLN_V
+// are both in a contiguous chunk of physical memory
 void
 alloc_space_for_big_arrays_U_and_V()
 {
@@ -249,6 +264,9 @@ run_up_to_T0(double * u, double T0, double dt_max)
 }
 
 
+// This function initializes this module, must be called from Python
+// before using any other functionality.
+// The entire primal trajectory is computed and stored after calling this.
 void
 init(double c, double * u0, int n_grid, double T0,
      int n_chunk, double t_chunk, double dt_max)
@@ -285,6 +303,10 @@ init(double c, double * u0, int n_grid, double T0,
 }
 
 
+// Solve the tangent equation in the i_chunk'th chunk with v0 as the
+// initial condiiton.  This can be called from Python.
+// The solution at the end of the time chunk then overwrites v0.
+// See ddtTan for the argument inhomo.
 void
 tangent(int i_chunk, double * v0, int inhomo)
 {
@@ -302,6 +324,10 @@ tangent(int i_chunk, double * v0, int inhomo)
 }
 
 
+// Solve the adjoint equation in the i_chunk'th chunk with w0 as the
+// terminal condiiton.  This can be called from Python.
+// The solution at the beginning of the time chunk then overwrites v0.
+// See stepAdjoint for the argument forcing.
 void
 adjoint(int i_chunk, double * w0, double forcing)
 {
@@ -314,3 +340,4 @@ adjoint(int i_chunk, double * w0, double forcing)
         stepAdjoint(u[i], v[i], 1, w0, w0, DT_STEP);
     }
 }
+
