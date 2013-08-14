@@ -11,11 +11,39 @@ GCC = gcc -Wall -g -O3 -finline-functions -I$(FFTINC) -I$(HDFDIR)
 #GCC = cc -xO5 -I$(FFTINC)
 LIBS =  -L$(FFTLIB) -L$(HDFSRC)
 
-OBJS1 =  LegendreSetup.o arrays.o getMem.o comp_gradient.o comp_hess.o myadjointforce.o increadjproject0.o increadjproject.o mvOps.o adjproject0.o adjproject.o  waveNumsAndCFL.o pass2.o myforce.o increBoundary.o increBoundary_s.o incre_initAlphaBeta.o
-OBJS2 = pass1.o   RsQs.o initAlphaBeta.o initAlphaBeta2.o incre_initAlphaBeta2.o project.o project0.o  increproject0.o increproject.o restart.o restart2.o write_data.o write_data2.o
-# compute_err.o compute_err2.o
-OBJS = $(OBJS1) $(OBJS2)
-#all : test1 test2 test3 minChnl
+SOURCES = LegendreSetup.c \
+          arrays.c \
+          getMem.c \
+          comp_gradient.c \
+          comp_hess.c \
+          myadjointforce.c \
+          increadjproject0.c \
+          increadjproject.c \
+          mvOps.c \
+          adjproject0.c \
+          adjproject.c \
+          waveNumsAndCFL.c \
+          pass2.c \
+          myforce.c \
+          increBoundary.c \
+          increBoundary_s.c \
+          incre_initAlphaBeta.c \
+          pass1.c \
+          RsQs.c \
+          initAlphaBeta.c \
+          initAlphaBeta2.c \
+          incre_initAlphaBeta2.c \
+          project.c \
+          project0.c \
+          increproject0.c \
+          increproject.c \
+          restart.c \
+          restart2.c \
+          write_data.c \
+          write_data2.c \
+
+
+OBJS = $(addsuffix .o,$(basename $(SOURCES)))
 
 #test7 :  increadjoint_test7.o $(OBJS)
 #	gcc -o test7 increadjoint_test7.o $(OBJS) $(LIBS) -lrfftw -lfftw -lhdf5 -lm 
