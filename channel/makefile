@@ -1,7 +1,7 @@
 
 # machine directive
-MACHINE = ices
-#MACHINE = tacc
+#MACHINE = ices
+MACHINE = tacc
 #MACHINE = mit
 
 EXEC = channel_dns
