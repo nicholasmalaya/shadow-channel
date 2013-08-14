@@ -6,7 +6,7 @@
 MACHINE = tacc
 #MACHINE = mit
 
-EXEC = channel_dns
+EXEC = libchanneldns.a
 
 ######################################################################## 
 ifeq ($(MACHINE),mit)
@@ -44,7 +44,7 @@ FFTINC =-I$(TACC_FFTW2_INC)
 HDFINC=-I$(TACC_HDF5_INC) 
 HDFLIB=-L$(TACC_HDF5_LIB) -lhdf5
 
-CC = cc
+CC = cc -fPIC
 
 endif
 ######################################################################## 
@@ -93,7 +93,8 @@ INCLUDE=$(FFTINC) $(HDFINC) $(OTHERINC)
 
 ## build the executable ##
 $(EXEC): $(OBJS)
-	$(CC) $(INCLUDE) $(OBJS) -o  $@ $(LDFLAGS) $(LIBS) 
+#	$(CC) $(INCLUDE) $(OBJS) -o  $@ $(LDFLAGS) $(LIBS) 
+	ar -rcs $(EXEC) $(OBJS)
 
 # build cpp object files
 %.o: %.cpp
