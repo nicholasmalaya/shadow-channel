@@ -1,5 +1,7 @@
-
+# ---------------------------
 # machine directive
+# ---------------------------
+#
 #MACHINE = ices
 MACHINE = tacc
 #MACHINE = mit
@@ -34,19 +36,16 @@ CC     = gcc -Wall -g -O3 -finline-functions
 endif
 ######################################################################## 
 ifeq ($(MACHINE),tacc)
-FFTDIR = /usr
-FFTLIB = $(FFTDIR)/lib
-FFTINC = $(FFTDIR)/include
-HDFDIR =/opt/apps/hdf5/1.8.3/
-HDFSRC =-L$(HDFDIR)/lib
-HDFINC =-I$(HDFDIR)/include
-CC     = gcc -Wall -g -O3 -finline-functions 
 
-#HDFDIR=$TACC_HDF5_INC
-#HDFDIR=/opt/apps/hdf5/1.8.3/include
-#HDFSRC=$TACC_HDF5_LIB
-#HDFSRC= /opt/apps/hdf5/1.8.3/lib
-#GCC = cc -xO5 -I$(FFTINC)
+FFTDIR =$(TACC_FFTW2_DIR)
+FFTLIB =-L$(TACC_FFTW2_LIB)
+FFTINC =-I$(TACC_FFTW2_INC)
+
+HDFINC=-I$(TACC_HDF5_INC)
+HDFLIB=-L$(TACC_HDF5_LIB)
+
+CC = cc
+
 endif
 ######################################################################## 
 
@@ -80,7 +79,7 @@ SOURCES = LegendreSetup.c \
           restart.c \
           restart2.c \
           write_data.c \
-          write_data2.c \
+          write_data2.c 
 
 
 OBJS = $(addsuffix .o,$(basename $(SOURCES)))
@@ -89,12 +88,12 @@ OBJS = $(addsuffix .o,$(basename $(SOURCES)))
 # construct exec
 ######################################################################## 
 
-LIBS=$(FFTLIB) $(HDFLIB) $(OTHERLIBS)
-INCLUDE= $(FFTINC) $(HDFINC) $(OTHERINC)
+LIBS=$(FFTLIB) $(HDFLIB) $(OTHERLIBS) -lm
+INCLUDE=$(FFTINC) $(HDFINC) $(OTHERINC)
 
 ## build the executable ##
 $(EXEC): $(OBJS)
-	$(COMPILE) $(INCLUDE) $(OBJECTS) -o  $@ $(LDFLAGS) $(LIBS) 
+	$(CC) $(INCLUDE) $(OBJS) -o  $@ $(LDFLAGS) $(LIBS) 
 
 # build cpp object files
 %.o: %.cpp
