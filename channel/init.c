@@ -7,13 +7,26 @@ update: 03/09, working on checking the accuracy of new rk scheme for state equat
 #include "main.h"
 #include "hdf5.h"
 
-// convertin main() to init() function, to be called from python
+// convertin main() to init() function
 //
+// will be called from python to compute primal trajectory
 //
+// call pattern:
+//               * mesh def
+//               * params
+//               * delta t
+//               * run-up time
+//               * time chunks
+//               * size of time chunks
+//
+// store all state in memory
+//
+// nick 
+// 9/12/13
 //
 
-
-int main(int argc, char **argv)
+//int main(int argc, char **argv)
+int init(int Nx,int Ny, int Nz, double Lx, double Lz, double Re, double mpg, double dt, double tsteps, double rut, int n_chunk, double t_chunk, int restart_flag)
 {
   /*****************************Definition of all variables ****************************/
     /* External Variables.  All external variables are defined in main.h */
@@ -73,27 +86,29 @@ int main(int argc, char **argv)
 
 
     /**************************read in and define parameters *********************/
-    if (argc != 11) {
-        printf
-            ("Required arguments are Nx,Ny,Nz,Lx,Lz,dt,tsteps,mpg,Re, restart_flag.\n");
-        return (EXIT_FAILURE);
-    }
+    /* if (argc != 11) { */
+    /*     printf */
+    /*         ("Required arguments are Nx,Ny,Nz,Lx,Lz,dt,tsteps,mpg,Re, restart_flag.\n"); */
+    /*     return (EXIT_FAILURE); */
+    /* } */
 
-    Nx = atoi(argv[1]);         /* number of terms in the truncated expansion
-                                   in x */
-    Ny = atoi(argv[2]);         /* number of terms in the truncated expansion
-                                   in y */
-    Nz = atoi(argv[3]);         /* number of terms in the truncated expansion
-                                   in z */
-    Lx = atof(argv[4]);         /* length of the interval in x */
-    Lz = atof(argv[5]);         /* length of the interval in z */
-    dt = atof(argv[6]);         /* value of time step */
-    tsteps = atoi(argv[7]);     /* number of time steps to take */
-    mpg = atof(argv[8]);        /* mean pressure gradient */
-    re = atof(argv[9]);         /* Reynolds number */
+    /* Nx = atoi(argv[1]);         /\* number of terms in the truncated expansion */
+    /*                                in x *\/ */
+    /* Ny = atoi(argv[2]);         /\* number of terms in the truncated expansion */
+    /*                                in y *\/ */
+    /* Nz = atoi(argv[3]);         /\* number of terms in the truncated expansion */
+    /*                                in z *\/ */
+    /* Lx = atof(argv[4]);         /\* length of the interval in x *\/ */
+    /* Lz = atof(argv[5]);         /\* length of the interval in z *\/ */
 
-    restart_flag = atoi(argv[10]);      /* whether to restart, 0, starting from initial conditions, 
-                                           nonzero, reading in stored results on hdf5 and restart from this time step */
+    /* dt = atof(argv[6]);         /\* value of time step *\/ */
+
+    /* tsteps = atoi(argv[7]);     /\* number of time steps to take *\/ */
+    /* mpg = atof(argv[8]);        /\* mean pressure gradient *\/ */
+    /* re = atof(argv[9]);         /\* Reynolds number *\/ */
+
+    /* restart_flag = atoi(argv[10]);      /\* whether to restart, 0, starting from initial conditions,  */
+    /*                                        nonzero, reading in stored results on hdf5 and restart *\/ */
 
     printf("Nx,Ny,Nz,Lx,Lz,dt,tsteps,mpg,Re,restart_flag\n"
            "%d %d %d %f %f %f %d %f %f %d\n",
