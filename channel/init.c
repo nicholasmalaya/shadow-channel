@@ -7,6 +7,12 @@ update: 03/09, working on checking the accuracy of new rk scheme for state equat
 #include "main.h"
 #include "hdf5.h"
 
+// convertin main() to init() function, to be called from python
+//
+//
+//
+
+
 int main(int argc, char **argv)
 {
   /*****************************Definition of all variables ****************************/
