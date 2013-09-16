@@ -75,6 +75,8 @@ int qpts,                       /* 3Ny/2, Ny specified by user */
  Nx,                            /* specified by user */
  Nz;                            /* specified by user */
 
+int nsteps;                     /* total number of time steps */
+
 double dt,                      /* time step */
  re,                            /* 1/RE, Reynolds number RE specified by user */
  mpg,                           /* mean pressure gradient (used when (Kx,Kz)=(0,0)) */

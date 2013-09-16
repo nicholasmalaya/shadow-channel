@@ -66,7 +66,6 @@ acknowledgement of the original source.
 #define TXEL   5
 #define TYEL   3
 #define TZEL   4
-#define MAXSTEP 100
 #define FT  0.5
 /* array C */
 #define ALPHA  0

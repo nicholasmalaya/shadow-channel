@@ -22,7 +22,7 @@ acknowledgement of the original source.
 int getMem(void)
 {
     /* External Variables */
-    extern int qpts, dimR, Nx, Nz;
+    extern int qpts, dimR, Nx, Nz, nsteps;
     extern double *cfl2, **MZ;
     extern double ***M;
     extern mcomplex ****U, ****C, ****IU, ****IC;
@@ -592,7 +592,7 @@ int getMem(void)
         return (NO_MEM);
     }
 
-    if ((MC = c5Darray(3 * MAXSTEP + 1, Nz, 2, dimR, Nx / 2)) == NULL) {
+    if ((MC = c5Darray(3 * nsteps + 1, Nz, 2, dimR, Nx / 2)) == NULL) {
         printf("ERROR: No memory for MC array.\n");
         freec4Darray(U);
         freec4Darray(C);
@@ -626,7 +626,7 @@ int getMem(void)
         return (NO_MEM);
     }
 
-    if ((MIC = c5Darray(3 * MAXSTEP + 1, Nz, 2, dimR, Nx / 2)) == NULL) {
+    if ((MIC = c5Darray(3 * nsteps + 1, Nz, 2, dimR, Nx / 2)) == NULL) {
         printf("ERROR: No memory for MIC array.\n");
         freec4Darray(U);
         freec4Darray(C);

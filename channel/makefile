@@ -44,7 +44,7 @@ FFTINC =-I$(TACC_FFTW2_INC)
 HDFINC=-I$(TACC_HDF5_INC) 
 HDFLIB=-L$(TACC_HDF5_LIB) -lhdf5
 
-CC = cc -fPIC
+CC = gcc -Wall -g -O0 -fPIC
 
 endif
 ######################################################################## 
