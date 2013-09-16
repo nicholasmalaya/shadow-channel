@@ -79,7 +79,8 @@ SOURCES = LegendreSetup.c \
           restart.c \
           restart2.c \
           write_data.c \
-          write_data2.c 
+          write_data2.c \
+          init.c
 
 
 OBJS = $(addsuffix .o,$(basename $(SOURCES)))

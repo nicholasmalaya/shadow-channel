@@ -25,8 +25,169 @@ update: 03/09, working on checking the accuracy of new rk scheme for state equat
 // 9/12/13
 //
 
+#define DESTROY_STATUS_FFTW 0x1
+#define DESTROY_STATUS_GETMEM 0x2
+#define DESTROY_STATUS_WAVENUMS 0x4
+#define DESTROY_STATUS_LEGENDRE 0x8
+#define DESTROY_STATUS_EVERYTHING 0xffff
+
+void destropy(int status)
+{
+    /* External Variables.  All external variables are defined in main.h */
+    extern int qpts, dimR, dimQ, Nx, Nz;
+    extern double dt, re, mpg;
+
+    extern double *Kx, *Kz, **K2, *cfl2;
+    extern double **Q, **Qp, **Qpp, **R, **Rp, **Qw, **Qpw, **Rw, **Qs,
+        **Qps, **Qpps, **Rs, **Rps, *Rp0, **Rpw, **Qppw, *Rpp0;
+
+    extern double *Uadd, *Vadd, *Vpadd;
+    extern double *Qy;
+    extern double *W;
+
+    extern mcomplex ****U, ****C;       /* state variables */
+    extern mcomplex **Fa, **Fb, **TM;
+    extern mcomplex *fa, *fb, *tm;
+    extern double **MZ;
+    extern double ***M;
+
+    extern mcomplex ****IU, ****IC;     /* incremental state variables */
+    extern mcomplex **IFa, **IFb, **ITM;
+    extern mcomplex *Ifa, *Ifb, *Itm;
+
+    extern mcomplex ****AU, ****AC;     /* adjoint variables and will use
+                                           the same other variables
+                                           used in state equations */
+
+    extern mcomplex ****IAU, ****IAC;   /* incremental adjoint variables */
+
+    extern mcomplex **Uxbt, **Uzb;      /* variables used to store dux duz
+                                           evaluated at y=-1 used for
+                                           computing boundary conditions for
+                                           incremental state equations */
+    extern mcomplex **Uxb, **Uzb;       /* variables used to store dux duz
+                                           evaluated at y=-1 from previous 
+                                           state used for boundary conditions
+                                           for incremental state equations */
+    extern mcomplex **IUxb, **IUzb;
+    extern mcomplex **IAUxb, **IAUzb;
+    extern mcomplex **AUxb, **AUzb;     /* variables used to store dux duz
+                                           evaluated at y=-1 used for
+                                           computing boundary conditions
+                                           for incremental state equations */
+    extern fftw_complex ***CT, ***ICT;  /* variables used in fft */
+    extern fftw_plan pf1, pf2;
+    extern fftw_plan Ipf1, Ipf2;
+    extern rfftwnd_plan pr1, pr2;
+
+    extern mcomplex *****MC, *****MIC;  /* variables used to store state and
+                                           incremental state solutions
+                                           between two check points. */
+
+    extern mcomplex ****MU, ****MIU;    /* variables used to store
+                                           manufacture solutions */
+    extern mcomplex ****LU, ****LIU;
+
+    if (status & DESTROY_STATUS_FFTW)
+    {
+        fftw_destroy_plan(pf1);
+        fftw_destroy_plan(pf2);
+        rfftwnd_destroy_plan(pr1);
+        rfftwnd_destroy_plan(pr2);
+        fftw_destroy_plan(Ipf1);
+        fftw_destroy_plan(Ipf2);
+    }
+
+    if (status & DESTROY_STATUS_GETMEM)
+    {
+        freec4Darray(U);
+        freec4Darray(C);
+        freec3Darray(CT);
+        freecMatrix(Fa);
+        freecMatrix(Fb);
+        freed3Darray(M);
+        freecMatrix(TM);
+        freedMatrix(MZ);
+        freecVector(fa);
+        freecVector(fb);
+        freecVector(tm);
+        freedVector(cfl2);
+        freec4Darray(IU);
+        freec4Darray(IC);
+        freecMatrix(IFa);
+        freecMatrix(IFb);
+        freecMatrix(ITM);
+        freecVector(Ifa);
+        freecVector(Ifb);
+        freecVector(Itm);
+        freec3Darray(ICT);
+        freecMatrix(Uxbt);
+        freecMatrix(Uzbt);
+        freecMatrix(Uxb);
+        freecMatrix(Uzb);
+        freec4Darray(AU);
+        freec4Darray(IAU);
+        freec4Darray(AC);
+        freec4Darray(IAC);
+        freec5Darray(MC);
+        freec5Darray(MIC);
+        freec4Darray(MU);
+        freec4Darray(MIU);
+        freec4Darray(LU);
+        freec4Darray(LIU);
+        freecMatrix(AUxb);
+        freecMatrix(AUzb);
+        freecMatrix(IUzb);
+        freecMatrix(IUxb);
+        freecMatrix(IAUxb);
+        freecMatrix(IAUzb);
+        freecMatrix(grad);
+        freecMatrix(GUxb);
+        freecMatrix(GUzb);
+        freecMatrix(GIUxb);
+        freecMatrix(GIUzb);
+        freecMatrix(HUxb);
+        freecMatrix(HUzb);
+        freecMatrix(HAUxb);
+        freecMatrix(HAUzb);
+        freecMatrix(hess);
+    }
+
+    if (status & DESTROY_STATUS_WAVENUMS)
+    {
+        freedVector(Kx);
+        freedVector(Kz);
+        freedMatrix(K2);
+    }
+
+    if (status & DESTROY_STATUS_LEGENDRE)
+    {
+        freedMatrix(Q);
+        freedMatrix(Qp);
+        freedMatrix(Qpp);
+        freedMatrix(R);
+        freedMatrix(Rp);
+        freedMatrix(Qw);
+        freedMatrix(Qpw);
+        freedMatrix(Rw);
+        freedMatrix(Qs);
+        freedMatrix(Qps);
+        freedMatrix(Qpps);
+        freedMatrix(Rs);
+        freedMatrix(Rps);
+        freedVector(Rp0);
+        freedVector(Vadd);
+        freedVector(Vpadd);
+        freedVector(Uadd);
+        freedVector(Qy);
+        freedVector(Rpp0);
+    }
+}
+
 //int main(int argc, char **argv)
-int init(int Nx,int Ny, int Nz, double Lx, double Lz, double Re, double mpg, double dt, double tsteps, double rut, int n_chunk, double t_chunk, int restart_flag)
+int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
+         double _mpg, double _dt, double _tsteps, double _rut,
+         int _n_chunk, double _t_chunk, int _restart_flag)
 {
   /*****************************Definition of all variables ****************************/
     /* External Variables.  All external variables are defined in main.h */
@@ -51,29 +212,39 @@ int init(int Nx,int Ny, int Nz, double Lx, double Lz, double Re, double mpg, dou
     extern mcomplex **IFa, **IFb, **ITM;
     extern mcomplex *Ifa, *Ifb, *Itm;
 
-    extern mcomplex ****AU, ****AC;     /* adjoint variables and will use the same other variables
+    extern mcomplex ****AU, ****AC;     /* adjoint variables and will use
+                                           the same other variables
                                            used in state equations */
 
     extern mcomplex ****IAU, ****IAC;   /* incremental adjoint variables */
 
-    extern mcomplex **Uxbt, **Uzb;      /* variables used to store dux duz evaluated at y=-1 used for
-                                           computing boundary conditions for incremental state equations */
-    extern mcomplex **Uxb, **Uzb;       /* variables used to store dux duz evaluated at y=-1 from previous 
-                                           state used for boundary conditions for incremental state equations */
+    extern mcomplex **Uxbt, **Uzb;      /* variables used to store dux duz
+                                           evaluated at y=-1 used for
+                                           computing boundary conditions for
+                                           incremental state equations */
+    extern mcomplex **Uxb, **Uzb;       /* variables used to store dux duz
+                                           evaluated at y=-1 from previous 
+                                           state used for boundary conditions
+                                           for incremental state equations */
     extern mcomplex **IUxb, **IUzb;
     extern mcomplex **IAUxb, **IAUzb;
-    extern mcomplex **AUxb, **AUzb;     /* variables used to store dux duz evaluated at y=-1 used for
-                                           computing boundary conditions for incremental state equations */
+    extern mcomplex **AUxb, **AUzb;     /* variables used to store dux duz
+                                           evaluated at y=-1 used for
+                                           computing boundary conditions
+                                           for incremental state equations */
     extern fftw_complex ***CT, ***ICT;  /* variables used in fft */
     extern fftw_plan pf1, pf2;
     extern fftw_plan Ipf1, Ipf2;
     extern rfftwnd_plan pr1, pr2;
 
-    extern mcomplex *****MC, *****MIC;  /* variables used to store state and incremental state
-                                           solutions between two check points. */
+    extern mcomplex *****MC, *****MIC;  /* variables used to store state and
+                                           incremental state solutions
+                                           between two check points. */
 
-    extern mcomplex ****MU, ****MIU;    /* variables used to store manufacture solutions */
+    extern mcomplex ****MU, ****MIU;    /* variables used to store
+                                           manufacture solutions */
     extern mcomplex ****LU, ****LIU;
+
     /* Local Variables */
     int n, z, dctr, tsteps;
     int Ny, sizeRealTransform;
@@ -82,10 +253,27 @@ int init(int Nx,int Ny, int Nz, double Lx, double Lz, double Re, double mpg, dou
     int restart_flag;
     int count;
     int checknum, checkstep;
-    /********************************************end of variable definitions ***********/
+
+    /************************ end of variable definitions ****************/
+
+    nullify_global_pointers();
+
+    Nx = _Nx;
+    Ny = _Ny;
+    Nz = _Nz;
+    Lx = _Lx;
+    Lz = _Lz;
+
+    dt = _dt;
+
+    tsteps = _tsteps;
+    mpg = _mpg;
+    re = _Re;
+
+    restart_flag = _restart_flag;
 
 
-    /**************************read in and define parameters *********************/
+    /***************** read in and define parameters *********************/
     /* if (argc != 11) { */
     /*     printf */
     /*         ("Required arguments are Nx,Ny,Nz,Lx,Lz,dt,tsteps,mpg,Re, restart_flag.\n"); */
@@ -147,58 +335,13 @@ int init(int Nx,int Ny, int Nz, double Lx, double Lz, double Re, double mpg, dou
     /***********************Initialize and allocate all variables ***************/
     /* Compute wave numbers */
     if (waveNums(Nx / 2, Nz, Lx, Lz) != NO_ERR) {
-        freedMatrix(Q);
-        freedMatrix(Qp);
-        freedMatrix(Qpp);
-        freedMatrix(R);
-        freedMatrix(Rp);
-        freedMatrix(Qw);
-        freedMatrix(Qpw);
-        freedMatrix(Rw);
-        freedMatrix(Qs);
-        freedMatrix(Qps);
-        freedMatrix(Qpps);
-        freedMatrix(Rs);
-        freedMatrix(Rps);
-        freedVector(Rp0);
-        freedVector(Vadd);
-        freedVector(Vpadd);
-        freedVector(Uadd);
-        freedMatrix(Rpw);
-        freedMatrix(Qppw);
-        freedVector(Qy);
-        freedVector(W);
-        freedVector(Rpp0);
+        destroy(DESTROY_STATUS_LEGENDRE);
         return (EXIT_FAILURE);
     }
 
     /* get memory for 4D arrays and other matrices */
     if (getMem() != NO_ERR) {
-        freedMatrix(Q);
-        freedMatrix(Qp);
-        freedMatrix(Qpp);
-        freedMatrix(R);
-        freedMatrix(Rp);
-        freedMatrix(Qw);
-        freedMatrix(Qpw);
-        freedMatrix(Rw);
-        freedMatrix(Qs);
-        freedMatrix(Qps);
-        freedMatrix(Qpps);
-        freedMatrix(Rs);
-        freedMatrix(Rps);
-        freedVector(Rp0);
-        freedVector(Vadd);
-        freedVector(Vpadd);
-        freedVector(Uadd);
-        freedMatrix(Rpw);
-        freedMatrix(Qppw);
-        freedVector(Qy);
-        freedVector(W);
-        freedVector(Kx);
-        freedVector(Kz);
-        freedMatrix(K2);
-        freedVector(Rpp0);
+        destroy(DESTROY_STATUS_LEGENDRE | DESTROY_STATUS_WAVENUMS);
         return (EXIT_FAILURE);
     }
 
@@ -231,76 +374,8 @@ int init(int Nx,int Ny, int Nz, double Lx, double Lz, double Re, double mpg, dou
     /* set variables for checking CFL condition */
     if (cflVars(Lx, Lz) != 0) {
         printf("Error creating CF variables\n");
-        fftw_destroy_plan(pf1);
-        fftw_destroy_plan(pf2);
-        rfftwnd_destroy_plan(pr1);
-        rfftwnd_destroy_plan(pr2);
-        freedMatrix(Q);
-        freedMatrix(Qp);
-        freedMatrix(Qpp);
-        freedMatrix(R);
-        freedMatrix(Rp);
-        freedMatrix(Qw);
-        freedMatrix(Qpw);
-        freedMatrix(Rw);
-        freedMatrix(Qs);
-        freedMatrix(Qps);
-        freedMatrix(Qpps);
-        freedMatrix(Rs);
-        freedMatrix(Rps);
-        freedVector(Rp0);
-        freedVector(Vadd);
-        freedVector(Vpadd);
-        freedVector(Uadd);
-        freedMatrix(Rpw);
-        freedMatrix(Qppw);
-        freedVector(Qy);
-        freedVector(W);
-        freedVector(Kx);
-        freedVector(Kz);
-        freedMatrix(K2);
-        freec4Darray(U);
-        freec4Darray(C);
-        freec3Darray(CT);
-        freecMatrix(Fa);
-        freecMatrix(Fb);
-        freed3Darray(M);
-        freecMatrix(TM);
-        freedMatrix(MZ);
-        freecVector(fa);
-        freecVector(fb);
-        freecVector(tm);
-        freedVector(cfl2);
-        freec4Darray(IU);
-        freec4Darray(IC);
-        freecMatrix(IFa);
-        freecMatrix(IFb);
-        freecMatrix(ITM);
-        freecVector(Ifa);
-        freecVector(Ifb);
-        freecVector(Itm);
-        freec3Darray(ICT);
-        freecMatrix(Uxbt);
-        freecMatrix(Uzbt);
-        freecMatrix(Uxb);
-        freecMatrix(Uzb);
-        freec4Darray(AU);
-        freec4Darray(IAU);
-        freec4Darray(AC);
-        freec4Darray(IAC);
-        freec5Darray(MC);
-        freec5Darray(MIC);
-        freec4Darray(MU);
-        freec4Darray(MIU);
-        freec4Darray(LU);
-        freec4Darray(LIU);
-        freecMatrix(AUxb);
-        freecMatrix(AUzb);
-        freecMatrix(IUzb);
-        freecMatrix(IUxb);
-        freecMatrix(IAUxb);
-        freecMatrix(IAUzb);
-        freedVector(Rpp0);
+        destroy(DESTROY_STATUS_LEGENDRE | DESTROY_STATUS_WAVENUMS
+              | DESTROY_STATUS_FFTW);
         return (EXIT_FAILURE);
     }
 
@@ -440,262 +515,262 @@ int init(int Nx,int Ny, int Nz, double Lx, double Lz, double Re, double mpg, dou
     return (EXIT_SUCCESS);
 
 
-    /*******************************start of solving backward systems *************/
-    for (checkstep = checknum; checkstep >= 0; checkstep--) {
-
-        restart_flag = checkstep * MAXSTEP;
-        printf("\n");
-        printf(" restarting from time step: %d\n", restart_flag);
-        restart2(restart_flag);
-        count = 0;
-
-
-        memcpy(MC[count][0][0][0], C[0][0][0],
-               (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
-        memcpy(MIC[count][0][0][0], IC[0][0][0],
-               (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
-        for (n = restart_flag; n < restart_flag + MAXSTEP; ++n) {       /* loop for each timestep */
-            for (dctr = 0; dctr < 3; ++dctr) {  /* RK steps */
-
-                count = count + 1;
-
-                /* copy the result to Uxbt, Uzbt. Uxb and Uzb will be used later for boundary condition
-                   of current time stage */
-                memcpy(Uxbt[0], Uxb[0],
-                       (Nz) * (Nx / 2) * sizeof(fftw_complex));
-                memcpy(Uzbt[0], Uzb[0],
-                       (Nz) * (Nx / 2) * sizeof(fftw_complex));
-                memset(Uxb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
-                memset(Uzb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
-
-                if (pass1(dctr, n) != NO_ERR) {
-                    printf("Pass1 failure\n");
-                    checkstep = -1;
-                    break;
-                }
-
-                project0(count, dctr, n, NULL); /* (kx, kz)=(0, 0), solve for a, b */
-                project(count, n, dctr, 0, 1, NULL);    /* (kx, kz)!=(0, 0), solve for alpha, beta */
-                for (z = 1; z < Nz; ++z) {
-                    if (z == Nz / 2) {
-                        memset(U[z][0][0], 0,
-                               5 * qpts * (Nx / 2) * sizeof(mcomplex));
-                        continue;
-                    }
-
-                    project(count, n, dctr, z, 0, NULL);
-                }
-
-                /*now update the boundary condition using current time step solution of state equation */
-                if (increBoundary() != NO_ERR) {
-                    printf("increBoundary failure\n");
-                    checkstep = -1;
-                    break;
-                }
-
-                increproject0(count, dctr, n, 1, NULL);
-                increproject(count, dctr, 0, 1, n, NULL);
-                for (z = 1; z < Nz; ++z) {
-                    if (z == Nz / 2) {
-                        // SET U[z][XEL,YEL,ZEL,DXEL,DZEL] TO ZEROS 
-                        memset(IU[z][0][0], 0,
-                               5 * qpts * (Nx / 2) * sizeof(mcomplex));
-                        continue;
-                    }
-
-                    increproject(count, dctr, z, 0, n, NULL);
-                }
-
-            }                   /* end for dctr... */
-        }
-
-        memcpy(Uxb[0], AUxb[0], (Nz) * (Nx / 2) * sizeof(fftw_complex));
-        memcpy(Uzb[0], AUzb[0], (Nz) * (Nx / 2) * sizeof(fftw_complex));
-
-        /* time step for backward equations */
-        for (n = restart_flag + MAXSTEP; n > restart_flag; --n) {       /* loop for each timestep */
-            for (dctr = 0; dctr < 3; ++dctr) {  /* RK steps */
-
-                /* copy the result to Uxbt, Uzbt. Uxb and Uzb will be used later for boundary condition
-                   of current time stage */
-                memcpy(Uxbt[0], Uxb[0],
-                       (Nz) * (Nx / 2) * sizeof(fftw_complex));
-                memcpy(Uzbt[0], Uzb[0],
-                       (Nz) * (Nx / 2) * sizeof(fftw_complex));
-                memset(Uxb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
-                memset(Uzb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
-                memset(AUxb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
-                memset(AUzb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
-
-                count = count - 1;
-
-                /*read data from memery */
-                if (dctr < 2) {
-                    memcpy(C[0][0][0], MC[count - 1][0][0][0],
-                           (Nz) * 2 * (Ny -
-                                       2) * (Nx / 2) * sizeof(mcomplex));
-                    memcpy(IC[0][0][0], MIC[count - 1][0][0][0],
-                           (Nz) * 2 * (Ny -
-                                       2) * (Nx / 2) * sizeof(mcomplex));
-
-
-                    /*reconstruct the state and incremental state solution u, iu from alpha and beta */
-                    initAlphaBeta2();
-                    if (increBoundary() != NO_ERR) {
-                        printf("increBoundary failure\n");
-                    }
-                    incre_initAlphaBeta2();
-
-                    if (pass2(dctr, n) != NO_ERR) {
-                        printf("Pass2 failure\n");
-                        n = restart_flag - 1;
-                        break;
-                    }
-                    memcpy(LU[0][0][0], U[0][0][0],
-                           (Nz) * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
-                    memcpy(LIU[0][0][0], IU[0][0][0],
-                           (Nz) * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
-
-                }
-                /*read data from memery */
-                memcpy(C[0][0][0], MC[count][0][0][0],
-                       (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
-                memcpy(IC[0][0][0], MIC[count][0][0][0],
-                       (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
-
-
-                /*reconstruct the state and incremental state solution u, iu from alpha and beta */
-                initAlphaBeta2();
-                if (increBoundary() != NO_ERR) {
-                    printf("increBoundary failure\n");
-                }
-                incre_initAlphaBeta2();
-
-                memcpy(AUxb[0], Uxb[0],
-                       (Nz) * (Nx / 2) * sizeof(fftw_complex));
-                memcpy(AUzb[0], Uzb[0],
-                       (Nz) * (Nx / 2) * sizeof(fftw_complex));
-
-                if (pass2(dctr, n) != NO_ERR) {
-                    printf("Pass2 failure\n");
-                    n = restart_flag - 1;
-                    break;
-                }
-
-                memset(Uxb[0], 0, Nz * (Nx / 2) * sizeof(mcomplex));
-                memset(Uzb[0], 0, Nz * (Nx / 2) * sizeof(mcomplex));
-
-                adjproject0(dctr, n, count, NULL);
-                adjproject(n, dctr, 0, 1, count, NULL);
-                for (z = 1; z < Nz; ++z) {
-                    if (z == Nz / 2) {
-                        memset(AU[z][0][0], 0,
-                               5 * qpts * (Nx / 2) * sizeof(mcomplex));
-                        continue;
-                    }
-
-                    adjproject(n, dctr, z, 0, count, NULL);
-                }
-
-                /*now update the boundary condition using current time step solution of state equation */
-                if (increBoundary() != NO_ERR) {
-                    printf("increBoundary failure\n");
-                    n = restart_flag - 1;
-                    break;
-                }
-
-                increadjproject0(dctr, n, count, NULL);
-                increadjproject(n, dctr, 0, 1, count, NULL);
-                for (z = 1; z < Nz; ++z) {
-                    if (z == Nz / 2) {
-                        // SET U[z][XEL,YEL,ZEL,DXEL,DZEL] TO ZEROS 
-                        memset(IAU[z][0][0], 0,
-                               5 * qpts * (Nx / 2) * sizeof(mcomplex));
-                        continue;
-                    }
-
-                    increadjproject(n, dctr, z, 0, count, NULL);
-                }
-                if (n == restart_flag + 1 && dctr == 2) {
-                    memcpy(AUxb[0], Uxb[0],
-                           (Nz) * (Nx / 2) * sizeof(fftw_complex));
-                    memcpy(AUzb[0], Uzb[0],
-                           (Nz) * (Nx / 2) * sizeof(fftw_complex));
-                }
-            }
-        }
-    }
-
-    /* clean up... */
-    fftw_destroy_plan(pf1);
-    fftw_destroy_plan(pf2);
-    rfftwnd_destroy_plan(pr1);
-    rfftwnd_destroy_plan(pr2);
-    fftw_destroy_plan(Ipf1);
-    fftw_destroy_plan(Ipf2);
-
-    freedMatrix(Q);
-    freedMatrix(Qp);
-    freedMatrix(Qpp);
-    freedMatrix(R);
-    freedMatrix(Rp);
-    freedMatrix(Qw);
-    freedMatrix(Qpw);
-    freedMatrix(Rw);
-    freedMatrix(Qs);
-    freedMatrix(Qps);
-    freedMatrix(Qpps);
-    freedMatrix(Rs);
-    freedMatrix(Rps);
-    freedVector(Kx);
-    freedVector(Kz);
-    freedMatrix(K2);
-    freec4Darray(U);
-    freec4Darray(C);
-    freec3Darray(CT);
-    freecMatrix(Fa);
-    freecMatrix(Fb);
-    freed3Darray(M);
-    freecMatrix(TM);
-    freedMatrix(MZ);
-    freecVector(fa);
-    freecVector(fb);
-    freecVector(tm);
-    freedVector(cfl2);
-    freedVector(Rp0);
-    freec3Darray(ICT);
-    freec4Darray(IU);
-    freec4Darray(IC);
-    freecMatrix(IFa);
-    freecMatrix(IFb);
-    freecMatrix(ITM);
-    freecVector(Ifa);
-    freecVector(Ifb);
-    freecVector(Itm);
-    freecMatrix(Uxbt);
-    freecMatrix(Uzbt);
-    freecMatrix(Uxb);
-    freecMatrix(Uzb);
-    freedVector(Vadd);
-    freedVector(Vpadd);
-    freedVector(Uadd);
-    freec4Darray(AU);
-    freec4Darray(AC);
-    freec4Darray(IAU);
-    freec4Darray(IAC);
-    freec5Darray(MC);
-    freec5Darray(MIC);
-    freec4Darray(MU);
-    freec4Darray(MIU);
-    freec4Darray(LU);
-    freec4Darray(LIU);
-    freecMatrix(AUxb);
-    freecMatrix(AUzb);
-    freecMatrix(IUzb);
-    freecMatrix(IUxb);
-    freecMatrix(IAUxb);
-    freecMatrix(IAUzb);
-    freedVector(Rpp0);
-    return (EXIT_SUCCESS);
-
+//    /*******************************start of solving backward systems *************/
+//    for (checkstep = checknum; checkstep >= 0; checkstep--) {
+//
+//        restart_flag = checkstep * MAXSTEP;
+//        printf("\n");
+//        printf(" restarting from time step: %d\n", restart_flag);
+//        restart2(restart_flag);
+//        count = 0;
+//
+//
+//        memcpy(MC[count][0][0][0], C[0][0][0],
+//               (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+//        memcpy(MIC[count][0][0][0], IC[0][0][0],
+//               (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+//        for (n = restart_flag; n < restart_flag + MAXSTEP; ++n) {       /* loop for each timestep */
+//            for (dctr = 0; dctr < 3; ++dctr) {  /* RK steps */
+//
+//                count = count + 1;
+//
+//                /* copy the result to Uxbt, Uzbt. Uxb and Uzb will be used later for boundary condition
+//                   of current time stage */
+//                memcpy(Uxbt[0], Uxb[0],
+//                       (Nz) * (Nx / 2) * sizeof(fftw_complex));
+//                memcpy(Uzbt[0], Uzb[0],
+//                       (Nz) * (Nx / 2) * sizeof(fftw_complex));
+//                memset(Uxb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
+//                memset(Uzb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
+//
+//                if (pass1(dctr, n) != NO_ERR) {
+//                    printf("Pass1 failure\n");
+//                    checkstep = -1;
+//                    break;
+//                }
+//
+//                project0(count, dctr, n, NULL); /* (kx, kz)=(0, 0), solve for a, b */
+//                project(count, n, dctr, 0, 1, NULL);    /* (kx, kz)!=(0, 0), solve for alpha, beta */
+//                for (z = 1; z < Nz; ++z) {
+//                    if (z == Nz / 2) {
+//                        memset(U[z][0][0], 0,
+//                               5 * qpts * (Nx / 2) * sizeof(mcomplex));
+//                        continue;
+//                    }
+//
+//                    project(count, n, dctr, z, 0, NULL);
+//                }
+//
+//                /*now update the boundary condition using current time step solution of state equation */
+//                if (increBoundary() != NO_ERR) {
+//                    printf("increBoundary failure\n");
+//                    checkstep = -1;
+//                    break;
+//                }
+//
+//                increproject0(count, dctr, n, 1, NULL);
+//                increproject(count, dctr, 0, 1, n, NULL);
+//                for (z = 1; z < Nz; ++z) {
+//                    if (z == Nz / 2) {
+//                        // SET U[z][XEL,YEL,ZEL,DXEL,DZEL] TO ZEROS 
+//                        memset(IU[z][0][0], 0,
+//                               5 * qpts * (Nx / 2) * sizeof(mcomplex));
+//                        continue;
+//                    }
+//
+//                    increproject(count, dctr, z, 0, n, NULL);
+//                }
+//
+//            }                   /* end for dctr... */
+//        }
+//
+//        memcpy(Uxb[0], AUxb[0], (Nz) * (Nx / 2) * sizeof(fftw_complex));
+//        memcpy(Uzb[0], AUzb[0], (Nz) * (Nx / 2) * sizeof(fftw_complex));
+//
+//        /* time step for backward equations */
+//        for (n = restart_flag + MAXSTEP; n > restart_flag; --n) {       /* loop for each timestep */
+//            for (dctr = 0; dctr < 3; ++dctr) {  /* RK steps */
+//
+//                /* copy the result to Uxbt, Uzbt. Uxb and Uzb will be used later for boundary condition
+//                   of current time stage */
+//                memcpy(Uxbt[0], Uxb[0],
+//                       (Nz) * (Nx / 2) * sizeof(fftw_complex));
+//                memcpy(Uzbt[0], Uzb[0],
+//                       (Nz) * (Nx / 2) * sizeof(fftw_complex));
+//                memset(Uxb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
+//                memset(Uzb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
+//                memset(AUxb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
+//                memset(AUzb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
+//
+//                count = count - 1;
+//
+//                /*read data from memery */
+//                if (dctr < 2) {
+//                    memcpy(C[0][0][0], MC[count - 1][0][0][0],
+//                           (Nz) * 2 * (Ny -
+//                                       2) * (Nx / 2) * sizeof(mcomplex));
+//                    memcpy(IC[0][0][0], MIC[count - 1][0][0][0],
+//                           (Nz) * 2 * (Ny -
+//                                       2) * (Nx / 2) * sizeof(mcomplex));
+//
+//
+//                    /*reconstruct the state and incremental state solution u, iu from alpha and beta */
+//                    initAlphaBeta2();
+//                    if (increBoundary() != NO_ERR) {
+//                        printf("increBoundary failure\n");
+//                    }
+//                    incre_initAlphaBeta2();
+//
+//                    if (pass2(dctr, n) != NO_ERR) {
+//                        printf("Pass2 failure\n");
+//                        n = restart_flag - 1;
+//                        break;
+//                    }
+//                    memcpy(LU[0][0][0], U[0][0][0],
+//                           (Nz) * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
+//                    memcpy(LIU[0][0][0], IU[0][0][0],
+//                           (Nz) * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
+//
+//                }
+//                /*read data from memery */
+//                memcpy(C[0][0][0], MC[count][0][0][0],
+//                       (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+//                memcpy(IC[0][0][0], MIC[count][0][0][0],
+//                       (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+//
+//
+//                /*reconstruct the state and incremental state solution u, iu from alpha and beta */
+//                initAlphaBeta2();
+//                if (increBoundary() != NO_ERR) {
+//                    printf("increBoundary failure\n");
+//                }
+//                incre_initAlphaBeta2();
+//
+//                memcpy(AUxb[0], Uxb[0],
+//                       (Nz) * (Nx / 2) * sizeof(fftw_complex));
+//                memcpy(AUzb[0], Uzb[0],
+//                       (Nz) * (Nx / 2) * sizeof(fftw_complex));
+//
+//                if (pass2(dctr, n) != NO_ERR) {
+//                    printf("Pass2 failure\n");
+//                    n = restart_flag - 1;
+//                    break;
+//                }
+//
+//                memset(Uxb[0], 0, Nz * (Nx / 2) * sizeof(mcomplex));
+//                memset(Uzb[0], 0, Nz * (Nx / 2) * sizeof(mcomplex));
+//
+//                adjproject0(dctr, n, count, NULL);
+//                adjproject(n, dctr, 0, 1, count, NULL);
+//                for (z = 1; z < Nz; ++z) {
+//                    if (z == Nz / 2) {
+//                        memset(AU[z][0][0], 0,
+//                               5 * qpts * (Nx / 2) * sizeof(mcomplex));
+//                        continue;
+//                    }
+//
+//                    adjproject(n, dctr, z, 0, count, NULL);
+//                }
+//
+//                /*now update the boundary condition using current time step solution of state equation */
+//                if (increBoundary() != NO_ERR) {
+//                    printf("increBoundary failure\n");
+//                    n = restart_flag - 1;
+//                    break;
+//                }
+//
+//                increadjproject0(dctr, n, count, NULL);
+//                increadjproject(n, dctr, 0, 1, count, NULL);
+//                for (z = 1; z < Nz; ++z) {
+//                    if (z == Nz / 2) {
+//                        // SET U[z][XEL,YEL,ZEL,DXEL,DZEL] TO ZEROS 
+//                        memset(IAU[z][0][0], 0,
+//                               5 * qpts * (Nx / 2) * sizeof(mcomplex));
+//                        continue;
+//                    }
+//
+//                    increadjproject(n, dctr, z, 0, count, NULL);
+//                }
+//                if (n == restart_flag + 1 && dctr == 2) {
+//                    memcpy(AUxb[0], Uxb[0],
+//                           (Nz) * (Nx / 2) * sizeof(fftw_complex));
+//                    memcpy(AUzb[0], Uzb[0],
+//                           (Nz) * (Nx / 2) * sizeof(fftw_complex));
+//                }
+//            }
+//        }
+//    }
+//
+//    /* clean up... */
+//    fftw_destroy_plan(pf1);
+//    fftw_destroy_plan(pf2);
+//    rfftwnd_destroy_plan(pr1);
+//    rfftwnd_destroy_plan(pr2);
+//    fftw_destroy_plan(Ipf1);
+//    fftw_destroy_plan(Ipf2);
+//
+//    freedMatrix(Q);
+//    freedMatrix(Qp);
+//    freedMatrix(Qpp);
+//    freedMatrix(R);
+//    freedMatrix(Rp);
+//    freedMatrix(Qw);
+//    freedMatrix(Qpw);
+//    freedMatrix(Rw);
+//    freedMatrix(Qs);
+//    freedMatrix(Qps);
+//    freedMatrix(Qpps);
+//    freedMatrix(Rs);
+//    freedMatrix(Rps);
+//    freedVector(Kx);
+//    freedVector(Kz);
+//    freedMatrix(K2);
+//    freec4Darray(U);
+//    freec4Darray(C);
+//    freec3Darray(CT);
+//    freecMatrix(Fa);
+//    freecMatrix(Fb);
+//    freed3Darray(M);
+//    freecMatrix(TM);
+//    freedMatrix(MZ);
+//    freecVector(fa);
+//    freecVector(fb);
+//    freecVector(tm);
+//    freedVector(cfl2);
+//    freedVector(Rp0);
+//    freec3Darray(ICT);
+//    freec4Darray(IU);
+//    freec4Darray(IC);
+//    freecMatrix(IFa);
+//    freecMatrix(IFb);
+//    freecMatrix(ITM);
+//    freecVector(Ifa);
+//    freecVector(Ifb);
+//    freecVector(Itm);
+//    freecMatrix(Uxbt);
+//    freecMatrix(Uzbt);
+//    freecMatrix(Uxb);
+//    freecMatrix(Uzb);
+//    freedVector(Vadd);
+//    freedVector(Vpadd);
+//    freedVector(Uadd);
+//    freec4Darray(AU);
+//    freec4Darray(AC);
+//    freec4Darray(IAU);
+//    freec4Darray(IAC);
+//    freec5Darray(MC);
+//    freec5Darray(MIC);
+//    freec4Darray(MU);
+//    freec4Darray(MIU);
+//    freec4Darray(LU);
+//    freec4Darray(LIU);
+//    freecMatrix(AUxb);
+//    freecMatrix(AUzb);
+//    freecMatrix(IUzb);
+//    freecMatrix(IUxb);
+//    freecMatrix(IAUxb);
+//    freecMatrix(IAUzb);
+//    freedVector(Rpp0);
+//    return (EXIT_SUCCESS);
+//
 }                               /* end main */
