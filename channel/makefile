@@ -21,12 +21,12 @@ endif
 ######################################################################## 
 ifeq ($(MACHINE),ices)
 FFTDIR =/h2/nick/src/lib
-FFTLIB = $(FFTDIR)/lib
-FFTINC = $(FFTDIR)/include
+FFTLIB = -L$(FFTDIR)/lib
+FFTINC = -I$(FFTDIR)/include
 HDFDIR =/opt/apps/hdf5/1.8.3
 HDFSRC =-L$(HDFDIR)/lib
 HDFINC =-I$(HDFDIR)/include
-CC     = gcc -Wall -g -O3 -finline-functions 
+CC     = icc -Wall -g -O3 -finline-functions 
 endif
 ######################################################################## 
 ifeq ($(MACHINE),tacc)
