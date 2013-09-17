@@ -48,7 +48,7 @@ CC = gcc -Wall -g -O0 -fPIC
 
 endif
 ######################################################################## 
-
+SWIG = swig -python
 
 SOURCES = LegendreSetup.c \
           arrays.c \
@@ -88,7 +88,6 @@ OBJS = $(addsuffix .o,$(basename $(SOURCES)))
 ######################################################################## 
 # construct exec
 ######################################################################## 
-
 LIBS=$(FFTLIB) $(HDFLIB) $(OTHERLIBS) -lm
 INCLUDE=$(FFTINC) $(HDFINC) $(OTHERINC)
 
@@ -107,7 +106,11 @@ $(EXEC): $(OBJS)
 	@echo building $<
 	$(CC) -c $(CFLAGS) $(INCLUDE) $< -o $@
 
+%_wrap.c:	%.i
+	@echo building $<
+	$(SWIG) $<
+
 # clean directive 'make clean'
 clean:
-	- /bin/rm -f $(EXEC) *.o *.mod 
+	- /bin/rm -f $(EXEC) *.o *.mod *_wrap.c
 	@echo 'files cleaned'
