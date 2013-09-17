@@ -2,8 +2,8 @@
 # machine directive
 # ---------------------------
 #
-#MACHINE = ices
-MACHINE = tacc
+MACHINE = ices
+#MACHINE = tacc
 #MACHINE = mit
 
 EXEC = libchanneldns.a
@@ -20,19 +20,13 @@ LIBS =  -L$(FFTLIB) -L$(HDFSRC)
 endif
 ######################################################################## 
 ifeq ($(MACHINE),ices)
-FFTDIR = /usr
+FFTDIR =/h2/nick/src/lib
 FFTLIB = $(FFTDIR)/lib
 FFTINC = $(FFTDIR)/include
-HDFDIR =/opt/apps/hdf5/1.8.3/
+HDFDIR =/opt/apps/hdf5/1.8.3
 HDFSRC =-L$(HDFDIR)/lib
 HDFINC =-I$(HDFDIR)/include
 CC     = gcc -Wall -g -O3 -finline-functions 
-
-#HDFDIR=$TACC_HDF5_INC
-#HDFDIR=/opt/apps/hdf5/1.8.3/include
-#HDFSRC=$TACC_HDF5_LIB
-#HDFSRC= /opt/apps/hdf5/1.8.3/lib
-#GCC = cc -xO5 -I$(FFTINC)
 endif
 ######################################################################## 
 ifeq ($(MACHINE),tacc)
