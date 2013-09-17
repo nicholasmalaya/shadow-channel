@@ -1,7 +1,7 @@
-%module kuramoto
+%module channel
 %{
 #define SWIG_FILE_WITH_INIT
-#include "kuramoto.h"
+#include "channel.h"
 %}
 
 

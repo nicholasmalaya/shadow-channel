@@ -26,7 +26,8 @@ FFTINC = -I$(FFTDIR)/include
 HDFDIR =/opt/apps/hdf5/1.8.3
 HDFSRC =-L$(HDFDIR)/lib
 HDFINC =-I$(HDFDIR)/include
-CC     = icc -Wall -g -O3 -finline-functions 
+#CC     = icc -Wall -g -O3 -finline-functions 
+CC     = icc -g -O3 -finline-functions 
 endif
 ######################################################################## 
 ifeq ($(MACHINE),tacc)
@@ -74,7 +75,8 @@ SOURCES = LegendreSetup.c \
           restart2.c \
           write_data.c \
           write_data2.c \
-          init.c
+          init.c   \
+	  channel.i
 
 
 OBJS = $(addsuffix .o,$(basename $(SOURCES)))
