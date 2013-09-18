@@ -88,9 +88,17 @@ LIBS=$(FFTLIB) $(HDFLIB) $(OTHERLIBS) -lm
 INCLUDE=$(FFTINC) $(HDFINC) $(OTHERINC)
 
 ## build the executable ##
-$(EXEC): $(OBJS)
+#$(EXEC): $(OBJS)
 #	$(CC) $(INCLUDE) $(OBJS) -o  $@ $(LDFLAGS) $(LIBS) 
-	ar -rcs $(EXEC) $(OBJS)
+#	ar -rcs $(EXEC) $(OBJS)
+
+default: _channel.so
+
+## build library ## 
+_%.so:  %.o %_wrap.o
+	swig -python example.i
+	$(CC) $(CFLAGS) $(INCLUDE) $(SOURCES)
+	$(CC) $(INCLUDE) -o _example.so $(OBJS) 
 
 # build cpp object files
 %.o: %.cpp
