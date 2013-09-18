@@ -19,12 +19,12 @@ endif
 ######################################################################## 
 ifeq ($(MACHINE),ices)
 FFTDIR =/h2/nick/src/lib
-FFTLIB = -L$(FFTDIR)/lib
+FFTLIB = -L$(FFTDIR)/lib -lrfftw -lfftw
 FFTINC = -I$(FFTDIR)/include
 HDFDIR =/opt/apps/hdf5/1.8.3
-HDFSRC =-L$(HDFDIR)/lib
-HDFINC =-I$(HDFDIR)/include
-#CC     = icc -Wall -g -O3 -finline-functions 
+HDFLIB =-L$(HDF5_DIR)/lib -lhdf5
+HDFINC =-I$(HDF5_DIR)/include
+
 CC     = icc -g -O3 -finline-functions -fPIC
 LD     = ld
 endif
@@ -76,7 +76,6 @@ SOURCES = LegendreSetup.c \
           write_data2.c \
           init.c   
 
-
 OBJS = $(addsuffix .o,$(basename $(SOURCES)))
 
 ######################################################################## 
@@ -85,34 +84,26 @@ OBJS = $(addsuffix .o,$(basename $(SOURCES)))
 LIBS=$(FFTLIB) $(HDFLIB) $(OTHERLIBS) -lm
 INCLUDE=$(FFTINC) $(HDFINC) $(OTHERINC)
 
-## build the executable ##
-#$(EXEC): $(OBJS)
-#	$(CC) $(INCLUDE) $(OBJS) -o  $@ $(LDFLAGS) $(LIBS) 
-#	ar -rcs $(EXEC) $(OBJS)
-
 default: _channel.so
 
-## build library ## 
-_%.so:  %.o %_wrap.o
-#	swig -python channel.i
-#	$(CC) $(CFLAGS) $(INCLUDE) $(SOURCES) -I/usr/include/python2.6 -I/usr/lib/python2.6
-	$(LD) $(INCLUDE) -o _channel.so $(OBJS) 
-
-# build cpp object files
-%.o: %.cpp
-	@echo building $< 
-	$(CC) -c $(CFLAGS) $(INCLUDE) $< -o $@ -I/usr/include/python2.6 -I/usr/lib/python2.6
-
-# build c object files
-%.o: %.c
-	@echo building $<
-	$(CC) -c $(CFLAGS) $(INCLUDE) $< -o $@ -I/usr/include/python2.6 -I/usr/lib/python2.6
-
-%_wrap.c:	%.i
-	@echo building $<
-	$(SWIG) $<  
+tar: $(SOURCES) makefile
+	tar -cjvf channel.tar.bz2 $^
 
 # clean directive 'make clean'
 clean:
 	- /bin/rm -f $(EXEC) *.o *.mod *_wrap.c
 	@echo 'files cleaned'
+
+## build library ## 
+_%.so:  %.o %_wrap.o $(OBJS)
+	$(CC) $(INCLUDE) $(OBJS) -o  $@ $(LIBS) 
+	$(LD) $^ $(INCLUDE) -o $@ $(LIBS) 
+
+%.o: %.c
+	@echo building $<
+	$(CC) -c $(INCLUDE) $< -o $@ -I/usr/include/python2.6 -I/usr/lib/python2.6
+
+%_wrap.c:	%.i
+	@echo building $<
+	$(SWIG) $<  
+
