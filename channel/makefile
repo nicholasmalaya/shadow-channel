@@ -25,8 +25,10 @@ HDFDIR =/opt/apps/hdf5/1.8.3
 HDFLIB =-L$(HDF5_DIR)/lib -lhdf5
 HDFINC =-I$(HDF5_DIR)/include
 
-CC     = icc -g -O3 -finline-functions
-LD     = ld 
+PYINC = $(shell python-config --includes)
+
+CC     = gcc -g -O3 -finline-functions
+LD     = ld
 endif
 ######################################################################## 
 ifeq ($(MACHINE),tacc)
@@ -81,7 +83,7 @@ OBJS = $(addsuffix .o,$(basename $(SOURCES)))
 ######################################################################## 
 # construct exec
 ######################################################################## 
-LIBS=$(FFTLIB) $(HDFLIB) $(OTHERLIBS) -lm
+LIBS=$(FFTLIB) $(HDFLIB) $(OTHERLIBS) -lc -lm
 INCLUDE=$(FFTINC) $(HDFINC) $(OTHERINC)
 
 default: _channel.so
@@ -95,13 +97,14 @@ clean:
 	@echo 'files cleaned'
 
 ## build library ## 
-_%.so:  %.o %_wrap.o $(OBJS)
+_%.so:  $(OBJS)
 #	$(CC) $(INCLUDE) $(OBJS) -o  $@ $(LIBS) 
 	$(LD) $^ $(INCLUDE) -o $@ $(LIBS) 
 
 %.o: %.c
 	@echo building $<
-	$(CC) -c $(INCLUDE) $< -o $@ -I/usr/include/python2.6 -I/usr/lib/python2.6
+	@echo $(PYINC)
+	$(CC) -c $(INCLUDE) $< -o $@ $(PYINC)
 
 %_wrap.c:	%.i
 	@echo building $<
