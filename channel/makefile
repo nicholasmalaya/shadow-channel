@@ -25,8 +25,8 @@ HDFDIR =/opt/apps/hdf5/1.8.3
 HDFLIB =-L$(HDF5_DIR)/lib -lhdf5
 HDFINC =-I$(HDF5_DIR)/include
 
-CC     = icc -g -O3 -finline-functions -fPIC
-LD     = ld
+CC     = icc -g -O3 -finline-functions
+LD     = ld 
 endif
 ######################################################################## 
 ifeq ($(MACHINE),tacc)
@@ -96,7 +96,7 @@ clean:
 
 ## build library ## 
 _%.so:  %.o %_wrap.o $(OBJS)
-	$(CC) $(INCLUDE) $(OBJS) -o  $@ $(LIBS) 
+#	$(CC) $(INCLUDE) $(OBJS) -o  $@ $(LIBS) 
 	$(LD) $^ $(INCLUDE) -o $@ $(LIBS) 
 
 %.o: %.c
