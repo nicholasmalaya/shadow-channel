@@ -24,5 +24,7 @@ int channel_ddt(double * dudt);
 
 void channel_destroy();
 
+extern double N_GRID;
+
 #endif
 

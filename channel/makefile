@@ -6,8 +6,6 @@ MACHINE = ices
 #MACHINE = tacc
 #MACHINE = mit
 
-EXEC = libchanneldns.a
-
 ######################################################################## 
 ifeq ($(MACHINE),mit)
 FFTDIR = /usr
@@ -27,7 +25,7 @@ HDFDIR =/opt/apps/hdf5/1.8.3
 HDFSRC =-L$(HDFDIR)/lib
 HDFINC =-I$(HDFDIR)/include
 #CC     = icc -Wall -g -O3 -finline-functions 
-CC     = icpc -g -O3 -finline-functions 
+CC     = icc -g -O3 -finline-functions -fPIC
 LD     = ld
 endif
 ######################################################################## 
@@ -96,23 +94,23 @@ default: _channel.so
 
 ## build library ## 
 _%.so:  %.o %_wrap.o
-	swig -python channel.i
-	$(CC) $(CFLAGS) $(INCLUDE) $(SOURCES) -I/usr/include/python2.6 -I/usr/lib/python2.6
-	$(LD) $(INCLUDE) -o _example.so $(OBJS) 
+#	swig -python channel.i
+#	$(CC) $(CFLAGS) $(INCLUDE) $(SOURCES) -I/usr/include/python2.6 -I/usr/lib/python2.6
+	$(LD) $(INCLUDE) -o _channel.so $(OBJS) 
 
 # build cpp object files
 %.o: %.cpp
 	@echo building $< 
-	$(CC) -c $(CFLAGS) $(INCLUDE) $< -o $@
+	$(CC) -c $(CFLAGS) $(INCLUDE) $< -o $@ -I/usr/include/python2.6 -I/usr/lib/python2.6
 
 # build c object files
 %.o: %.c
 	@echo building $<
-	$(CC) -c $(CFLAGS) $(INCLUDE) $< -o $@
+	$(CC) -c $(CFLAGS) $(INCLUDE) $< -o $@ -I/usr/include/python2.6 -I/usr/lib/python2.6
 
 %_wrap.c:	%.i
 	@echo building $<
-	$(SWIG) $<
+	$(SWIG) $<  
 
 # clean directive 'make clean'
 clean:
