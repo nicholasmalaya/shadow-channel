@@ -95,8 +95,9 @@ INCLUDE=$(FFTINC) $(HDFINC) $(OTHERINC)
 default: _channel.so
 
 ## build library ## 
-_%.so:  %.o %_wrap.o
-	swig -python example.i
+_%.so:  %.o
+# %_wrap.o
+	swig -python channel.i
 	$(CC) $(CFLAGS) $(INCLUDE) $(SOURCES)
 	$(CC) $(INCLUDE) -o _example.so $(OBJS) 
 
