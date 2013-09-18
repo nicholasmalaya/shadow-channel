@@ -27,7 +27,8 @@ HDFDIR =/opt/apps/hdf5/1.8.3
 HDFSRC =-L$(HDFDIR)/lib
 HDFINC =-I$(HDFDIR)/include
 #CC     = icc -Wall -g -O3 -finline-functions 
-CC     = icc -g -O3 -finline-functions 
+CC     = icpc -g -O3 -finline-functions 
+LD     = ld
 endif
 ######################################################################## 
 ifeq ($(MACHINE),tacc)
@@ -75,8 +76,7 @@ SOURCES = LegendreSetup.c \
           restart2.c \
           write_data.c \
           write_data2.c \
-          init.c   \
-	  channel.i
+          init.c   
 
 
 OBJS = $(addsuffix .o,$(basename $(SOURCES)))
@@ -95,11 +95,10 @@ INCLUDE=$(FFTINC) $(HDFINC) $(OTHERINC)
 default: _channel.so
 
 ## build library ## 
-_%.so:  %.o
-# %_wrap.o
+_%.so:  %.o %_wrap.o
 	swig -python channel.i
-	$(CC) $(CFLAGS) $(INCLUDE) $(SOURCES)
-	$(CC) $(INCLUDE) -o _example.so $(OBJS) 
+	$(CC) $(CFLAGS) $(INCLUDE) $(SOURCES) -I/usr/include/python2.6 -I/usr/lib/python2.6
+	$(LD) $(INCLUDE) -o _example.so $(OBJS) 
 
 # build cpp object files
 %.o: %.cpp
