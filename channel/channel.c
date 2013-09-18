@@ -3,6 +3,8 @@
 #include"main.h"
 //#include"channel_main.h"
 
+int MAXSTEP=3;
+
 int channel_construct(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz,
                       double _dt, double _mpg, double _re, int _restart_flag)
 {

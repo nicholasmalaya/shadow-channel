@@ -71,7 +71,7 @@ int comp_hess(int n, int k);
 /* External Variables */
 
 // what do we want to do about this?
-int MAXSTEP = 3;
+extern int MAXSTEP;
 
 int qpts,                       /* 3Ny/2, Ny specified by user */
  dimR,                          /* Ny-2.  # of columns of matrix R(i,j) = (1-y(i)^2)P_j(y(i)) */
