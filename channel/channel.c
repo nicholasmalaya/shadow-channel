@@ -512,6 +512,7 @@ int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 void getsoln(int i_step, mcomplex ** MC_ptr,
              int * Nz_ptr, int * Nvar_ptr, int * Ny_ptr, int * Nx_ptr)
 {
+    assert (i_step >= 0 && i_step <= nsteps);
     (*MC_ptr) = MC[i_step * 3][0][0][0];
     (*Nz_ptr) = Nz;
     (*Nvar_ptr) = 2;
