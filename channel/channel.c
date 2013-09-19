@@ -5,6 +5,7 @@ update: 03/09, working on checking the accuracy of new rk scheme for state equat
 **********************************************************************/
 
 #include "main.h"
+#include "channel.h"
 #include "hdf5.h"
 
 // convertin main() to init() function

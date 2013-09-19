@@ -28,7 +28,7 @@ HDFINC =-I$(HDF5_DIR)/include
 PYINC = $(shell python-config --includes)
 
 CC     = gcc -g -O3 -finline-functions
-LD     = ld
+LD     = ld -shared
 endif
 ######################################################################## 
 ifeq ($(MACHINE),tacc)
@@ -76,7 +76,8 @@ SOURCES = LegendreSetup.c \
           restart2.c \
           write_data.c \
           write_data2.c \
-          init.c   
+          channel.c \
+          channel_wrap.c
 
 OBJS = $(addsuffix .o,$(basename $(SOURCES)))
 
@@ -93,7 +94,7 @@ tar: $(SOURCES) makefile
 
 # clean directive 'make clean'
 clean:
-	- /bin/rm -f $(EXEC) *.o *.mod *_wrap.c
+	- /bin/rm -f $(EXEC) *.o *.mod *_wrap.c *.so
 	@echo 'files cleaned'
 
 ## build library ## 

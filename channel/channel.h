@@ -1,15 +1,7 @@
-%module channel
-%{
-#define SWIG_FILE_WITH_INIT
-#include "channel.h"
-%}
+#ifndef CHANNEL_CHANNEL_H
+#define CHANNEL_CHANNEL_H
 
-
-%include "numpy.i"
-
-%init %{
-import_array();
-%}
+#include"mcomplex.h"
 
 int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
          double _mpg, double _dt, double _rut,
@@ -17,9 +9,7 @@ int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 
 void destroy(int status);
 
-%apply (mcomplex ** ARGOUTVIEW_ARRAY4, int * DIM1, int * DIM2, int * DIM3, int * DIM4)
-      {(mcomplex ** MC_ptr, int * Nz_ptr, int * Nvar_ptr, int * Ny_ptr, int * Nx_ptr)}
-
 void getsoln(int i_step, mcomplex ** MC_ptr,
              int * Nz_ptr, int * Nvar_ptr, int * Ny_ptr, int * Nx_ptr);
 
+#endif
