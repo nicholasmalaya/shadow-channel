@@ -17,9 +17,11 @@ int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 
 void destroy(int status);
 
+%numpy_typemaps(mcomplex, NPY_CDOUBLE, int);
+
 %apply (mcomplex ** ARGOUTVIEW_ARRAY4, int * DIM1, int * DIM2, int * DIM3, int * DIM4)
       {(mcomplex ** MC_ptr, int * Nz_ptr, int * Nvar_ptr, int * Ny_ptr, int * Nx_ptr)}
 
+
 void getsoln(int i_step, mcomplex ** MC_ptr,
              int * Nz_ptr, int * Nvar_ptr, int * Ny_ptr, int * Nx_ptr);
-

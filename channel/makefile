@@ -8,13 +8,7 @@ MACHINE = ices
 
 ######################################################################## 
 ifeq ($(MACHINE),mit)
-FFTDIR = /usr
-FFTLIB = $(FFTDIR)/lib
-FFTINC = $(FFTDIR)/include
-HDFDIR= $/opt/apps/hdf5/1.8.3/include
-HDFSRC= $/opt/apps/hdf5/1.8.3/lib
-CC = gcc -Wall -g -O3 -finline-functions -I$(FFTINC) -I$(HDFDIR)
-LIBS =  -L$(FFTLIB) -L$(HDFSRC)
+CC = gcc -Wall -g -O0 -finline-functions -I$(FFTINC) -I$(HDFDIR)
 endif
 ######################################################################## 
 ifeq ($(MACHINE),ices)
@@ -46,40 +40,42 @@ endif
 ######################################################################## 
 SWIG = swig -python
 
-SOURCES = LegendreSetup.c \
-          arrays.c \
-          getMem.c \
-          comp_gradient.c \
-          comp_hess.c \
-          myadjointforce.c \
-          increadjproject0.c \
-          increadjproject.c \
-          mvOps.c \
-          adjproject0.c \
-          adjproject.c \
-          waveNumsAndCFL.c \
-          pass2.c \
-          myforce.c \
-          increBoundary.c \
-          increBoundary_s.c \
-          incre_initAlphaBeta.c \
-          pass1.c \
-          RsQs.c \
-          initAlphaBeta.c \
-          initAlphaBeta2.c \
-          incre_initAlphaBeta2.c \
-          project.c \
-          project0.c \
-          increproject0.c \
-          increproject.c \
-          restart.c \
-          restart2.c \
-          write_data.c \
-          write_data2.c \
-          channel.c \
-          channel_wrap.c
+OBJS = LegendreSetup.o \
+       arrays.o \
+       getMem.o \
+       comp_gradient.o \
+       comp_hess.o \
+       myadjointforce.o \
+       increadjproject0.o \
+       increadjproject.o \
+       mvOps.o \
+       adjproject0.o \
+       adjproject.o \
+       waveNumsAndCFL.o \
+       pass2.o \
+       myforce.o \
+       increBoundary.o \
+       increBoundary_s.o \
+       incre_initAlphaBeta.o \
+       pass1.o \
+       RsQs.o \
+       initAlphaBeta.o \
+       initAlphaBeta2.o \
+       incre_initAlphaBeta2.o \
+       project.o \
+       project0.o \
+       increproject0.o \
+       increproject.o \
+       restart.o \
+       restart2.o \
+       write_data.o \
+       write_data2.o \
+       channel.o \
+       channel_wrap.o
 
-OBJS = $(addsuffix .o,$(basename $(SOURCES)))
+.SECONDARY: $(OBJS)
+
+SOURCESS = $(addsuffix .c,$(basename $(OBJS)))
 
 ######################################################################## 
 # construct exec
@@ -104,7 +100,6 @@ _%.so:  $(OBJS)
 
 %.o: %.c
 	@echo building $<
-	@echo $(PYINC)
 	$(CC) -c $(INCLUDE) $< -o $@ $(PYINC)
 
 %_wrap.c:	%.i
