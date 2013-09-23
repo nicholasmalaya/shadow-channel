@@ -11,9 +11,42 @@ import channel
 #  which we can access in Python through channel.stdout
 #
 # http://docs.python.org/2/library/subprocess.html
+#
+# ------------------------------------------------------------------
+# main function
+# ------------------------------------------------------------------
+#
+# parameters
+#
+# number of pts. 
+Nx=16
+Ny=33
+Nz=16
 
-# will segfault, at present
-# channel.init(16,32,16,1.6,1.6,32,1,0.01,1,5,1069,0)
-channel.init(16,32,16,1.6,1.6,32,1,0.01,1,5,100,0)
+# box size
+Lx=1.6
+Lz=1.6
 
-U = channel.getsoln(0)
+# time step and number of steps
+dt = .01
+nsteps=10
+
+# restart flag: 0 for no restart
+restart_flag=0
+
+# mpg (mean pressure gradient)
+mpg=2
+
+# reynolds number
+Re=32
+
+# run up (or spin up) time
+rut=1
+
+# number of time chunks
+nchunk=5
+
+# invoke init
+channel.init(Nx,Ny,Nz,Lx,Lz,Re,mpg,dt,rut,nchunk,nsteps,restart_flag)
+
+#U = channel.getsoln(0)
