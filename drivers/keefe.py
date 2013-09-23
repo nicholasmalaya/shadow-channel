@@ -29,7 +29,7 @@ Lz=1.6
 
 # time step and number of steps
 dt = .01
-nsteps=10
+nsteps=1
 
 # restart flag: 0 for no restart
 restart_flag=0
@@ -41,12 +41,19 @@ mpg=2
 Re=32
 
 # run up (or spin up) time
-rut=1
+rut=100
 
 # number of time chunks
-nchunk=5
+nchunk=1
 
 # invoke init
 channel.init(Nx,Ny,Nz,Lx,Lz,Re,mpg,dt,rut,nchunk,nsteps,restart_flag)
 
+#
+# postprocess
+#
+#
+# void getsoln(int i_step, mcomplex ** MC_ptr,
+#              int * Nz_ptr, int * Nvar_ptr, int * Ny_ptr, int * Nx_ptr);
+# 
 U = channel.getsoln(0)
