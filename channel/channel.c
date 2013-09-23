@@ -200,7 +200,7 @@ void destroy(int status)
 ****************************************************************/
 
 int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
-         double _mpg, double _dt, double _rut,
+         double _mpg, double _dt, int _rut,
          int _n_chunk, int _nsteps_chunk, int _restart_flag)
 {
   /*****************************Definition of all variables ****************************/
@@ -267,6 +267,7 @@ int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
     int restart_flag;
     int count;
     // int checknum, checkstep;
+    int rut; 
 
     /************************ end of variable definitions ****************/
 
@@ -281,6 +282,7 @@ int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
     nsteps = _n_chunk * _nsteps_chunk;
     mpg = _mpg;
     re = _Re;
+    rut = _rut;
 
     restart_flag = _restart_flag;
 
@@ -479,17 +481,23 @@ int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 
                 increproject(count, dctr, z, 0, n, NULL);
             }
-            memcpy(MC[count][0][0][0], C[0][0][0],
-                   (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
-            memcpy(MIC[count][0][0][0], IC[0][0][0],
-                   (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
-
+	    
+	    //
+	    // only writing after rut steps
+	    // 
+	    if(n > rut)
+	      {
+		memcpy(MC[count][0][0][0], C[0][0][0],
+		       (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+		memcpy(MIC[count][0][0][0], IC[0][0][0],
+		       (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+	      }
         }                       /* end for dctr... */
 
         /* now writing the results to HDF file at selected time steps */
-        if (((n + 1) % 100 == 0) && (n + 1 < nsteps)) {
+        if (((n-rut + 1) % 100 == 0) && (n + 1 < nsteps)) {
             /* when we need to store the current time step results */
-            write_data2(n);
+            write_data2(n-rut);
             // checknum = checknum + 1;
             // count = 0;
             // memcpy(MC[count][0][0][0], C[0][0][0],

@@ -12,7 +12,7 @@ import_array();
 %}
 
 int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
-         double _mpg, double _dt, double _rut,
+         double _mpg, double _dt, int _rut,
          int _n_chunk, int _nsteps_chunk, int _restart_flag);
 
 void destroy(int status);
