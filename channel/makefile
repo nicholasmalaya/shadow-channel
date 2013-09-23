@@ -95,7 +95,7 @@ clean:
 
 ## build library ## 
 _%.so:  $(OBJS)
-#	$(CC) $(INCLUDE) $(OBJS) -o  $@ $(LIBS) 
+#	$(CC) $(INCLUDE) $(OBJS) -o $@ $(LIBS) 
 	$(LD) $^ $(INCLUDE) -o $@ $(LIBS) 
 
 %.o: %.c

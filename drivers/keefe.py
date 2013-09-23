@@ -49,4 +49,4 @@ nchunk=5
 # invoke init
 channel.init(Nx,Ny,Nz,Lx,Lz,Re,mpg,dt,rut,nchunk,nsteps,restart_flag)
 
-#U = channel.getsoln(0)
+U = channel.getsoln(0)
