@@ -21,7 +21,16 @@ HDFINC =-I$(HDF5_DIR)/include
 
 PYINC = $(shell python-config --includes)
 
-CC     = gcc -g -O3 -finline-functions
+ifeq ($(LBITS),64)
+    # do 64 bit stuff here, like set some CFLAGS
+    CFLAGS_FPIC = -fPIC
+else
+    # do 32 bit stuff here
+    CFLAGS_FPIC =
+endif
+
+CC     = gcc
+CFLAGS = -O3 $(CFLAGS_FPIC) -fPIC
 LD     = ld -shared
 endif
 ######################################################################## 
@@ -100,7 +109,7 @@ _%.so:  $(OBJS)
 
 %.o: %.c
 	@echo building $<
-	$(CC) -c $(INCLUDE) $< -o $@ $(PYINC)
+	$(CC) $(CFLAGS) -c $(INCLUDE) $< -o $@ $(PYINC)
 
 %_wrap.c:	%.i
 	@echo building $<
