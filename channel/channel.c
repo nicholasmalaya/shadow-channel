@@ -4,6 +4,7 @@ main code used to solve State, incremental state, adjoint and incremental adjoin
 update: 03/09, working on checking the accuracy of new rk scheme for state equations.
 **********************************************************************/
 
+#include <assert.h>
 #include "main.h"
 #include "channel.h"
 #include "hdf5.h"
