@@ -428,7 +428,7 @@ int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
             count = count + 1;
 
 	    //
-	    // only writing after rut steps
+	    // only saving/writing after rut steps
 	    // 
 	    if(n << rut)
 	      {
