@@ -418,13 +418,22 @@ int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 
 
     /***************solving state and incremental state equations ****/
+    //nsteps = nsteps + rut;
 
     /* time step for forward problem */
-    for (n = restart_flag; n < nsteps; ++n) {   /* loop for each timestep */
-        printf("Step %d/%d\n", n, nsteps);
+    for (n = restart_flag; n < nsteps+rut; ++n) {   /* loop for each timestep */
+        printf("Step %d/%d\n", n, nsteps+rut);
         for (dctr = 0; dctr < 3; ++dctr) {      /* RK steps */
 
             count = count + 1;
+
+	    //
+	    // only writing after rut steps
+	    // 
+	    if(n << rut)
+	      {
+		count = 0;
+	      }
 
             /* copy the result to Uxbt, Uzbt. Uxb and Uzb will be used
                later for boundary condition of current time stage */
@@ -443,14 +452,14 @@ int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
              */
             if (pass1(dctr, n) != NO_ERR) {
                 printf("Pass1 failure\n");
-                n = nsteps;
+                n = nsteps+rut;
                 break;
             }
 
-            project0(count, dctr, n, NULL);     /* (kx, kz)=(0, 0),
-                                                   solve for a, b */
-            project(count, n, dctr, 0, 1, NULL);   /* (kx, kz)!=(0, 0),
-                                                      solve for alpha, beta */
+	    project0(count, dctr, n, NULL);     /* (kx, kz)=(0, 0),
+						   solve for a, b */
+	    project(count, n, dctr, 0, 1, NULL);   /* (kx, kz)!=(0, 0),
+						      solve for alpha, beta */
             for (z = 1; z < Nz; ++z) {
                 if (z == Nz / 2) {
                     memset(U[z][0][0], 0,
@@ -465,7 +474,7 @@ int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
               solution of state equation */
             if (increBoundary() != NO_ERR) {
                 printf("increBoundary failure\n");
-                n = nsteps;
+                n = nsteps+rut;
                 break;
             }
 
@@ -481,23 +490,18 @@ int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 
                 increproject(count, dctr, z, 0, n, NULL);
             }
-	    
-	    //
-	    // only writing after rut steps
-	    // 
-	    if(n > rut)
-	      {
-		memcpy(MC[count][0][0][0], C[0][0][0],
-		       (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
-		memcpy(MIC[count][0][0][0], IC[0][0][0],
-		       (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
-	      }
+
+	    memcpy(MC[count][0][0][0], C[0][0][0],
+		   (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+	    memcpy(MIC[count][0][0][0], IC[0][0][0],
+		   (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+
         }                       /* end for dctr... */
 
         /* now writing the results to HDF file at selected time steps */
-        if (((n-rut + 1) % 100 == 0) && (n + 1 < nsteps)) {
+        if (((n + 1) % 100 == 0) && (n + 1 < nsteps)) {
             /* when we need to store the current time step results */
-            write_data2(n-rut);
+            write_data2(n);
             // checknum = checknum + 1;
             // count = 0;
             // memcpy(MC[count][0][0][0], C[0][0][0],
