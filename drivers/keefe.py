@@ -29,7 +29,7 @@ Lz=1.6
 
 # time step and number of steps
 dt = .01
-nsteps=1
+nsteps=101
 
 # restart flag: 0 for no restart
 restart_flag=0
@@ -41,7 +41,7 @@ mpg=2
 Re=32
 
 # run up (or spin up) time
-rut=100
+rut=1
 
 # number of time chunks
 nchunk=1

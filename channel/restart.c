@@ -41,10 +41,10 @@ void restart(int restart_flag)
     complex_t IMatrix3[qpts][Nz][Nx / 2];       // find the restart file 
 
 
-    sprintf(filename, "data_t=%d", restart_flag);
+    sprintf(filename, "data_t=%d.h5", restart_flag);
 
     // open the file and dataset 
-    file_id1 = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+    file_id1  = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
     dataset_u = H5Dopen1(file_id1, "/data_u");
     dataset_v = H5Dopen1(file_id1, "/data_v");
     dataset_w = H5Dopen1(file_id1, "/data_w");

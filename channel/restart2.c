@@ -38,7 +38,7 @@ void restart2(int restart_flag)
     complex_t IMatrix2[dimR][Nz][Nx / 2];
 
 
-    sprintf(filename, "data_t=%d", restart_flag);
+    sprintf(filename, "data_t=%d.h5", restart_flag);
 
     // open the file and dataset 
     file_id1 = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);

@@ -57,7 +57,7 @@ int write_data2(int n)
         }
     }
 
-    sprintf(filename, "data_t=%d", n + 1);
+    sprintf(filename, "data_t=%d.h5", n + 1);
 
     /* create File data.h5 for three data sets */
     file_id1 =
