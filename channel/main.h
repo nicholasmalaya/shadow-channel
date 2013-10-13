@@ -44,6 +44,10 @@ void increadjproject0(int k, int n, int count, func_force_t force);
 void increadjproject(int n, int k, int z, int x0, int count,
                      func_force_t force);
 
+
+FILE *fp, *fp2;
+FILE *fp3, *fp4, *fp5, *fp6, *fp7, *fp8, *fp9, *fp10, *fp11;
+
 int pass1(int dctr, int n);
 int pass2(int dctr, int n);
 int increBoundary();
@@ -75,6 +79,8 @@ int qpts,                       /* 3Ny/2, Ny specified by user */
  dimQ,                          /* Ny-4.  # of cols of matrix Q(i,j) = (1-y(i)^2)^2 P_j(y(i)) */
  Nx,                            /* specified by user */
  Nz;                            /* specified by user */
+
+int nums; 
 
 int nsteps;                     /* total number of time steps */
 
@@ -175,7 +181,7 @@ mcomplex **GIUxb, **GIUzb;
 mcomplex **HUxb, **HUzb;
 mcomplex **HAUxb, **HAUzb;
 mcomplex **AUxb, **AUzb;
-mcomplex **grad, **hess;
+mcomplex **grad, **hess, ishear;
 fftw_plan pf1,                  /* complex to complex backward transform */
  pf2;                           /* complex to complex forward transform */
 rfftwnd_plan pr1,               /* complex to real transform */
@@ -188,5 +194,8 @@ fftw_plan Ipf1,                 /* complex to complex backward transform */
 mcomplex ****MU, ****MIU;       /* variables used to store manufacture solutions */
 fftw_complex ***CT;             /* 9-by-(3Nz/2)-by-(3*Nx/4+1).  For Fourier transforms. */
 fftw_complex ***ICT;            /* 9-by-(3Nz/2)-by-(3*Nx/4+1).  For Fourier transforms in the incremental system. */
+
+double tau, itau, maxtstep, atau, iatau;
+double **uu, **us;
 
 #endif

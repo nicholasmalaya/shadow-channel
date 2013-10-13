@@ -8,7 +8,11 @@ update: 03/09, working on checking the accuracy of new rk scheme for state equat
 #include "main.h"
 #include "channel.h"
 #include "hdf5.h"
-#include <assert.h>
+#include "mcomplex.h"
+
+#include "minChnl.h"
+#include "mvOps.h"
+
 
 // convertin main() to init() function
 //
@@ -93,6 +97,8 @@ void destroy(int status)
     extern mcomplex ****MU, ****MIU;    /* variables used to store
                                            manufacture solutions */
     extern mcomplex ****LU, ****LIU;
+
+    mcomplex tmp;
 
     if (status & DESTROY_STATUS_FFTW)
     {
@@ -268,6 +274,7 @@ int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
     int count;
     // int checknum, checkstep;
     int rut; 
+    int i;
 
     /************************ end of variable definitions ****************/
 
@@ -402,14 +409,25 @@ int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
     /******************************end of initialization part ***************/
 
     /******************restart check ******************************/
-    if (restart_flag != 0) {
+    if (restart_flag != 0) 
+      {
         restart2(restart_flag);
-    }
+      }
+    else // provide laminar solution
+      {       // NZ by 2 by ny by nx
+	      //  0 by 2 by ny by 0 
+	for(i = 0; i< Ny-2; i++)
+	  {
+	    Re( C[0][0][i][0])  = (1-(double)(i*i)/Lx);
+	    Re(MC[0][0][0][i][0]) = (1-(double)(i*i)/Lx);
+	  }
+      }
 
     /**********************************end of restart **********************/
 
     /* store current Fourier coefficient into MC and MIC
        used for solving the adjoint system. */
+    // destination // source
     memcpy(MC[0][0][0][0], C[0][0][0],
            (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
     memcpy(MIC[0][0][0][0], IC[0][0][0],
@@ -430,9 +448,9 @@ int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 	    //
 	    // only saving/writing after rut steps
 	    // 
-	    if(n << rut)
+ 	    if(n << rut)
 	      {
-		count = 0;
+	    	count = 0;
 	      }
 
             /* copy the result to Uxbt, Uzbt. Uxb and Uzb will be used
@@ -443,7 +461,6 @@ int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
                    (Nz) * (Nx / 2) * sizeof(fftw_complex));
             memset(Uxb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
             memset(Uzb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
-
 
             /* do FFTs to get H_hats.  After this we have for each (Kx,y,Kz)
                Hx_hat   -->  U[z][HXEL][y][x]
@@ -498,8 +515,10 @@ int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 
         }                       /* end for dctr... */
 
+	comp_stat(n);
+
         /* now writing the results to HDF file at selected time steps */
-        if (((n + 1) % 100 == 0) && (n + 1 < nsteps)) {
+        if (((n + 1) % 10000 == 0) && (n + 1 < nsteps)) {
             /* when we need to store the current time step results */
             write_data2(n);
             // checknum = checknum + 1;
