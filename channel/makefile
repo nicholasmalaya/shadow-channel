@@ -74,6 +74,7 @@ OBJS = LegendreSetup.o \
        project.o \
        project0.o \
        increproject0.o \
+       comp_stat.o \
        increproject.o \
        restart.o \
        restart2.o \
