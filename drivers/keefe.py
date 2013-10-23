@@ -56,4 +56,4 @@ channel.init(Nx,Ny,Nz,Lx,Lz,Re,mpg,dt,ru_steps,nchunk,nsteps,restart_flag)
 # void getsoln(int i_step, mcomplex ** MC_ptr,
 #              int * Nz_ptr, int * Nvar_ptr, int * Ny_ptr, int * Nx_ptr);
 # 
-U = channel.getsoln(0)
+U = channel.getsoln(100)

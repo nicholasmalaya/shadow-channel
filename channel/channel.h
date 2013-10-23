@@ -12,4 +12,7 @@ void destroy(int status);
 void getsoln(int i_step, mcomplex ** MC_ptr,
              int * Nz_ptr, int * Nvar_ptr, int * Ny_ptr, int * Nx_ptr);
 
+void getsoln(int i_step, mcomplex ** MC_ptr,
+             int * Nz_ptr, int * Nvar_ptr, int * Ny_ptr, int * Nx_ptr);
+
 #endif
