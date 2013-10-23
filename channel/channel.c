@@ -271,6 +271,7 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 	// int checknum, checkstep;
 	int ru_steps;
 	int i;
+    double **us;
 
     /************************ end of variable definitions ****************/
 
@@ -363,6 +364,9 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 			| DESTROY_STATUS_FFTW);
 		return (EXIT_FAILURE);
 	}
+
+    /* statistics */
+    us = dMatrix(20, qpts);
 
 	/* initalize part */
 	memset(C[0][0][0], 0,
