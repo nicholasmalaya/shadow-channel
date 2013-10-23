@@ -480,10 +480,12 @@ int LegendreSetup(void)
 
     memcpy(Qy, y, qpts * sizeof(double));
 
+    /*
     printf("the Quadrature points are: \n");
     for (i = 0; i < qpts; ++i) {
         printf(" %f\n", Qy[i]);
     }
+    */
 
     /* Compute quadrature weights and create the matrices */
     Qweights(qpts, y, w, Legendre);

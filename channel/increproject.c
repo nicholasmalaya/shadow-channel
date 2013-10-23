@@ -13,7 +13,7 @@ New piece of code used to solve the linear system for (kx, kx)!=(0,0)
 #include "mvOps.h"
 
 /* project when (Kx,Kz) != (0,0) */
-void increproject(int count, int k, int z, int x0, int n,
+void increproject(int k, int z, int x0, int n,
                   func_force_t force)
 {
 
@@ -377,6 +377,7 @@ void increproject(int count, int k, int z, int x0, int n,
     }
 
 
+    /*
     for (i = 0; i < dimQ; i++) {
         for (x = x0; x < Nx / 2; x++) {
             Re(MIC[count][z][ALPHA][i][x]) = Re(IC[z][ALPHA][i][x]);
@@ -389,6 +390,7 @@ void increproject(int count, int k, int z, int x0, int n,
             Im(MIC[count][z][BETA][i][x]) = Im(IC[z][BETA][i][x]);
         }
     }
+    */
     /* UPDATE RHS FOR NEXT TIME */
     if (k != 2) {               /* not last step */
         /* first alphas */

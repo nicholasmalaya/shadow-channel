@@ -28,7 +28,7 @@ Lx=1.6
 Lz=1.6
 
 # time step and number of steps
-dt = .01
+dt = .0005
 nsteps=101
 
 # restart flag: 0 for no restart
@@ -41,13 +41,13 @@ mpg=2
 Re=32
 
 # run up (or spin up) time
-rut=1
+ru_steps = 1
 
 # number of time chunks
 nchunk=1
 
 # invoke init
-channel.init(Nx,Ny,Nz,Lx,Lz,Re,mpg,dt,rut,nchunk,nsteps,restart_flag)
+channel.init(Nx,Ny,Nz,Lx,Lz,Re,mpg,dt,ru_steps,nchunk,nsteps,restart_flag)
 
 #
 # postprocess
