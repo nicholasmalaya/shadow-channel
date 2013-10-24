@@ -25,3 +25,13 @@ void destroy(int status);
 
 void getsoln(int i_step, mcomplex ** MC_ptr,
              int * Nz_ptr, int * Nvar_ptr, int * Ny_ptr, int * Nx_ptr);
+
+%apply (mcomplex * IN_ARRAY4, int DIM1, int DIM2, int DIM3, int DIM4)
+      {(mcomplex * C, int Nz_dup, int Nvar_dup, int Ny_dup, int Nx_dup)}
+%apply (double ** ARGOUTVIEW_ARRAY2, int * DIM1, int * DIM2)
+      {(double ** us_ptr, int * nstats_ptr, int * qpts_ptr)}
+
+void statistics(mcomplex * C,
+             int Nz_dup, int Nvar_dup, int Ny_dup, int Nx_dup,
+             double ** us_ptr, int * nstats_ptr, int * qpts_ptr);
+

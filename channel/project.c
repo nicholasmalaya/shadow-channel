@@ -21,7 +21,7 @@ acknowledgement of the original source.
 #include "mvOps.h"
 
 /* project when (Kx,Kz) != (0,0) */
-void project(int count, int n, int k, int z, int x0, func_force_t force)
+void project(int n, int k, int z, int x0, func_force_t force)
 {
     /* External Variables */
     extern int qpts, dimR, dimQ, Nx;
@@ -211,6 +211,7 @@ void project(int count, int n, int k, int z, int x0, func_force_t force)
     bsolve(M, C[z][BETA], RSDIAG - 1, RSDIAG - 1, dimR, Nx / 2, x0);
 
 
+    /*
     for (i = 0; i < dimQ; i++) {
         for (x = x0; x < Nx / 2; x++) {
             Re(MC[count][z][ALPHA][i][x]) = Re(C[z][ALPHA][i][x]);
@@ -223,6 +224,7 @@ void project(int count, int n, int k, int z, int x0, func_force_t force)
             Im(MC[count][z][BETA][i][x]) = Im(C[z][BETA][i][x]);
         }
     }
+    */
 
     /* NOW COMPUTE U HATS */
     /* v = uy_hat. */

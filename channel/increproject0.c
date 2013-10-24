@@ -11,7 +11,7 @@ as the state equation.
 
 /* note for myself: need a new mpg for the incremental state solution */
 
-void increproject0(int count, int k, int n, int flag, func_force_t force)
+void increproject0(int k, int n, int flag, func_force_t force)
 {
 
     /* External Variables */
@@ -266,12 +266,14 @@ void increproject0(int count, int k, int n, int flag, func_force_t force)
         Im(IU[0][DZEL][i][0]) += -Im(Uzb[0][0]) / 2.;
     }
 
+    /*
     for (i = 0; i < dimR; i++) {
         Re(MIC[count][0][ALPHA][i][0]) = Re(IC[0][ALPHA][i][0]);
         Im(MIC[count][0][ALPHA][i][0]) = Im(IC[0][ALPHA][i][0]);
         Re(MIC[count][0][BETA][i][0]) = Re(IC[0][BETA][i][0]);
         Im(MIC[count][0][BETA][i][0]) = Im(IC[0][BETA][i][0]);
     }
+    */
 
     /* UPDATE RHS FOR NEXT TIME */
     if (k != 2) {               /* not last step */

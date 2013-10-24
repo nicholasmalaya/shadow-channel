@@ -32,14 +32,14 @@ int LegendreSetup(void);
 int waveNums(int x, int z, double Lx, double Lz);
 int cflVars(double Lx, double Lz);
 int getMem(void);
-void project0(int count, int k, int n, func_force_t force);
-void project(int count, int n, int k, int z, int x0, func_force_t force);
+void project0(int k, int n, func_force_t force);
+void project(int n, int k, int z, int x0, func_force_t force);
 void adjproject(int n, int k, int z, int x0, int count,
                 func_force_t force);
 void adjproject0(int k, int n, int count, func_force_t force);
-void increproject(int count, int k, int z, int x0, int n,
+void increproject(int k, int z, int x0, int n,
                   func_force_t force);
-void increproject0(int count, int k, int n, int flag, func_force_t force);
+void increproject0(int k, int n, int flag, func_force_t force);
 void increadjproject0(int k, int n, int count, func_force_t force);
 void increadjproject(int n, int k, int z, int x0, int count,
                      func_force_t force);
@@ -71,6 +71,7 @@ int write_data2(int n);
 int write_data(int n);
 int comp_gradient(int n, int k);
 int comp_hess(int n, int k);
+int comp_stats(double **us);
 
 /* External Variables */
 

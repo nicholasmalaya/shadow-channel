@@ -131,8 +131,8 @@ int pass1(int dctr, int n)
             }
             CFL *= dt;
             if (CFL >= CFL_MAX) {
-                printf("Pass1:  CFL[%d]:%e.  CFL condition violated.\n",
-                       y, CFL);
+                printf("Pass1:  CFL[%d]:%e, dt:%e.  CFL condition violated.\n",
+                       y, CFL, dt);
                 return (ERROR);
             }
         }

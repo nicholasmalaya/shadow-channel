@@ -28,8 +28,8 @@ Lx=1.6
 Lz=1.6
 
 # time step and number of steps
-dt = .01
-nsteps=101
+dt = .0005
+nsteps=10
 
 # restart flag: 0 for no restart
 restart_flag=0
@@ -41,13 +41,13 @@ mpg=2
 Re=32
 
 # run up (or spin up) time
-rut=1
+ru_steps = 0
 
 # number of time chunks
 nchunk=1
 
 # invoke init
-channel.init(Nx,Ny,Nz,Lx,Lz,Re,mpg,dt,rut,nchunk,nsteps,restart_flag)
+channel.init(Nx,Ny,Nz,Lx,Lz,Re,mpg,dt,ru_steps,nchunk,nsteps,restart_flag)
 
 #
 # postprocess
@@ -56,4 +56,17 @@ channel.init(Nx,Ny,Nz,Lx,Lz,Re,mpg,dt,rut,nchunk,nsteps,restart_flag)
 # void getsoln(int i_step, mcomplex ** MC_ptr,
 #              int * Nz_ptr, int * Nvar_ptr, int * Ny_ptr, int * Nx_ptr);
 # 
-U = channel.getsoln(0)
+for i in range(nsteps + 1):
+    C = channel.getsoln(i)
+    stats = channel.statistics(C)
+    # us[0][y] = u1;
+    # us[1][y] = u2;
+    # us[2][y] = u3;
+    # us[3][y] = u1u2;
+    # us[4][y] = u1u3;
+    # us[5][y] = u2u3;
+    # us[12][y] = u1u1;
+    # us[13][y] = u2u2;
+    # us[14][y] = u3u3;
+    # us[18][y] = u1y;
+    plot(stats[0])
