@@ -271,7 +271,6 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 	// int checknum, checkstep;
 	int ru_steps;
 	int i;
-    double **us;
 
     /************************ end of variable definitions ****************/
 
@@ -364,9 +363,6 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 			| DESTROY_STATUS_FFTW);
 		return (EXIT_FAILURE);
 	}
-
-    /* statistics */
-    us = dMatrix(20, qpts);
 
 	/* initalize part */
 	memset(C[0][0][0], 0,
@@ -495,8 +491,6 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 
 		}		/* end for dctr... */
 
-		comp_stat(us);
-
 		/* now writing the results to HDF file at selected time steps */
 		if (((n + 1) % 10000 == 0) || (n + 1 == nsteps + ru_steps)) {
 			/* when we need to store the current time step results */
@@ -531,4 +525,37 @@ getsoln(int i_step, mcomplex ** MC_ptr,
 	(*Nvar_ptr) = 2;
 	(*Ny_ptr) = dimR;
 	(*Nx_ptr) = Nx / 2;
+}
+
+/***************************************************************
+*                                                              *
+*                       STATISTICS FUNCTION                    *
+*                                                              *
+****************************************************************/
+
+void statistics(mcomplex * C_ptr,
+             int Nz_dup, int Nvar_dup, int Ny_dup, int Nx_dup,
+             double ** us_ptr, int * nstats_ptr, int * qpts_ptr)
+{
+    int z;
+    double ** us;
+
+    /* copy C_ptr to C */
+    assert(Nx_dup == Nx / 2);
+    assert(Ny_dup == dimR);
+    assert(Nz_dup == Nz);
+    assert(Nvar_dup == 2);
+    memcpy(C[0][0][0], C_ptr, Nz * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+
+    /* Compute U from C */
+    initAlphaBeta2();
+
+    /* comptute statistics */
+    us = dMatrix(20, qpts);     // memory leak here, not much though
+	comp_stat(us);
+
+    /* set return variables */
+    *us_ptr = us[0];
+    *nstats_ptr = 20;
+    *qpts_ptr = qpts;
 }
