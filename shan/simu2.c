@@ -83,7 +83,7 @@ int main(int argc, char **argv)
    itau=0;
     if (argc != 11)
     {
-	printf("Required arguments are Nx,Ny,Nz,Lx,Lz,dt,tsteps,mpg,Re.\n");
+	printf("Required arguments are Nx,Ny,Nz,Lx,Lz,dt,tsteps,mpg,Re., Restart flag\n");
 	return(EXIT_FAILURE);
     }
 
@@ -110,8 +110,9 @@ int main(int argc, char **argv)
                                  /* functions v_hat, g_hat, U, W */
 				 /* (see page 5 of Moser's notes). */
     sizeRealTransform = 3*Nx/2;  /* for the FFTs */
-    // printf("Re=%f\n", re);
-
+    printf("Re=%f\n", re);
+    printf("dt=%f\n", dt);
+    printf("tsteps=%i\n", tsteps);
 
     //assert((Nx%4==0)&&(Nz%2==0));
 
@@ -404,7 +405,7 @@ int main(int argc, char **argv)
       }
 
     fclose(fp); fclose(fp2); fclose(fp11);
-  fclose(fp3);    fclose(fp4);     fclose(fp5);     fclose(fp6);
+    fclose(fp3);    fclose(fp4);     fclose(fp5);     fclose(fp6);
     fclose(fp7);  fclose(fp8);  fclose(fp9);  fclose(fp10);
 
     /* clean up... */
