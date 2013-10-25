@@ -59,14 +59,15 @@ channel.init(Nx,Ny,Nz,Lx,Lz,Re,mpg,dt,ru_steps,nchunk,nsteps,restart_flag)
 for i in range(nsteps + 1):
     C = channel.getsoln(i)
     stats = channel.statistics(C)
-    # us[0][y] = u1;
-    # us[1][y] = u2;
-    # us[2][y] = u3;
-    # us[3][y] = u1u2;
-    # us[4][y] = u1u3;
-    # us[5][y] = u2u3;
-    # us[12][y] = u1u1;
-    # us[13][y] = u2u2;
-    # us[14][y] = u3u3;
-    # us[18][y] = u1y;
-    plot(stats[0])
+    # us[0][y] = Qy[y];
+    # us[1+0][y] = u1;
+    # us[1+1][y] = u2;
+    # us[1+2][y] = u3;
+    # us[1+3][y] = u1u2;
+    # us[1+4][y] = u1u3;
+    # us[1+5][y] = u2u3;
+    # us[1+12][y] = u1u1;
+    # us[1+13][y] = u2u2;
+    # us[1+14][y] = u3u3;
+    # us[1+18][y] = u1y;
+    plot(stats[0], stats[1])
