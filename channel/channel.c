@@ -5,6 +5,7 @@ update: 03/09, working on checking the accuracy of new rk scheme for state equat
 **********************************************************************/
 
 #include <assert.h>
+#include <stdlib.h>
 #include "main.h"
 #include "channel.h"
 #include "hdf5.h"
@@ -397,12 +398,17 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
     /******************restart check ******************************/
     if (restart_flag != 0) {
         restart2(restart_flag);
-    } else            // provide laminar solution
+    } else            // provide laminar solution with perturbations
     {
         memset(U[0][0][0], 0, Nz * 5 * qpts * Nx / 2 * sizeof(mcomplex));
         for (i = 0; i < qpts; i++) {
             Re(U[0][XEL][i][0]) = 1.0 - Qy[i] * Qy[i];
             Im(U[0][XEL][i][0]) = 0.0;
+        }
+        // perturbation
+        for (i = 0; i < qpts; i++) {
+            Re(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5) * 1E-1;
+            Im(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5) * 1E-1;
         }
         initAlphaBeta();
     }
@@ -421,7 +427,9 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 
     /* time step for forward problem */
     for (n = restart_flag; n < nsteps + ru_steps; ++n) {
-        printf("Step %d/%d\n", n, nsteps + ru_steps);
+        if (n % 100 == 0) {
+            printf("Step %d/%d\n", n, nsteps + ru_steps);
+        }
         for (dctr = 0; dctr < 3; ++dctr) {    /* RK steps */
 
             /* copy the result to Uxbt, Uzbt. Uxb and Uzb will be used
