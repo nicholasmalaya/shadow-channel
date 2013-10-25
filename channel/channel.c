@@ -294,7 +294,7 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
            "%d %d %d %f  |  %f %f %d %d  |  %f %f %d\n",
            Nx, Ny, Nz, Lx, Lz, dt, nsteps, ru_steps, mpg, re, restart_flag);
 
-    re = 1. / re;        /* time step routines assume I pass 1/Re */
+    re = 1. / re;         /* time step routines assume I pass 1/Re */
     qpts = 3 * Ny / 2;    /* number of quadrature points 
                    (see page 9 of Moser's notes) */
     dimR = Ny - 2;        /* dimR and dimQ denote the number of terms */

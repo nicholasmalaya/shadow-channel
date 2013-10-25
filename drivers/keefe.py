@@ -8,6 +8,9 @@ import sys
 sys.path.append("../channel/")
 import channel 
 
+# for plotting
+import pylab as pl
+
 # try subprocess to 
 # redirect all the screen outputs in C  to a buffer
 #  which we can access in Python through channel.stdout
@@ -29,27 +32,32 @@ Nz=16
 Lx=1.6
 Lz=1.6
 
-# time step and number of steps
+# time step
 dt = .005
+
+# run up (or spin up) time
+ru_steps = 100
+
+# steps
 nsteps=100
 
 # restart flag: look for the largest steps in the currect directory
 restart_flag = 0
-for fname in os.listdir('.'):
-    if fname.startswith('data_t=') and fname.endswith('.h5'):
-        n = int(fname[len('data_t='):-len('.h5')])
-        restart_flag = max(n, restart_flag)
+#for fname in os.listdir('.'):
+#    if fname.startswith('data_t=') and fname.endswith('.h5'):
+#        n = int(fname[len('data_t='):-len('.h5')])
+#        restart_flag = max(n, restart_flag)
 
 print('restart from ', restart_flag)
 
 # mpg (mean pressure gradient)
-mpg=2
+#mpg=200.
+mpg=.000
+#mpg=1.56
 
 # reynolds number
-Re=32
-
-# run up (or spin up) time
-ru_steps = 0
+Re=20
+#Re=1069.
 
 # number of time chunks
 nchunk=1
@@ -64,18 +72,24 @@ channel.init(Nx,Ny,Nz,Lx,Lz,Re,mpg,dt,ru_steps,nchunk,nsteps,restart_flag)
 # void getsoln(int i_step, mcomplex ** MC_ptr,
 #              int * Nz_ptr, int * Nvar_ptr, int * Ny_ptr, int * Nx_ptr);
 # 
-for i in range(nsteps + 1):
-    C = channel.getsoln(i)
-    stats = channel.statistics(C)
-    # us[0][y] = Qy[y];
-    # us[1+0][y] = u1;
-    # us[1+1][y] = u2;
-    # us[1+2][y] = u3;
-    # us[1+3][y] = u1u2;
-    # us[1+4][y] = u1u3;
-    # us[1+5][y] = u2u3;
-    # us[1+12][y] = u1u1;
-    # us[1+13][y] = u2u2;
-    # us[1+14][y] = u3u3;
-    # us[1+18][y] = u1y;
-    plot(stats[0], stats[1])
+# for i in range(nsteps + 1):
+#     C = channel.getsoln(i)
+#     stats = channel.statistics(C)
+#     # us[0][y] = Qy[y];
+#     # us[1+0][y] = u1;
+#     # us[1+1][y] = u2;
+#     # us[1+2][y] = u3;
+#     # us[1+3][y] = u1u2;
+#     # us[1+4][y] = u1u3;
+#     # us[1+5][y] = u2u3;
+#     # us[1+12][y] = u1u1;
+#     # us[1+13][y] = u2u2;
+#     # us[1+14][y] = u3u3;
+#     # us[1+18][y] = u1y;
+#     pl.plot(stats[0], stats[1])
+#     pl.show()
+
+C = channel.getsoln(nsteps)
+stats = channel.statistics(C)
+pl.plot(stats[0], stats[1],'o-')
+pl.show()

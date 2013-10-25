@@ -23,7 +23,7 @@ void project0(int k, int n, func_force_t force)
 {
     /* External Variables */
     extern int qpts, dimR, Nz, Nx;
-    extern double dt, re, mpg, flux;
+    extern double dt, re, flux;
     extern mcomplex *fa, *fb, *tm;
     extern double **R, **Rp, **Rw, **Rs, **Rps, *Rp0;
     extern double **MZ;
@@ -158,7 +158,7 @@ void project0(int k, int n, func_force_t force)
             flux_t += Rw[i][j] * Re(C[0][ALPHA][i][0]);
         }
     }
-    //  printf("flux_t=%f\n", flux_t);
+    printf("flux_t=%f\n", flux_t);
 
     flux_t = flux - flux_t;
 

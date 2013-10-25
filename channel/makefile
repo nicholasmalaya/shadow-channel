@@ -54,7 +54,6 @@ OBJS = LegendreSetup.o \
        getMem.o \
        comp_gradient.o \
        comp_hess.o \
-       myadjointforce.o \
        increadjproject0.o \
        increadjproject.o \
        mvOps.o \
@@ -62,7 +61,6 @@ OBJS = LegendreSetup.o \
        adjproject.o \
        waveNumsAndCFL.o \
        pass2.o \
-       myforce.o \
        increBoundary.o \
        increBoundary_s.o \
        incre_initAlphaBeta.o \
