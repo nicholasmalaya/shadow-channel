@@ -2,7 +2,9 @@
 #
 # run the channel and create plots comparable to keefe (92)
 #
+import os
 import sys
+
 sys.path.append("../channel/")
 import channel 
 
@@ -31,8 +33,14 @@ Lz=1.6
 dt = .005
 nsteps=100
 
-# restart flag: 0 for no restart
-restart_flag=0
+# restart flag: look for the largest steps in the currect directory
+restart_flag = 0
+for fname in os.listdir('.'):
+    if fname.startswith('data_t=') and fname.endswith('.h5'):
+        n = int(fname[len('data_t='):-len('.h5')])
+        restart_flag = max(n, restart_flag)
+
+print('restart from ', restart_flag)
 
 # mpg (mean pressure gradient)
 mpg=2
@@ -41,7 +49,7 @@ mpg=2
 Re=32
 
 # run up (or spin up) time
-ru_steps = 9900
+ru_steps = 0
 
 # number of time chunks
 nchunk=1
