@@ -158,15 +158,15 @@ void project0(int k, int n, func_force_t force)
             flux_t += Rw[i][j] * Re(C[0][ALPHA][i][0]);
         }
     }
-    printf("flux_t=%f\n", flux_t);
+    // printf("flux_t=%f\n", flux_t);
 
     flux_t = flux - flux_t;
 
-    /* for (j = 0; j < dimR; ++j)
+    for (j = 0; j < dimR; ++j)
        {
        Re(C[0][ALPHA][j][0])= Re(C[0][ALPHA][j][0])+flux_t*Re(add[j]);
        Im(C[0][ALPHA][j][0])= Im(C[0][ALPHA][j][0])+flux_t*Im(add[j]);
-       } */
+    }
 
     for (i = 0; i < qpts; ++i) {
         Re(U[0][XEL][i][0]) = 0.0;

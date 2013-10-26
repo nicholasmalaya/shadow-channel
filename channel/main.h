@@ -87,7 +87,7 @@ int nsteps;                     /* total number of time steps */
 
 double dt,                      /* time step */
  re,                            /* 1/RE, Reynolds number RE specified by user */
- mpg,                           /* mean pressure gradient (used when (Kx,Kz)=(0,0)) */
+ //mpg,                           /* mean pressure gradient (used when (Kx,Kz)=(0,0)) */
  flux,                          /* total mass flux in the domain. */
  cfl1,                          /* constant for cfl computation in x */
  cfl3;                          /* constant for cfl computation in z */

@@ -28,17 +28,17 @@ Lx=1.6
 Lz=1.6
 
 # time step and number of steps
-dt = .005
+dt = .01
 nsteps=100
 
 # restart flag: 0 for no restart
 restart_flag=0
 
-# mpg (mean pressure gradient)
-mpg=2
+# flux (mean pressure gradient)
+flux = 2
 
 # reynolds number
-Re=32
+Re=10000
 
 # run up (or spin up) time
 ru_steps = 9900
@@ -47,4 +47,4 @@ ru_steps = 9900
 nchunk=1
 
 # invoke init
-channel.init(Nx,Ny,Nz,Lx,Lz,Re,mpg,dt,ru_steps,nchunk,nsteps,restart_flag)
+channel.init(Nx,Ny,Nz,Lx,Lz,Re,flux,dt,ru_steps,nchunk,nsteps,restart_flag)

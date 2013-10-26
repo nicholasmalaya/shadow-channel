@@ -33,37 +33,34 @@ Lx=1.6
 Lz=1.6
 
 # time step
-dt = .005
+dt = .01
 
 # run up (or spin up) time
-ru_steps = 100
+ru_steps = 0
 
 # steps
-nsteps=100
+nsteps=10
 
 # restart flag: look for the largest steps in the currect directory
 restart_flag = 0
-#for fname in os.listdir('.'):
-#    if fname.startswith('data_t=') and fname.endswith('.h5'):
-#        n = int(fname[len('data_t='):-len('.h5')])
-#        restart_flag = max(n, restart_flag)
+for fname in os.listdir('.'):
+    if fname.startswith('data_t=') and fname.endswith('.h5'):
+        n = int(fname[len('data_t='):-len('.h5')])
+        restart_flag = max(n, restart_flag)
 
 print('restart from ', restart_flag)
 
-# mpg (mean pressure gradient)
-#mpg=200.
-mpg=.000
-#mpg=1.56
+# flux (mean pressure gradient)
+flux = 2
 
 # reynolds number
-Re=20
-#Re=1069.
+Re=10000
 
 # number of time chunks
 nchunk=1
 
 # invoke init
-channel.init(Nx,Ny,Nz,Lx,Lz,Re,mpg,dt,ru_steps,nchunk,nsteps,restart_flag)
+channel.init(Nx,Ny,Nz,Lx,Lz,Re,flux,dt,ru_steps,nchunk,nsteps,restart_flag)
 
 #
 # postprocess
@@ -72,9 +69,6 @@ channel.init(Nx,Ny,Nz,Lx,Lz,Re,mpg,dt,ru_steps,nchunk,nsteps,restart_flag)
 # void getsoln(int i_step, mcomplex ** MC_ptr,
 #              int * Nz_ptr, int * Nvar_ptr, int * Ny_ptr, int * Nx_ptr);
 # 
-# for i in range(nsteps + 1):
-#     C = channel.getsoln(i)
-#     stats = channel.statistics(C)
 #     # us[0][y] = Qy[y];
 #     # us[1+0][y] = u1;
 #     # us[1+1][y] = u2;
@@ -86,10 +80,15 @@ channel.init(Nx,Ny,Nz,Lx,Lz,Re,mpg,dt,ru_steps,nchunk,nsteps,restart_flag)
 #     # us[1+13][y] = u2u2;
 #     # us[1+14][y] = u3u3;
 #     # us[1+18][y] = u1y;
-#     pl.plot(stats[0], stats[1])
-#     pl.show()
 
-C = channel.getsoln(nsteps)
-stats = channel.statistics(C)
-pl.plot(stats[0], stats[1],'o-')
+for i in range(nsteps + 1):
+    C = channel.getsoln(i)
+    stats = channel.statistics(C)
+    pl.subplot(2,1,1)
+    if i == 0:
+        pl.plot(stats[0], 3./2 * (1 - stats[0]**2), ':')
+    pl.plot(stats[0], stats[1], '.-')
+    pl.subplot(2,1,2)
+    pl.plot(stats[0], sqrt(stats[13] - stats[1]**2), '.-')
+
 pl.show()

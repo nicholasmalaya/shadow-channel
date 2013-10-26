@@ -203,13 +203,13 @@ void destroy(int status)
 
 int
 init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
-     double _mpg, double _dt, int _ru_steps,
+     double _flux, double _dt, int _ru_steps,
      int _n_chunk, int _nsteps_chunk, int _restart_flag)
 {
     /******************** Definition of all variables ********************/
     /* External Variables.  All external variables are defined in main.h */
     extern int qpts, dimR, dimQ, Nx, Nz;
-    extern double dt, re, mpg;
+    extern double dt, re, flux;
 
     extern double *Kx, *Kz, **K2, *cfl2;
     extern double **Q, **Qp, **Qpp, **R, **Rp, **Qw, **Qpw, **Rw, **Qs,
@@ -285,14 +285,14 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 
     nsteps = _n_chunk * _nsteps_chunk;
     ru_steps = _ru_steps;
-    mpg = _mpg;
+    flux = _flux;
     re = _Re;
 
     restart_flag = _restart_flag;
 
-    printf("Nx,Ny,Nz,Lx  |  Lz,dt,nsteps,ru_steps  |  mpg,Re,restart_flag\n"
+    printf("Nx,Ny,Nz,Lx  |  Lz,dt,nsteps,ru_steps  |  flux,Re,restart_flag\n"
            "%d %d %d %f  |  %f %f %d %d  |  %f %f %d\n",
-           Nx, Ny, Nz, Lx, Lz, dt, nsteps, ru_steps, mpg, re, restart_flag);
+           Nx, Ny, Nz, Lx, Lz, dt, nsteps, ru_steps, flux, re, restart_flag);
 
     re = 1. / re;         /* time step routines assume I pass 1/Re */
     qpts = 3 * Ny / 2;    /* number of quadrature points 
@@ -402,13 +402,13 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
     {
         memset(U[0][0][0], 0, Nz * 5 * qpts * Nx / 2 * sizeof(mcomplex));
         for (i = 0; i < qpts; i++) {
-            Re(U[0][XEL][i][0]) = 1.0 - Qy[i] * Qy[i];
+            Re(U[0][XEL][i][0]) = (1.0 - Qy[i] * Qy[i]) * flux * 3./4.;
             Im(U[0][XEL][i][0]) = 0.0;
         }
         // perturbation
         for (i = 0; i < qpts; i++) {
-            Re(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5) * 1E-1;
-            Im(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5) * 1E-1;
+            Re(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
+            Im(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
         }
         initAlphaBeta();
     }
@@ -426,9 +426,9 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
     /***************solving state and incremental state equations ****/
 
     /* time step for forward problem */
-    for (n = restart_flag; n < nsteps + ru_steps; ++n) {
+    for (n = restart_flag; n < restart_flag + nsteps + ru_steps; ++n) {
         if (n % 100 == 0) {
-            printf("Step %d/%d\n", n, nsteps + ru_steps);
+            printf("Step %d/%d\n", n, restart_flag + nsteps + ru_steps);
         }
         for (dctr = 0; dctr < 3; ++dctr) {    /* RK steps */
 
@@ -448,7 +448,7 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
              */
             if (pass1(dctr, n) != NO_ERR) {
                 printf("Pass1 failure\n");
-                n = nsteps + ru_steps;
+                n = restart_flag + nsteps + ru_steps;
                 break;
             }
 
@@ -470,7 +470,7 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
                solution of state equation */
             if (increBoundary() != NO_ERR) {
                 printf("increBoundary failure\n");
-                n = nsteps + ru_steps;
+                n = restart_flag + nsteps + ru_steps;
                 break;
             }
 
@@ -487,21 +487,19 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
                 increproject(dctr, z, 0, n, NULL);
             }
 
-            if (n >= ru_steps) {
-                count = (n - ru_steps) * 3 + dctr + 1;
-
+            count = (n - restart_flag - ru_steps) * 3 + dctr + 1;
+            if (count >= 0) {
                 memcpy(MC[count][0][0][0], C[0][0][0],
-                       (Nz) * 2 * (Ny - 2) * (Nx / 2) *
-                       sizeof(mcomplex));
+                       (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
                 memcpy(MIC[count][0][0][0], IC[0][0][0],
-                       (Nz) * 2 * (Ny - 2) * (Nx / 2) *
-                       sizeof(mcomplex));
+                       (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
             }
 
         }        /* end for dctr... */
 
         /* now writing the results to HDF file at selected time steps */
-        if (((n + 1) % 10000 == 0) || (n + 1 == nsteps + ru_steps)) {
+        if (((n + 1) % 10000 == 0) ||
+                (n + 1 == restart_flag + nsteps + ru_steps)) {
             /* when we need to store the current time step results */
             write_data2(n + 1);
             // checknum = checknum + 1;
