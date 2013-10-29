@@ -558,7 +558,7 @@ void statistics(mcomplex * C_ptr,
     /* Compute U from C */
     initAlphaBeta2();
 
-    /* comptute statistics */
+    /* compute statistics */
     us = dMatrix(21, qpts);     // memory leak here, not much though
     memcpy(us[0], Qy, qpts * sizeof(double));
     comp_stat(us + 1);
