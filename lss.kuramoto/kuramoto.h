@@ -37,7 +37,11 @@ project_ddt(int i_chunk, int i_step, double * v);
 
 void
 init(double c, double * u0, int n_grid, double T0,
-     int n_chunk, double t_chunk, double dt_max);
+     int n_chunk, double t_chunk, double dt_max, int n_proc);
+
+void
+assignJBAR(double Jbar);
+
 void
 tangent(int i_chunk, double * v0, int inhomo);
 
@@ -54,6 +58,7 @@ extern int N_GRID, N_CHUNK, N_STEP;
 extern double C_CONST;
 extern double DT_STEP;
 extern double JBAR;
+extern double T_TOTAL;
 extern double *** SOLN_U;
 extern double *** SOLN_V;
 extern double *** SOLN_W;

@@ -40,7 +40,7 @@ class Wrapper(object):
         for i in range(self.n):
             vip, eta = self.forward(i, v[i], inhomo)
             self.zeta[i] = eta / self.dT
-            wim = self.backward(i, w[i], strength=1.0, inhomo=0)
+            wim = self.backward(i, w[i], strength=0.01, inhomo=0)
             if i < self.n - 1:
                 R_w[i] = v[i+1] - vip
             if i > 0:
@@ -56,7 +56,7 @@ import kuramoto
 u0 = zeros(127)
 u0[64] = 1
 
-kuramoto.c_init(0.5, u0, 500, 2, 50, 0.2);
+kuramoto.c_init(0.5, u0, 500, 25, 4, 0.2, 1);
 
 pde = Wrapper(kuramoto.cvar.N_GRID, kuramoto.cvar.N_CHUNK,
               kuramoto.cvar.DT_STEP * kuramoto.cvar.N_STEP,
@@ -84,8 +84,9 @@ class Callback:
         self.n += 1
         if self.n == 1 or self.n % 10 == 0:
             resnorm = norm(self.pde.matvec(x, 1))
-            print 'iter ', self.n, resnorm
-            self.hist.append([self.n, resnorm])
+            gradient = kuramoto.c_grad()
+            print 'iter ', self.n, resnorm, gradient
+            self.hist.append([self.n, resnorm, gradient])
         sys.stdout.flush()
 
 # --- solve with minres (if cg converges this should converge -#

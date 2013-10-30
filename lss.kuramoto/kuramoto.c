@@ -11,6 +11,7 @@ int N_GRID=0, N_CHUNK=0, N_STEP=0;
 double C_CONST=0;
 double DT_STEP=0;
 double JBAR=0;
+double T_TOTAL=0;
 double *** SOLN_U=0;
 double *** SOLN_V=0;
 double *** SOLN_W=0;
@@ -236,9 +237,8 @@ stepAdjoint(const double * u0, const double * v0, double strength,
 	
 	// Adjoint -- source term from forcing
 	double dJdu[N_GRID];
-	double T1 = N_CHUNK * N_STEP * DT_STEP;
 	ddObj(u0, dJdu);
-	cblas_daxpy(N_GRID, inhomo * dt / T1 , dJdu, 1, w, 1);	
+	cblas_daxpy(N_GRID, inhomo * dt / T_TOTAL , dJdu, 1, w, 1);	
 	
 }
 
@@ -328,7 +328,7 @@ run_up_to_T0(double * u, double T0, double dt_max)
 // The entire primal trajectory is computed and stored after calling this.
 void
 init(double c, double * u0, int n_grid, double T0,
-     int n_chunk, double t_chunk, double dt_max)
+     int n_chunk, double t_chunk, double dt_max, int n_proc)
 {
     C_CONST = c;
 
@@ -341,6 +341,9 @@ init(double c, double * u0, int n_grid, double T0,
     N_STEP = (int) ceil(t_chunk / dt_max);
     DT_STEP = t_chunk / N_STEP;
 
+	assert(n_proc > 0);
+	T_TOTAL = n_proc * N_CHUNK * N_STEP * DT_STEP;
+
     alloc_space_for_big_arrays_U_and_V();
 
     run_up_to_T0(u0, T0, dt_max);
@@ -348,7 +351,6 @@ init(double c, double * u0, int n_grid, double T0,
 
     // run in each time chunk, compute time averaged objective fcn Jbar
 	double Jbar = 0;
-	double T1 = N_CHUNK * N_GRID * DT_STEP;
     for (int i_chunk = 0; i_chunk < N_CHUNK; ++ i_chunk)
     {
         double ** u = SOLN_U[i_chunk];
@@ -357,13 +359,19 @@ init(double c, double * u0, int n_grid, double T0,
             // when i == N_STEP - 1, u[i+1] is SOLN_U{i_chunk + 1][0]
             // there's one more memory slot at the last i_chunk, so don't worry
             stepPrimal(u[i], u[i+1], DT_STEP);
-			Jbar = Jbar + (DT_STEP/T1) * Obj(u[i]);
+			Jbar = Jbar + (DT_STEP/T_TOTAL) * Obj(u[i]);
 			// printf("Jbar = %f\n",Jbar);
         }
     }
-	printf("Jbar = %f\n",Jbar);
 	JBAR = Jbar;
     memmove(u0, SOLN_U[N_CHUNK][0], sizeof(double) * N_GRID);
+}
+
+// Assign value to global variable JBAR, the long time averaged objective function J
+void
+assignJBAR(double Jbar)
+{
+	JBAR = Jbar;
 }
 
 
@@ -387,12 +395,6 @@ tangent(int i_chunk, double * v0, int inhomo)
     }
     stepTangent(u[N_STEP - 1], v[N_STEP - 1], v0, DT_STEP, inhomo);
 
-	if ( (inhomo > 0) && (i_chunk == N_CHUNK-1))
-    {
-        double dJbar_dc = grad();
-        printf("Gradient = %f\n",dJbar_dc);
-    }
-
 }
 
 
@@ -413,8 +415,7 @@ adjoint(int i_chunk, double * w0, double forcing, int inhomo)
 	double dudtT[N_GRID];
 	ddt(u[N_STEP],dudtT);  
     double utDotUt = cblas_ddot(N_GRID, dudtT, 1, dudtT, 1);
-	double T1 = N_CHUNK * N_STEP * DT_STEP;
-    cblas_daxpy(N_GRID, inhomo * ((JBAR - Obj(u[N_STEP])) / (utDotUt * T1)), dudtT, 1, w0, 1);
+    cblas_daxpy(N_GRID, inhomo * ((JBAR - Obj(u[N_STEP])) / (utDotUt * T_TOTAL)), dudtT, 1, w0, 1);
 
 	stepAdjoint(u[N_STEP - 1], v[N_STEP - 1], forcing, w0, w[N_STEP - 1], DT_STEP, inhomo);
     for (int i = N_STEP - 2; i >= 0; -- i)
@@ -429,11 +430,6 @@ adjoint(int i_chunk, double * w0, double forcing, int inhomo)
     }
 */
 
-	if ( (inhomo > 0) && (i_chunk == N_CHUNK-1))
-	{
-		double dJbar_dc = gradAdj();
-		printf("Gradient = %f\n",dJbar_dc);
-	}
 }
 
 // Compute the gradient with respect to c (Tangent LSS)
@@ -442,7 +438,6 @@ grad()
 {
 
     double dJbar_dc = 0.0;
-	double T1 = N_CHUNK * N_STEP * DT_STEP;
     double dJdu[N_GRID];
     for (int i_chunk = 0; i_chunk < N_CHUNK; ++ i_chunk)
     {
@@ -451,9 +446,9 @@ grad()
         for (int i = 0; i < N_STEP; ++ i)
         {
             ddObj(u[i], dJdu);
-            dJbar_dc = dJbar_dc + (DT_STEP/T1) * cblas_ddot(N_GRID, dJdu, 1, v[i], 1);
+            dJbar_dc = dJbar_dc + (DT_STEP/T_TOTAL) * cblas_ddot(N_GRID, dJdu, 1, v[i], 1);
         }
-		dJbar_dc = dJbar_dc + project_ddt(i_chunk, N_STEP, v[N_STEP-1]) * (JBAR - Obj(u[N_STEP])) / T1;
+		dJbar_dc = dJbar_dc + project_ddt(i_chunk, N_STEP, v[N_STEP-1]) * (JBAR - Obj(u[N_STEP])) / T_TOTAL;
     }
 
     return dJbar_dc;

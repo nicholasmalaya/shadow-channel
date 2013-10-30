@@ -16,9 +16,17 @@ import_array();
 %inline %{
     void
     c_init(double c, double * u0, int n_grid, double T0,
-           int n_chunk, double t_chunk, double dt_max)
+           int n_chunk, double t_chunk, double dt_max, int n_proc)
     {
-        init(c, u0, n_grid, T0, n_chunk, t_chunk, dt_max);
+        init(c, u0, n_grid, T0, n_chunk, t_chunk, dt_max, n_proc); 
+    }
+%}
+
+%inline %{
+    void
+    c_assignJBAR(double Jbar)
+    {
+        assignJBAR(Jbar);
     }
 %}
 
@@ -55,6 +63,22 @@ import_array();
     }
 %}
 
+
+%inline %{
+    double
+    c_grad()
+    {
+        return grad();
+    }
+%}
+
+%inline %{
+    double
+    c_gradAdj()
+    {
+        return gradAdj();
+    }
+%}
 
 %apply (double ** ARGOUTVIEW_ARRAY1, int * DIM1)
       {(double ** u_ptr, int * n_ptr)}
@@ -104,4 +128,5 @@ int N_GRID, N_CHUNK, N_STEP;
 double C_CONST;
 double DT_STEP;
 double JBAR;
+double T_TOTAL;
 %mutable;
