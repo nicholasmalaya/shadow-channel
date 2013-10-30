@@ -12,17 +12,17 @@ class Wrapper(object):
         self._tan, self._adj, self._proj = tan, adj, proj
 
     # ------------------ interface ------------------
-    def forward(self, i, v0, inhomo):
+    def forward(self, i, v0):
         v1 = v0.copy()
         self._proj(i, 0, v1)
-      	self._tan(i, v1, inhomo)
+      	self._tan(i, v1, 0)
         eta = self._proj(i + 1, 0, v1)
         return v1, eta
         
-    def backward(self, i, w0, strength):
+    def backward(self, i, w0, strength, inhomo):
         w1 = w0.copy()
         self._proj(i + 1, 0, w1)
-        self._adj(i, w1, strength, 0)
+        self._adj(i, w1, strength, inhomo)
         self._proj(i, 0, w1)
         return w1
 
@@ -53,7 +53,7 @@ class Wrapper(object):
         R_w = zeros([self.n, self.m])
         self.zeta = zeros(self.n)
         for i in range(self.n):
-            vip, eta = self.forward(i, v[i], inhomo)
+            vip, eta = self.forward(i, v[i])
             self.zeta[i] = eta / self.dT
             if i < self.n - 1:
                 R_w[i+1] = v[i+1] - vip
@@ -71,7 +71,7 @@ class Wrapper(object):
         # do computation of w while the last vip is going over the network
         R_v = zeros([self.n, self.m])
         for i in range(self.n):
-            wim = self.backward(i, w[i+1], strength=.01)
+            wim = self.backward(i, w[i+1], 0.01, inhomo)
             R_v[i] = w[i] - wim
 
         # match the last vip
@@ -130,8 +130,6 @@ oper = splinalg.LinearOperator((vw.size, vw.size), matvec=pde.matvec,
                                dtype=float)
 
 par_dot = lambda vw1, vw2: mpi_comm.allreduce(dot(vw1, vw2))
-# def par_dot(vw1, vw2):
-#     return mpi_comm.allreduce(dot(vw1, vw2))
 par_norm = lambda vw : sqrt(par_dot(vw, vw))
 
 class Callback:
@@ -145,7 +143,7 @@ class Callback:
         self.n += 1
         if self.n == 1 or self.n % 10 == 0:
             resnorm = par_norm(self.pde.matvec(x, 1))
-            gradient = mpi_comm.allreduce(kuramoto.c_grad())
+            gradient = mpi_comm.allreduce(kuramoto.c_gradAdj())
             if mpi_rank == 0: print 'iter ', self.n, resnorm, gradient
             self.hist.append([self.n, resnorm, gradient])
         sys.stdout.flush()

@@ -38,9 +38,9 @@ class Wrapper(object):
         R_v = zeros([self.n, self.m])
         self.zeta = zeros(self.n)
         for i in range(self.n):
-            vip, eta = self.forward(i, v[i], inhomo)
+            vip, eta = self.forward(i, v[i], inhomo=0)
             self.zeta[i] = eta / self.dT
-            wim = self.backward(i, w[i], strength=0.01, inhomo=0)
+            wim = self.backward(i, w[i], 1.0, inhomo)
             if i < self.n - 1:
                 R_w[i] = v[i+1] - vip
             if i > 0:
@@ -52,7 +52,7 @@ class Wrapper(object):
 
 import kuramoto
 # c, n_grid, T0, n_chunk, t_chunk, dt_max
-#u0 = rand(127)
+# u0 = rand(127)
 u0 = zeros(127)
 u0[64] = 1
 
@@ -84,7 +84,7 @@ class Callback:
         self.n += 1
         if self.n == 1 or self.n % 10 == 0:
             resnorm = norm(self.pde.matvec(x, 1))
-            gradient = kuramoto.c_grad()
+            gradient = kuramoto.c_gradAdj()
             print 'iter ', self.n, resnorm, gradient
             self.hist.append([self.n, resnorm, gradient])
         sys.stdout.flush()
@@ -121,7 +121,7 @@ dt = kuramoto.cvar.DT_STEP
 T1 = kuramoto.cvar.N_CHUNK * kuramoto.cvar.N_STEP * dt
 t = dt * arange(int(T1 / dt))
 
-subplot(2,2,1)
+#subplot(2,2,1)
 title('$u(t)$')
 contourf(x, t, u, 100); colorbar()
 xticks( array([0., 32., 64., 96., 128.]  ))
@@ -130,9 +130,9 @@ ylabel('$t$')
 axis('scaled')
 axis([x[0], x[-1], t[0], t[-1]])
 
-#figure()
-subplot(2,2,3)
-title('$v(t)$')
+figure()
+#subplot(2,2,3)
+title('$\hat{v}(t)$')
 contourf(x, t, v0, 100); colorbar()
 contour(x,t,u,[0.3*u.min() , 0.3*u.max()]);
 xticks( array([0., 32., 64., 96., 128.]  ))
@@ -141,22 +141,27 @@ ylabel('$t$')
 axis('scaled')
 axis([x[0], x[-1], t[0], t[-1]])
 
-#figure()
-subplot(2,2,4)
-title('$w(t)$')
+figure()
+#subplot(2,2,4)
+title('$\hat{w}(t)$')
 contourf(x, t, w, 100); colorbar()
 contour(x,t,u,[0.3*u.min() , 0.3*u.max()]);
 xticks( array([0., 32., 64., 96., 128.]  ))
 xlabel('$x$')
-#ylabel('$t$')
+ylabel('$t$')
 axis('scaled')
 axis([x[0], x[-1], t[0], t[-1]])
 
-'''
-du = v.mean(0) + (pde.zeta[:,newaxis] * (uEnd - u.mean(0))).mean(0)
-figure()
-plot(u.mean(0) - 0.1 * du)
-plot(u.mean(0) + 0.1 * du)
-'''
+
+#subplot(1,2,1); contourf(u, 100); colorbar()
+#subplot(1,2,2); contourf(v0, 100); colorbar()
+#figure()
+#subplot(1,2,1); contourf(u, 100); colorbar()
+#subplot(1,2,2); contourf(w, 100); colorbar()
+
+#du = v.mean(0) + (pde.zeta[:,newaxis] * (uEnd - u.mean(0))).mean(0)
+#figure()
+#plot(u.mean(0) - 0.1 * du)
+#plot(u.mean(0) + 0.1 * du)
 
 show()
