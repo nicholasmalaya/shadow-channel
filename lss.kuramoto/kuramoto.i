@@ -48,10 +48,10 @@ import_array();
 
 %inline %{
     void
-    c_adjoint(int i_chunk, double * w0, int n0, double forcing)
+    c_adjoint(int i_chunk, double * w0, int n0, double forcing, int inhomo)
     {
         assert (n0 == N_GRID);
-        adjoint(i_chunk, w0, forcing);
+        adjoint(i_chunk, w0, forcing, inhomo);
     }
 %}
 
@@ -85,9 +85,23 @@ import_array();
     }
 %}
 
+%apply (double ** ARGOUTVIEW_ARRAY1, int * DIM1)
+      {(double ** w_ptr, int * n_ptr)}
+
+%inline %{
+    void
+    c_w(int i_chunk, int i_step, double ** w_ptr, int * n_ptr)
+    {
+        assert (i_chunk >= 0 && i_chunk < N_CHUNK);
+        assert (i_step >= 0 && i_step < N_STEP);
+        *n_ptr = N_GRID;
+        *w_ptr = SOLN_W[i_chunk][i_step];
+    }
+%}
 
 %immutable;
 int N_GRID, N_CHUNK, N_STEP;
 double C_CONST;
 double DT_STEP;
+double JBAR;
 %mutable;
