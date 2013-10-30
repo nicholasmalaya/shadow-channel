@@ -37,10 +37,10 @@ Lz=1.6
 dt = .01
 
 # run up (or spin up) time
-ru_steps = 0
+ru_steps = 4000
 
 # steps
-nsteps=1200
+nsteps=1000
 
 # restart flag: look for the largest steps in the currect directory
 restart_flag = 0
@@ -49,14 +49,15 @@ for fname in os.listdir('.'):
         n = int(fname[len('data_t='):-len('.h5')])
         restart_flag = max(n, restart_flag)
 
-restart_flag = 10000
+# restart_flag = 10000
 print('restart from ', restart_flag)
 
 # flux (mean pressure gradient)
 flux = 2
 
 # reynolds number
-Re=1190
+#Re=1190
+Re=2000
 
 # number of time chunks
 nchunk=1

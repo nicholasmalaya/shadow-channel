@@ -8,9 +8,9 @@ else
 endif
 
 CC = gcc
-PY_INC = /usr/include/python2.7
-#CFLAGS = -O0 -g --std=c99 -I$(PY_INC)
-CFLAGS = -O3 $(CFLAGS_FPIC) --std=c99 -I$(PY_INC)
+PY_INC = $(shell python-config --includes)
+#CFLAGS = -O0 -g --std=c99 $(PY_INC)
+CFLAGS = -O3 $(CFLAGS_FPIC) --std=c99 $(PY_INC)
 SWIG = swig -python
 LD = ld -shared
 LIBS = -lm -lblas
@@ -18,6 +18,9 @@ LIBS = -lm -lblas
 default:	_kuramoto.so
 
 test:	testKura
+
+testPrimal:   testKSprimal.o kuramoto.o
+	$(CC) $^ -o $@ $(LIBS)
 
 tar:	testKura.c kuramoto.c kuramoto.i kuramoto.h numpy.i wrapper.py Makefile
 	tar -cjvf kuramoto.tar.bz2 $^

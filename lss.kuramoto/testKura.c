@@ -12,6 +12,7 @@ main()
     for (int i = 0; i < n_grid; ++ i) u0[i] = rand() / (double)RAND_MAX;
     init(0.5, u0, n_grid, 100, 10, 2, 0.2);
 
+
     const int n = 10;
     double u[n][N_GRID];
     double v0[N_GRID], w0[N_GRID];
@@ -70,6 +71,8 @@ main()
 
     cblas_daxpy(N_GRID, -1, v1, 1, du, 1);
     printf("%f %f %f\n", v1Nrm2, duNrm2, cblas_dnrm2(N_GRID, du, 1));
+
+	
 
     return 0;
 }
