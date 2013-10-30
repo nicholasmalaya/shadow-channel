@@ -40,7 +40,7 @@ dt = .01
 ru_steps = 0
 
 # steps
-nsteps=1200
+nsteps=1
 
 # restart flag: look for the largest steps in the currect directory
 restart_flag = 0
@@ -49,14 +49,14 @@ for fname in os.listdir('.'):
         n = int(fname[len('data_t='):-len('.h5')])
         restart_flag = max(n, restart_flag)
 
-restart_flag = 10000
+#restart_flag = 78000
 print('restart from ', restart_flag)
 
 # flux (mean pressure gradient)
 flux = 2
 
 # reynolds number
-Re=1190
+Re=1190.
 
 # number of time chunks
 nchunk=1
@@ -86,11 +86,24 @@ channel.init(Nx,Ny,Nz,Lx,Lz,Re,flux,dt,ru_steps,nchunk,nsteps,restart_flag)
 for i in range(0, nsteps + 1, 400):
     C = channel.getsoln(i)
     stats = channel.statistics(C)
-    pl.subplot(2,1,1)
+    ax = pl.subplot(2,1,1)
     if i == 0:
         pl.plot(stats[0], 3./2 * (1 - stats[0]**2), ':k')
-    pl.plot(stats[0], stats[1], '.-')
-    pl.subplot(2,1,2)
-    pl.plot(stats[0], sqrt(stats[13] - stats[1]**2), '.-')
 
+    # calculate u_tau by finite 
+    utau  = np.sqrt((1/Re)*((stats[1][1] - stats[1][0]) / (stats[0][1]-stats[0][0])))
+    retau = utau*Re
+    print "utau: ", utau 
+    print "re_tau: ", retau
+    
+    ax.set_xscale('log')
+    yp = (stats[0]+1)*retau
+    up = stats[1]/utau
+    pl.plot(yp, up, '.-')
+
+    pl.subplot(2,1,2)
+    pl.plot(stats[0], np.sqrt(stats[13] - stats[1]**2)/utau, '.-')
+
+
+xl = pl.xlabel(r'$\mathrm{y/\delta}$')
 pl.show()
