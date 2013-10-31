@@ -366,19 +366,19 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 
     /* initalize part */
     memset(C[0][0][0], 0,
-           (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
     memset(IC[0][0][0], 0,
-           (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
     memset(AC[0][0][0], 0,
-           (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
     memset(IAC[0][0][0], 0,
-           (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
     memset(MC[0][0][0][0], 0,
-           (nsteps * 3 + 1) * (Nz) * 2 * (Ny - 2) * (Nx / 2)
+           (nsteps * 3 + 1) * (Nz) * 2 * dimR * (Nx / 2)
            * sizeof(mcomplex));
     memset(MIC[0][0][0][0], 0,
-           (nsteps * 3 + 1) * (Nz) * 2 * (Ny - 2) * (Nx / 2)
+           (nsteps * 3 + 1) * (Nz) * 2 * dimR * (Nx / 2)
            * sizeof(mcomplex));
 
     memset(U[0][0][0], 0, (Nz) * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
@@ -397,6 +397,7 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
     /******************restart check ******************************/
     if (restart_flag != 0) {
         restart2(restart_flag);
+        ru_steps += restart_flag;
     } else            // provide laminar solution with perturbations
     {
         memset(U[0][0][0], 0, Nz * 5 * qpts * Nx / 2 * sizeof(mcomplex));
@@ -418,16 +419,16 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
        used for solving the adjoint system. */
     // destination // source
     memcpy(MC[0][0][0][0], C[0][0][0],
-           (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
     memcpy(MIC[0][0][0][0], IC[0][0][0],
-           (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
     /***************solving state and incremental state equations ****/
 
     /* time step for forward problem */
-    for (n = restart_flag; n < restart_flag + nsteps + ru_steps; ++n) {
+    for (n = restart_flag; n < nsteps + ru_steps; ++n) {
         if (n % 100 == 0) {
-            printf("Step %d/%d\n", n, restart_flag + nsteps + ru_steps);
+            printf("Step %d/%d\n", n, nsteps + ru_steps);
         }
         for (dctr = 0; dctr < 3; ++dctr) {    /* RK steps */
 
@@ -447,7 +448,7 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
              */
             if (pass1(dctr, n) != NO_ERR) {
                 printf("Pass1 failure\n");
-                n = restart_flag + nsteps + ru_steps;
+                n = nsteps + ru_steps;
                 break;
             }
 
@@ -469,7 +470,7 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
                solution of state equation */
             if (increBoundary() != NO_ERR) {
                 printf("increBoundary failure\n");
-                n = restart_flag + nsteps + ru_steps;
+                n = nsteps + ru_steps;
                 break;
             }
 
@@ -486,27 +487,21 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
                 increproject(dctr, z, 0, n, NULL);
             }
 
-            count = (n - restart_flag - ru_steps) * 3 + dctr + 1;
+            count = (n - ru_steps) * 3 + dctr + 1;
             if (count >= 0) {
                 memcpy(MC[count][0][0][0], C[0][0][0],
-                       (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+                       (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
                 memcpy(MIC[count][0][0][0], IC[0][0][0],
-                       (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+                       (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
             }
 
         }        /* end for dctr... */
 
         /* now writing the results to HDF file at selected time steps */
         if (((n + 1) % 10000 == 0) ||
-                (n + 1 == restart_flag + nsteps + ru_steps)) {
+                (n + 1 == nsteps + ru_steps)) {
             /* when we need to store the current time step results */
             write_data2(n + 1);
-            // checknum = checknum + 1;
-            // count = 0;
-            // memcpy(MC[count][0][0][0], C[0][0][0],
-            //        (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
-            // memcpy(MIC[count][0][0][0], IC[0][0][0],
-            //        (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
         }
     }            /* end for n... */
 
@@ -521,21 +516,23 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 
 void tangent(int start_step, int end_step, mcomplex ****IC_given)
 {
+    int n, dctr, count, z;
+
     /* retrieve solution */
     assert (end_step > start_step);
-    assert (start_step >= restart_flag + ru_steps);
-    assert (end_step <= restart_flag + ru_steps + nsteps);
+    assert (start_step >= ru_steps);
+    assert (end_step <= ru_steps + nsteps);
 	assert (IC_given != 0);
 
-    memcpy(C[0][0][0], MC[(start_step - restart_flag - ru_steps) * 3][0][0][0],
-           (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+    memcpy(C[0][0][0], MC[(start_step - ru_steps) * 3][0][0][0],
+           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
     memcpy(IC[0][0][0], IC_given[0][0][0],
-           (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
     /***************solving state and incremental state equations ****/
 
     /* time step for forward problem */
-    for (n = n_start; n < n_end; ++n) {
+    for (n = start_step; n < end_step; ++n) {
         for (dctr = 0; dctr < 3; ++dctr) {    /* RK steps */
 
             /* copy the result to Uxbt, Uzbt. Uxb and Uzb will be used
@@ -554,7 +551,7 @@ void tangent(int start_step, int end_step, mcomplex ****IC_given)
              */
             if (pass1(dctr, n) != NO_ERR) {
                 printf("Pass1 failure\n");
-                n = restart_flag + nsteps + ru_steps;
+                n = nsteps + ru_steps;
                 break;
             }
 
@@ -574,10 +571,10 @@ void tangent(int start_step, int end_step, mcomplex ****IC_given)
 
             /*now update the boundary condition using current time step
                solution of state equation */
-            TODO: change the boundary condition of the tangent to 0 ( look at how BC is enforced in the primal)
+            // TODO: change the boundary condition of the tangent to 0 ( look at how BC is enforced in the primal)
             if (increBoundary() != NO_ERR) {
                 printf("increBoundary failure\n");
-                n = restart_flag + nsteps + ru_steps;
+                n = nsteps + ru_steps;
                 break;
             }
 
@@ -594,16 +591,16 @@ void tangent(int start_step, int end_step, mcomplex ****IC_given)
                 increproject(dctr, z, 0, n, NULL);
             }
 
-            count = (n - restart_flag - ru_steps) * 3 + dctr + 1;
-            assert (count >= 0)
+            count = (n - ru_steps) * 3 + dctr + 1;
+            assert (count >= 0);
             memcpy(MIC[count][0][0][0], IC[0][0][0],
-                   (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+                   (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
         }        /* end for dctr... */
     }            /* end for n... */
 
     memcpy(IC_given[0][0][0], IC[0][0][0],
-           (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 }
 
 /***************************************************************
@@ -614,24 +611,26 @@ void tangent(int start_step, int end_step, mcomplex ****IC_given)
 
 void adjoint(int start_step, int end_step, mcomplex ****AC_given)
 {
+    int n, dctr, count, z;
+
     /* retrieve solution */
     assert (end_step < start_step);
-    assert (end_step >= restart_flag + ru_steps);
-    assert (start_step <= restart_flag + ru_steps + nsteps);
+    assert (end_step >= ru_steps);
+    assert (start_step <= ru_steps + nsteps);
 	assert (AC_given != 0);
 
-    memcpy(C[0][0][0], MC[(start_step - restart_flag - ru_steps) * 3][0][0][0],
-           (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+    memcpy(C[0][0][0], MC[(start_step - ru_steps) * 3][0][0][0],
+           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
     memcpy(AC[0][0][0], AC_given[0][0][0],
-           (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
     /***************solving adjoint equations ****/
 
     /* time step for adjoint problem */
-    for (n = n_start; n > n_end; --n) {
+    for (n = start_step; n > end_step; --n) {
         for (dctr = 0; dctr < 3; ++dctr) {    /* RK steps */
 
-			TODO: figure out the adjoint boundary condition and the Uxb, Uxbt etc hell
+			// TODO: figure out the adjoint boundary condition and the Uxb, Uxbt etc hell
             /* copy the result to Uxbt, Uzbt. Uxb and Uzb will be used later for boundary condition
                of current time stage */
             memcpy(Uxbt[0], Uxb[0],
@@ -647,14 +646,14 @@ void adjoint(int start_step, int end_step, mcomplex ****AC_given)
             memset(AUzb[0], 0,
                    Nz * (Nx / 2) * sizeof(fftw_complex));
 
-            count = (n - restart_flag - ru_steps) * 3 - dctr - 1;
+            count = (n - ru_steps) * 3 - dctr - 1;
 
             /*read data from memery */
             if (dctr < 2) {
-                memcpy(C[0][0][0], MC[count - 1][0][0][0], (Nz) * 2 * (Ny - 2) * (Nx / 2) *
-                       sizeof(mcomplex));
-                memcpy(IC[0][0][0], MIC[count - 1][0][0][0], (Nz) * 2 * (Ny - 2) * (Nx / 2) *
-                       sizeof(mcomplex));
+                memcpy(C[0][0][0], MC[count - 1][0][0][0],
+                        (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+                memcpy(IC[0][0][0], MIC[count - 1][0][0][0],
+                        (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
                 /*reconstruct the state and incremental state solution u, iu from alpha and beta */
                 initAlphaBeta2();
@@ -666,7 +665,7 @@ void adjoint(int start_step, int end_step, mcomplex ****AC_given)
 
                 if (pass2(dctr, n) != NO_ERR) {
                     printf("Pass2 failure\n");
-                    n = restart_flag - 1;
+                    n = ru_steps - 1;
                     break;
                 }
                 memcpy(LU[0][0][0], U[0][0][0],
@@ -679,9 +678,9 @@ void adjoint(int start_step, int end_step, mcomplex ****AC_given)
             }
             /*read data from memery */
             memcpy(C[0][0][0], MC[count][0][0][0],
-                   (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+                   (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
             memcpy(IC[0][0][0], MIC[count][0][0][0],
-                   (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+                   (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
             /*reconstruct the state and incremental state solution u, iu from alpha and beta */
             initAlphaBeta2();
@@ -695,7 +694,7 @@ void adjoint(int start_step, int end_step, mcomplex ****AC_given)
 
             if (pass2(dctr, n) != NO_ERR) {
                 printf("Pass2 failure\n");
-                n = restart_flag - 1;
+                n = ru_steps - 1;
                 break;
             }
 
@@ -713,39 +712,11 @@ void adjoint(int start_step, int end_step, mcomplex ****AC_given)
 
                 adjproject(n, dctr, z, 0, count, NULL);
             }
-
-            /*now update the boundary condition using current time step solution of state equation */
-            if (increBoundary() != NO_ERR) {
-                printf("increBoundary failure\n");
-                n = restart_flag - 1;
-                break;
-            }
-
-            increadjproject0(dctr, n, count, NULL);
-            increadjproject(n, dctr, 0, 1, count, NULL);
-            for (z = 1; z < Nz; ++z) {
-                if (z == Nz / 2) {
-                    // SET U[z][XEL,YEL,ZEL,DXEL,DZEL] TO ZEROS 
-                    memset(IAU[z][0][0], 0,
-                           5 * qpts * (Nx / 2) * sizeof(mcomplex));
-                    continue;
-                }
-
-                increadjproject(n, dctr, z, 0, count, NULL);
-            }
-            if (n == restart_flag + 1 && dctr == 2) {
-                memcpy(AUxb[0], Uxb[0],
-                       (Nz) * (Nx / 2) *
-                       sizeof(fftw_complex));
-                memcpy(AUzb[0], Uzb[0],
-                       (Nz) * (Nx / 2) *
-                       sizeof(fftw_complex));
-            }
         }
 	}
 
     memcpy(AC_given[0][0][0], AC[0][0][0],
-           (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
+           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 }
 
 /***************************************************************
