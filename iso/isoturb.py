@@ -95,17 +95,17 @@ class IF3D(IsoBox):
         self.ode = ode(self.ddt)
         self.ode.set_integrator('dopri5', nsteps=10000, rtol=1e-5, atol=1e-9)
 
+    def step(self, U_h, dt):
+        dUdt_h = zeros_like(U_h)
+        self.forcing(U_h, dUdt_h)
+        self.pressure(dUdt_h)
+
     def navierStokes(self, U_h):
         dUdt_h = zeros_like(U_h)
         self.forcing(U_h, dUdt_h)
-        # viscosity
-        dudt_h += self.nu * self.laplace * u_h
-        dvdt_h += self.nu * self.laplace * v_h
-        dwdt_h += self.nu * self.laplace * w_h
-        self.advection(U_h, dUdt_h)
-        # pressure
-        self.p = self.pressure(dudt_h, dvdt_h, dwdt_h)
-        return dudt_h, dvdt_h, dwdt_h
+        self.viscosity(U_h, dUdt_h)
+        self.p = self.pressure(dUdt_h)
+        return dUdt_h
 
     def forcing(self, U_h, F_h):
         POWER = 20 * self.nu * (self.n*2)**6
@@ -124,6 +124,13 @@ class IF3D(IsoBox):
         dudt_h += self.nu * self.laplace * u_h
         dvdt_h += self.nu * self.laplace * v_h
         dwdt_h += self.nu * self.laplace * w_h
+
+    def viscousStep(self, U_h, dt):
+        decay = exp(dt * self.nu * self.laplace)
+        u_h, v_h, w_h = U_h
+        dudt_h *= decay
+        dvdt_h *= decay
+        dwdt_h *= decay
 
     def advection(self, U_h, dUdt_h):
         u_h, v_h, w_h = U_h
@@ -144,26 +151,20 @@ class IF3D(IsoBox):
         w_h -= self.derivZ * p_h
         return p_h
 
-    def ravel(self, u_h, v_h, w_h):
-        'Package 3 complex 3D arrays into a single 1D real array'
-        return hstack([ravel(u_h.real), ravel(u_h.imag),
-                       ravel(v_h.real), ravel(v_h.imag),
-                       ravel(w_h.real), ravel(w_h.imag)])
+    def ravel(self, U_h):
+        'Package a complex 4D arrays into a single 1D real array'
+        return frombuffer(U_h, dtype=float)
 
     def unravel(self, uvw1d):
-        'Unpackage 3 complex 3D arrays from a single 1D real array'
-        ur_h, ui_h, vr_h, vi_h, wr_h, wi_h \
-            = uvw1d.reshape([6, self.n*2, self.n*2, self.n+1])
-        return ur_h + 1j * ui_h, vr_h + 1j * vi_h, wr_h + 1j * wi_h
+        'Unpackage a complex 4D arrays from a single 1D real array'
+        U_h = frombuffer(uvw1d, dtype=complex)
+        return U_h.reshape([3, self.n*2, self.n*2, self.n+1])
 
     def ddt(self, t, uvw1d):
         'Wrapper of navierStokes'
-        u_h, v_h, w_h = self.unravel(uvw1d)
-        dudt_h, dvdt_h, dwdt_h = self.navierStokes(u_h, v_h, w_h)
-        return self.ravel(dudt_h, dvdt_h, dwdt_h)
-
-    def step(self, U, ):
-
+        U_h = self.unravel(uvw1d)
+        dUdt_h = self.navierStokes(U_h)
+        return self.ravel(dUdt_h)
 
     def energySpectrum(self, u_h, v_h, w_h):
         'return values (k, e) to be plotted as loglog(k, e)'
