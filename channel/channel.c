@@ -519,8 +519,15 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 *                                                              *
 ****************************************************************/
 
-void tangent(int start_step, int end_step, mcomplex ****IC_given)
+void tangent(int start_step, int end_step, int restart_flag,  mcomplex ****IC_given, int inhomo)
 {
+    /* Local variables */
+    int Ny = dimR + 2;
+    int n = 0;
+    int dctr = 0;
+    int z = 0;
+    int count = 0;
+
     /* retrieve solution */
     assert (end_step > start_step);
     assert (start_step >= restart_flag + ru_steps);
@@ -532,10 +539,19 @@ void tangent(int start_step, int end_step, mcomplex ****IC_given)
     memcpy(IC[0][0][0], IC_given[0][0][0],
            (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
 
+    /* forcing function */
+    func_force_t forcing0 = NULL;
+    func_force_t forcing = NULL;
+
+    if (inhomo != 0) {
+        func_force_t forcing0 = tangent_forcing0;
+        func_force_t forcing = tangent_forcing;
+    } 
+
     /***************solving state and incremental state equations ****/
 
     /* time step for forward problem */
-    for (n = n_start; n < n_end; ++n) {
+    for (n = start_step; n < end_step; ++n) {
         for (dctr = 0; dctr < 3; ++dctr) {    /* RK steps */
 
             /* copy the result to Uxbt, Uzbt. Uxb and Uzb will be used
@@ -574,15 +590,14 @@ void tangent(int start_step, int end_step, mcomplex ****IC_given)
 
             /*now update the boundary condition using current time step
                solution of state equation */
-            TODO: change the boundary condition of the tangent to 0 ( look at how BC is enforced in the primal)
             if (increBoundary() != NO_ERR) {
                 printf("increBoundary failure\n");
                 n = restart_flag + nsteps + ru_steps;
                 break;
             }
 
-            increproject0(dctr, n, 1, NULL);
-            increproject(dctr, 0, 1, n, NULL);
+            increproject0(dctr, n, 1, forcing0);
+            increproject(dctr, 0, 1, n, forcing);
             for (z = 1; z < Nz; ++z) {
                 if (z == Nz / 2) {
                     // SET U[z][XEL,YEL,ZEL,DXEL,DZEL] TO ZEROS 
@@ -591,11 +606,11 @@ void tangent(int start_step, int end_step, mcomplex ****IC_given)
                     continue;
                 }
 
-                increproject(dctr, z, 0, n, NULL);
+                increproject(dctr, z, 0, n, forcing);
             }
 
             count = (n - restart_flag - ru_steps) * 3 + dctr + 1;
-            assert (count >= 0)
+            assert (count >= 0);
             memcpy(MIC[count][0][0][0], IC[0][0][0],
                    (Nz) * 2 * (Ny - 2) * (Nx / 2) * sizeof(mcomplex));
 
@@ -612,8 +627,15 @@ void tangent(int start_step, int end_step, mcomplex ****IC_given)
 *                                                              *
 ****************************************************************/
 
-void adjoint(int start_step, int end_step, mcomplex ****AC_given)
+void adjoint(int start_step, int end_step, int restart_flag, mcomplex ****AC_given, int inhomo)
 {
+    /* Local variables */
+    int Ny = dimR + 2;
+    int n = 0;
+    int dctr = 0;
+    int z = 0;
+    int count = 0;
+
     /* retrieve solution */
     assert (end_step < start_step);
     assert (end_step >= restart_flag + ru_steps);
@@ -628,10 +650,10 @@ void adjoint(int start_step, int end_step, mcomplex ****AC_given)
     /***************solving adjoint equations ****/
 
     /* time step for adjoint problem */
-    for (n = n_start; n > n_end; --n) {
+    for (n = start_step; n > end_step; --n) {
         for (dctr = 0; dctr < 3; ++dctr) {    /* RK steps */
 
-			TODO: figure out the adjoint boundary condition and the Uxb, Uxbt etc hell
+			//TODO: figure out the adjoint boundary condition and the Uxb, Uxbt etc hell
             /* copy the result to Uxbt, Uzbt. Uxb and Uzb will be used later for boundary condition
                of current time stage */
             memcpy(Uxbt[0], Uxb[0],

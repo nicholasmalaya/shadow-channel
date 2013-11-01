@@ -139,8 +139,9 @@ void increproject(int k, int z, int x0, int n,
         }
     }
 
+/* Boundary conditions enforced here (note presence of Uzbt */
 
-    for (x = x0; x < Nx / 2; ++x) {
+/*    for (x = x0; x < Nx / 2; ++x) {
         for (i = 0; i < 8 && i < dimQ; ++i) {
             Re(IC[z][ALPHA][i][x]) +=
                 (r[i] / 2. - K2[z][x] * xx[i]) * (Re(Uzbt[z][x]) -
@@ -159,6 +160,7 @@ void increproject(int k, int z, int x0, int n,
         }
 
     }
+*/
 
     /* Compute alphas */
     bsolve(M, IC[z][ALPHA], QSDIAG - 1, QSDIAG - 1, dimQ, Nx / 2, x0);
@@ -235,7 +237,9 @@ void increproject(int k, int z, int x0, int n,
         }
     }
 
-    for (x = x0; x < Nx / 2; ++x) {
+    /* Boundary conditions here: */
+
+/*    for (x = x0; x < Nx / 2; ++x) {
         for (i = 0; i < 4 && i < dimR; ++i) {
             Re(IC[z][BETA][i][x]) +=
                 e[i] / 2. * (Re(Uxbt[z][x]) - Re(Uxb[z][x])) +
@@ -247,6 +251,7 @@ void increproject(int k, int z, int x0, int n,
                            b[k] * Im(Uxb[z][x])) * (-K2[z][x] * e[i] / 2.);
         }
     }
+*/
 
     /* Compute betas */
     bsolve(M, IC[z][BETA], RSDIAG - 1, RSDIAG - 1, dimR, Nx / 2, x0);

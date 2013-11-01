@@ -118,7 +118,7 @@ void increproject0(int k, int n, int flag, func_force_t force)
         Re(IC[0][ALPHA][i][0]) += dt * c[k] * Re(Ifa[i]);
     }
 
-    for (i = 0; i < dimR; ++i) {
+/*    for (i = 0; i < dimR; ++i) {
         for (j = 0; j < qpts; ++j) {
             Re(IC[0][ALPHA][i][0]) +=
                 Rw[i][j] * (1 - Qy[j]) * 0.5 * (Re(Uxbt[0][0]) -
@@ -127,7 +127,7 @@ void increproject0(int k, int n, int flag, func_force_t force)
                 Rw[i][j] * (1 - Qy[j]) * 0.5 * (Im(Uxbt[0][0]) -
                                                 Im(Uxb[0][0]));
         }
-    }
+    }*/
 
 
     /*  Re(IC[0][ALPHA][0][0])=Re(IC[0][ALPHA][0][0])+e[0]* Re(Uxbt[0][0])-e[0]* Re(Uxb[0][0]);
@@ -241,8 +241,8 @@ void increproject0(int k, int n, int flag, func_force_t force)
         Re(IU[0][YEL][i][0]) = 0.0;
         Im(IU[0][YEL][i][0]) = 0.0;
     }
-
-    /* Iuz_hat = R*b +c4/2*(1-y) */
+/*
+    // Iuz_hat = R*b +c4/2*(1-y) /
     for (i = 0; i < qpts; ++i) {
         Re(IU[0][ZEL][i][0]) = 0.0;
         Im(IU[0][ZEL][i][0]) = 0.0;
@@ -254,7 +254,7 @@ void increproject0(int k, int n, int flag, func_force_t force)
         Im(IU[0][ZEL][i][0]) += Im(Uzb[0][0]) * Uadd[i] / 2.;
     }
 
-    /* duz_hat = Rp*b-c4/2 */
+    // duz_hat = Rp*b-c4/2 /
     for (i = 0; i < qpts; ++i) {
         Re(IU[0][DZEL][i][0]) = 0.0;
         Im(IU[0][DZEL][i][0]) = 0.0;
@@ -265,7 +265,7 @@ void increproject0(int k, int n, int flag, func_force_t force)
         Re(IU[0][DZEL][i][0]) += -Re(Uzb[0][0]) / 2.;
         Im(IU[0][DZEL][i][0]) += -Im(Uzb[0][0]) / 2.;
     }
-
+*/
     /*
     for (i = 0; i < dimR; i++) {
         Re(MIC[count][0][ALPHA][i][0]) = Re(IC[0][ALPHA][i][0]);
