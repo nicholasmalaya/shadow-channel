@@ -74,8 +74,6 @@ OBJS = LegendreSetup.o \
        increproject0.o \
        comp_stat.o \
        increproject.o \
-       write_data.o \
-       write_data2.o \
        channel.o \
        channel_wrap.o
 
