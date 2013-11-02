@@ -14,6 +14,11 @@ update: 03/09, working on checking the accuracy of new rk scheme for state equat
 #include "minChnl.h"
 #include "mvOps.h"
 
+// for restart2
+#include <stdio.h>
+#include <string.h>
+#include "arrays.h"
+
 // convertin main() to init() function
 //
 // will be called from python to compute primal trajectory
@@ -842,3 +847,106 @@ void statistics(mcomplex * C_ptr,
     *nstats_ptr = 21;
     *qpts_ptr = qpts;
 }
+
+// expose restart2 to python
+void restart2(int restart_flag)
+{
+
+    extern int qpts, dimR, dimQ, Nx, Nz;
+    extern mcomplex ****U, ****C;
+    extern mcomplex ****IU, ****IC;
+    int x, y, z;
+    hid_t file_id1, dataset_a, dataset_b;       /* file identifier */
+    hid_t dataset_ia, dataset_ib;
+    hid_t complex_id;
+    herr_t ret;
+    char filename[50];
+
+    /* define compound datatype for the complex number */
+    typedef struct {
+        double re;              /*real part */
+        double im;              /*imaginary part */
+    } complex_t;
+
+    complex_id = H5Tcreate(H5T_COMPOUND, sizeof(complex_t));
+    H5Tinsert(complex_id, "real", HOFFSET(complex_t, re),
+              H5T_NATIVE_DOUBLE);
+    H5Tinsert(complex_id, "imaginary", HOFFSET(complex_t, im),
+              H5T_NATIVE_DOUBLE);
+
+    /* define some temporal matrix to store the data to the hdf file */
+    complex_t Matrix1[dimR][Nz][Nx / 2];
+    complex_t Matrix2[dimR][Nz][Nx / 2];
+
+    complex_t IMatrix1[dimR][Nz][Nx / 2];
+    complex_t IMatrix2[dimR][Nz][Nx / 2];
+
+    sprintf(filename, "data_t=%d.h5", restart_flag);
+
+    // open the file and dataset 
+    file_id1 = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
+    dataset_a = H5Dopen1(file_id1, "/data_alpha");
+    dataset_b = H5Dopen1(file_id1, "/data_beta");
+
+    dataset_ia = H5Dopen1(file_id1, "/data_ialpha");
+    dataset_ib = H5Dopen1(file_id1, "/data_ibeta");
+
+    ret =
+        H5Dread(dataset_a, complex_id, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                Matrix1);
+    ret =
+        H5Dread(dataset_b, complex_id, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                Matrix2);
+
+    ret =
+        H5Dread(dataset_ia, complex_id, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                IMatrix1);
+    ret =
+        H5Dread(dataset_ib, complex_id, H5S_ALL, H5S_ALL, H5P_DEFAULT,
+                IMatrix2);
+
+
+    ret = H5Dclose(dataset_a);
+    ret = H5Dclose(dataset_b);
+
+    ret = H5Dclose(dataset_ia);
+    ret = H5Dclose(dataset_ib);
+
+    ret = H5Fclose(file_id1);
+
+    for (y = 0; y < dimR; y++) {
+        for (z = 0; z < Nz; ++z) {
+            for (x = 0; x < Nx / 2; ++x) {
+                Re(C[z][ALPHA][y][x]) = Matrix1[y][z][x].re;
+                Im(C[z][ALPHA][y][x]) = Matrix1[y][z][x].im;
+                Re(C[z][BETA][y][x]) = Matrix2[y][z][x].re;
+                Im(C[z][BETA][y][x]) = Matrix2[y][z][x].im;
+
+                Re(IC[z][ALPHA][y][x]) = IMatrix1[y][z][x].re;
+                Im(IC[z][ALPHA][y][x]) = IMatrix1[y][z][x].im;
+                Re(IC[z][BETA][y][x]) = IMatrix2[y][z][x].re;
+                Im(IC[z][BETA][y][x]) = IMatrix2[y][z][x].im;
+            }
+        }
+    }
+
+    /* compute  ux hat, uy hat, uz hat given alpha, beta,. */
+    initAlphaBeta2();
+
+    /* compute the boundary condition for previous stage or time step, 
+       result is stored in Uxb and Uzb */
+    if (increBoundary() != NO_ERR) {
+        printf("increBoundary failure\n");
+    }
+
+
+    /* compute iux, iuy, iuz given i-alpha, i-beta */
+
+    incre_initAlphaBeta2();
+
+    memset(U[Nz / 2][0][0], 0, 5 * qpts * (Nx / 2) * sizeof(mcomplex));
+    memset(IU[Nz / 2][0][0], 0, 5 * qpts * (Nx / 2) * sizeof(mcomplex));
+
+}
+
+// expose write_data2 to python
