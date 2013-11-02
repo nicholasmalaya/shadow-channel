@@ -34,3 +34,6 @@ void statistics(mcomplex * C,
              int Nz_dup, int Nvar_dup, int Ny_dup, int Nx_dup,
              double ** us_ptr, int * nstats_ptr, int * qpts_ptr);
 
+void restart2(int restart_flag);
+
+
