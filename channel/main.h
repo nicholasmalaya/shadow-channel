@@ -43,6 +43,7 @@ void increproject0(int k, int n, int flag, func_force_t force);
 void increadjproject0(int k, int n, int count, func_force_t force);
 void increadjproject(int n, int k, int z, int x0, int count,
                      func_force_t force);
+int comp_stat(double **us);
 
 
 FILE *fp, *fp2;
@@ -83,8 +84,7 @@ int qpts,                       /* 3Ny/2, Ny specified by user */
 
 int nums; 
 
-int nsteps,                     /* number of time steps that are saved in memory */
-    ru_steps;                   /* number of run up steps, those are not saved in memory */
+int nsteps;                     /* number of time steps that are saved in memory */
 
 double dt,                      /* time step */
  re,                            /* 1/RE, Reynolds number RE specified by user */

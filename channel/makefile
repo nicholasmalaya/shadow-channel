@@ -29,7 +29,7 @@ else
     CFLAGS_FPIC =
 endif
 
-CC     = gcc
+CC     = gcc -Wall
 CFLAGS = -O3 $(CFLAGS_FPIC) -fPIC
 LD     = ld -shared
 endif

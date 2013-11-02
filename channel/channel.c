@@ -98,8 +98,6 @@ void destroy(int status)
                            manufacture solutions */
     extern mcomplex ****LU, ****LIU;
 
-    mcomplex tmp;
-
     if (status & DESTROY_STATUS_FFTW) {
         fftw_destroy_plan(pf1);
         fftw_destroy_plan(pf2);
@@ -203,8 +201,7 @@ void destroy(int status)
 
 int
 init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
-     double _flux, double _dt, int _ru_steps,
-     int _n_chunk, int _nsteps_chunk, int _restart_flag)
+     double _flux, double _dt, int _nsteps)
 {
     /******************** Definition of all variables ********************/
     /* External Variables.  All external variables are defined in main.h */
@@ -263,14 +260,9 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
     extern mcomplex ****LU, ****LIU;
 
     /* Local Variables */
-    int n, z, dctr;
     int Ny, sizeRealTransform;
     double Lx, Lz;
     fftw_complex *fout = NULL;
-    int restart_flag;
-    int count;
-    // int checknum, checkstep;
-    int i;
 
     /************************ end of variable definitions ****************/
 
@@ -282,16 +274,13 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 
     dt = _dt;
 
-    nsteps = _n_chunk * _nsteps_chunk;
-    ru_steps = _ru_steps;
+    nsteps = _nsteps;
     flux = _flux;
     re = _Re;
 
-    restart_flag = _restart_flag;
-
-    printf("Nx,Ny,Nz,Lx  |  Lz,dt,nsteps,ru_steps  |  flux,Re,restart_flag\n"
-           "%d %d %d %f  |  %f %f %d %d  |  %f %f %d\n",
-           Nx, Ny, Nz, Lx, Lz, dt, nsteps, ru_steps, flux, re, restart_flag);
+    printf("Nx,Ny,Nz,Lx  |  Lz,dt,nsteps  |  flux,Re\n"
+           "%d %d %d %f  |  %f %f %d |  %f %f\n",
+           Nx, Ny, Nz, Lx, Lz, dt, nsteps, flux, re);
 
     re = 1. / re;         /* time step routines assume I pass 1/Re */
     qpts = 3 * Ny / 2;    /* number of quadrature points 
@@ -393,12 +382,82 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
     memset(Uzb[0], 0, Nz * (Nx / 2) * sizeof(mcomplex));
 
     /******************************end of initialization part ***************/
+    return (EXIT_SUCCESS);
+}
+
+/***************************************************************
+*                                                              *
+*                        SOLVE THE PRIMAL                      *
+*                                                              *
+****************************************************************/
+
+void primal(int ru_steps, mcomplex ****C_given)
+{
+    /******************** Definition of all variables ********************/
+    /* External Variables.  All external variables are defined in main.h */
+    extern int qpts, dimR, dimQ, Nx, Nz;
+    extern double dt, re, flux;
+
+    extern double *Kx, *Kz, **K2, *cfl2;
+    extern double **Q, **Qp, **Qpp, **R, **Rp, **Qw, **Qpw, **Rw, **Qs,
+        **Qps, **Qpps, **Rs, **Rps, *Rp0, **Rpw, **Qppw, *Rpp0;
+
+    extern double *Uadd, *Vadd, *Vpadd;
+    extern double *Qy;
+    extern double *W;
+
+    extern mcomplex ****U, ****C;    /* state variables */
+    extern mcomplex **Fa, **Fb, **TM;
+    extern mcomplex *fa, *fb, *tm;
+    extern double **MZ;
+    extern double ***M;
+
+    extern mcomplex ****IU, ****IC;    /* incremental state variables */
+    extern mcomplex **IFa, **IFb, **ITM;
+    extern mcomplex *Ifa, *Ifb, *Itm;
+
+    extern mcomplex ****AU, ****AC;    /* adjoint variables and will use
+                       the same other variables
+                       used in state equations */
+
+    extern mcomplex ****IAU, ****IAC;    /* incremental adjoint variables */
+
+    extern mcomplex **Uxbt, **Uzb;    /* variables used to store dux duz
+                       evaluated at y=-1 used for
+                       computing boundary conditions for
+                       incremental state equations */
+    extern mcomplex **Uxb, **Uzb;    /* variables used to store dux duz
+                       evaluated at y=-1 from previous 
+                       state used for boundary conditions
+                       for incremental state equations */
+    extern mcomplex **IUxb, **IUzb;
+    extern mcomplex **IAUxb, **IAUzb;
+    extern mcomplex **AUxb, **AUzb;    /* variables used to store dux duz
+                       evaluated at y=-1 used for
+                       computing boundary conditions
+                       for incremental state equations */
+    extern fftw_complex ***CT, ***ICT;    /* variables used in fft */
+    extern fftw_plan pf1, pf2;
+    extern fftw_plan Ipf1, Ipf2;
+    extern rfftwnd_plan pr1, pr2;
+
+    extern mcomplex *****MC, *****MIC;    /* variables used to store state and
+                           incremental state solutions
+                           between two check points. */
+
+    extern mcomplex ****MU, ****MIU;    /* variables used to store
+                           manufacture solutions */
+    extern mcomplex ****LU, ****LIU;
+
+    int i, n, z, dctr, count;
 
     /******************restart check ******************************/
-    if (restart_flag != 0) {
-        restart2(restart_flag);
-        ru_steps += restart_flag;
-    } else            // provide laminar solution with perturbations
+    if (C_given != 0) {
+        memcpy(C[0][0][0], C_given[0][0][0],
+               (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+        initAlphaBeta2();
+    }
+    else            // provide laminar solution with perturbations
     {
         memset(U[0][0][0], 0, Nz * 5 * qpts * Nx / 2 * sizeof(mcomplex));
         for (i = 0; i < qpts; i++) {
@@ -426,7 +485,7 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
     /***************solving state and incremental state equations ****/
 
     /* time step for forward problem */
-    for (n = restart_flag; n < nsteps + ru_steps; ++n) {
+    for (n = 0; n < nsteps + ru_steps; ++n) {
         if (n % 100 == 0) {
             printf("Step %d/%d\n", n, nsteps + ru_steps);
         }
@@ -504,9 +563,7 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
             write_data2(n + 1);
         }
     }            /* end for n... */
-
-    return (EXIT_SUCCESS);
-}                /* end main */
+}
 
 /***************************************************************
 *                                                              *
@@ -514,21 +571,24 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 *                                                              *
 ****************************************************************/
 
-void tangent(int start_step, int end_step, int restart_flag,  mcomplex ****IC_given, int inhomo)
+void tangent(int start_step, int end_step, mcomplex ****IC_given, int inhomo)
 {
     /* Local variables */
     int n, dctr, count, z;
 
     /* retrieve solution */
     assert (end_step > start_step);
-    assert (start_step >= ru_steps);
-    assert (end_step <= ru_steps + nsteps);
+    assert (start_step >= 0);
+    assert (end_step <= nsteps);
 	assert (IC_given != 0);
 
-    memcpy(C[0][0][0], MC[(start_step - ru_steps) * 3][0][0][0],
+    memcpy(C[0][0][0], MC[start_step * 3][0][0][0],
            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
     memcpy(IC[0][0][0], IC_given[0][0][0],
            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+
+    initAlphaBeta2();
+    incre_initAlphaBeta2();
 
     /* forcing function */
     func_force_t forcing0 = NULL;
@@ -561,7 +621,7 @@ void tangent(int start_step, int end_step, int restart_flag,  mcomplex ****IC_gi
              */
             if (pass1(dctr, n) != NO_ERR) {
                 printf("Pass1 failure\n");
-                n = nsteps + ru_steps;
+                n = nsteps;
                 break;
             }
 
@@ -584,7 +644,7 @@ void tangent(int start_step, int end_step, int restart_flag,  mcomplex ****IC_gi
             // TODO: change the boundary condition of the tangent to 0 ( look at how BC is enforced in the primal)
             if (increBoundary() != NO_ERR) {
                 printf("increBoundary failure\n");
-                n = nsteps + ru_steps;
+                n = nsteps;
                 break;
             }
 
@@ -601,8 +661,7 @@ void tangent(int start_step, int end_step, int restart_flag,  mcomplex ****IC_gi
                 increproject(dctr, z, 0, n, forcing);
             }
 
-            count = (n - restart_flag - ru_steps) * 3 + dctr + 1;
-            count = (n - ru_steps) * 3 + dctr + 1;
+            count = n * 3 + dctr + 1;
             assert (count >= 0);
             memcpy(MIC[count][0][0][0], IC[0][0][0],
                    (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
@@ -620,17 +679,17 @@ void tangent(int start_step, int end_step, int restart_flag,  mcomplex ****IC_gi
 *                                                              *
 ****************************************************************/
 
-void adjoint(int start_step, int end_step, int restart_flag, mcomplex ****AC_given, int inhomo)
+void adjoint(int start_step, int end_step, mcomplex ****AC_given, int inhomo)
 {
    int n, dctr, count, z;
 
     /* retrieve solution */
     assert (end_step < start_step);
-    assert (end_step >= ru_steps);
-    assert (start_step <= ru_steps + nsteps);
+    assert (end_step >= 0);
+    assert (start_step <= nsteps);
 	assert (AC_given != 0);
 
-    memcpy(C[0][0][0], MC[(start_step - ru_steps) * 3][0][0][0],
+    memcpy(C[0][0][0], MC[start_step * 3][0][0][0],
            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
     memcpy(AC[0][0][0], AC_given[0][0][0],
            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
@@ -657,7 +716,7 @@ void adjoint(int start_step, int end_step, int restart_flag, mcomplex ****AC_giv
             memset(AUzb[0], 0,
                    Nz * (Nx / 2) * sizeof(fftw_complex));
 
-            count = (n - ru_steps) * 3 - dctr - 1;
+            count = n * 3 - dctr - 1;
 
             /*read data from memery */
             if (dctr < 2) {
@@ -676,7 +735,7 @@ void adjoint(int start_step, int end_step, int restart_flag, mcomplex ****AC_giv
 
                 if (pass2(dctr, n) != NO_ERR) {
                     printf("Pass2 failure\n");
-                    n = ru_steps - 1;
+                    n = -1;
                     break;
                 }
                 memcpy(LU[0][0][0], U[0][0][0],
@@ -705,7 +764,7 @@ void adjoint(int start_step, int end_step, int restart_flag, mcomplex ****AC_giv
 
             if (pass2(dctr, n) != NO_ERR) {
                 printf("Pass2 failure\n");
-                n = ru_steps - 1;
+                n = -1;
                 break;
             }
 
@@ -761,7 +820,6 @@ void statistics(mcomplex * C_ptr,
              double ** us_ptr, int * nstats_ptr, int * qpts_ptr)
 {
     extern double * Qy;
-    int z;
     double ** us;
 
     /* copy C_ptr to C */

@@ -4,12 +4,13 @@
 #include"mcomplex.h"
 
 int init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
-         double _flux, double _dt, int _rut,
-         int _n_chunk, int _nsteps_chunk, int _restart_flag);
+         double _flux, double _dt, int _nsteps);
 
-void tangent(int start_step, int end_step, int restart_flag, mcomplex ****IC_given, int inhomo);
+void primal(int ru_steps, mcomplex ****C_given);
 
-void adjoint(int start_step, int end_step, int restart_flag, mcomplex ****AC_given, int inhomo);
+void tangent(int start_step, int end_step, mcomplex ****IC_given, int inhomo);
+
+void adjoint(int start_step, int end_step, mcomplex ****AC_given, int inhomo);
 
 void tangent_forcing0(int n, int k, int flag, mcomplex * fb, mcomplex * fa);
 
