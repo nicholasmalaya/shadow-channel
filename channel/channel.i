@@ -36,4 +36,6 @@ void statistics(mcomplex * C,
 
 void restart2(int restart_flag);
 
+void write_data2(int n);
+
 
