@@ -2,6 +2,7 @@
 #
 # run the channel and create plots comparable to keefe (92)
 #
+import os
 import sys
 sys.path.append("..")
 import channel 
@@ -17,7 +18,9 @@ channel.Re=2000
 n_steps = 1200
 ru_steps = 0
 
-channel.init(n_steps, ru_steps, 'keefe_runup')
+restart_file = 'keefe_runup_stage_2.hd5'
+assert os.path.exists(restart_file)
+channel.init(n_steps, ru_steps, restart_file)
 
 #
 # postprocess

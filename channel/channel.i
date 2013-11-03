@@ -108,10 +108,10 @@ void c_getsoln(int i_step, mcomplex ** MC_ptr,
 %}
 
 
-%apply (mcomplex * INPLACE_ARRAY4, int DIM1, int DIM2, int DIM3, int DIM4)
-      {(mcomplex * C_ptr, int Nz_dup, int Nvar_dup, int Ny_dup, int Nx_dup)}
-%apply (double * INPLACE_ARRAY2, int DIM1, int DIM2)
-      {(double * us_ptr, int nstats_dup, int qpts_dup)}
+%apply (mcomplex * IN_ARRAY4, int DIM1, int DIM2, int DIM3, int DIM4)
+      {(mcomplex * C, int Nz_dup, int Nvar_dup, int Ny_dup, int Nx_dup)}
+%apply (double ** ARGOUTVIEW_ARRAY2, int * DIM1, int * DIM2)
+      {(double ** us_ptr, int * nstats_ptr, int * qpts_ptr)}
 
 %inline %{
 void c_statistics(mcomplex * C_ptr,

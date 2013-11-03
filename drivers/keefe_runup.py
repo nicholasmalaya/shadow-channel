@@ -44,7 +44,7 @@ n_steps = 1
 # STAGE 1 -- invoke init
 channel.init(n_steps, ru_steps, restart=None)
 channel.save_solution('keefe_runup_stage_1', channel.get_solution(0))
-channel.destropy()
+channel.destroy()
 
 # ============================================
 # STAGE 2 -- reynolds number
@@ -55,7 +55,7 @@ ru_steps = 1999
 n_steps = 1
 
 # STAGE 1 -- invoke init
-channel.init(n_steps, ru_steps, restart=None)
+channel.init(n_steps, ru_steps, restart='keefe_runup_stage_1')
 channel.save_solution('keefe_runup_stage_2', channel.get_solution(0))
-channel.destropy()
+channel.destroy()
 
