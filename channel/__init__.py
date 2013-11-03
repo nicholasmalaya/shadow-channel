@@ -58,10 +58,10 @@ def init(n_steps, ru_steps=0, restart=None):
 def destroy():
     c_channel.c_destroy()
     
-def primal(n_steps, ru_steps, C_init):
+def primal(C_init):
     assert C_init.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
                             c_channel.c_Nx() / 2)
-    c_channel.c_primal(ru_steps, C_init)
+    c_channel.c_primal(0, C_init)
 
 def statistics(solution):
     if isinstance(solution, str):
