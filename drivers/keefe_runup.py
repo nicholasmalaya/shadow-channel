@@ -3,7 +3,7 @@
 # run the channel and create plots comparable to keefe (92)
 #
 import sys
-sys.path.append("../channel/")
+sys.path.append("..")
 import channel 
 
 # try subprocess to 
@@ -19,32 +19,43 @@ import channel
 # parameters
 #
 # number of pts. 
-Nx=16
-Ny=33
-Nz=16
+channel.Nx=16
+channel.Ny=33
+channel.Nz=16
 
 # box size
-Lx=1.6
-Lz=1.6
+channel.Lx=1.6
+channel.Lz=1.6
 
 # time step and number of steps
-dt = .01
-nsteps=100
-
-# restart flag: 0 for no restart
-restart_flag=0
+channel.dt = .01
 
 # flux (mean pressure gradient)
-flux = 2
+channel.meanU = 1
 
-# reynolds number
-Re=10000
+# ============================================
+# STAGE 1 -- reynolds number
+channel.Re=10000
 
-# run up (or spin up) time
-ru_steps = 9900
+# STAGE 1 -- time steps
+ru_steps = 4999
+n_steps = 1
 
-# number of time chunks
-nchunk=1
+# STAGE 1 -- invoke init
+channel.init(n_steps, ru_steps, restart=None)
+channel.save_solution('keefe_runup_stage_1', channel.get_solution(0))
+channel.destropy()
 
-# invoke init
-channel.init(Nx,Ny,Nz,Lx,Lz,Re,flux,dt,ru_steps,nchunk,nsteps,restart_flag)
+# ============================================
+# STAGE 2 -- reynolds number
+channel.Re=2000
+
+# STAGE 1 -- time steps
+ru_steps = 1999
+n_steps = 1
+
+# STAGE 1 -- invoke init
+channel.init(n_steps, ru_steps, restart=None)
+channel.save_solution('keefe_runup_stage_2', channel.get_solution(0))
+channel.destropy()
+

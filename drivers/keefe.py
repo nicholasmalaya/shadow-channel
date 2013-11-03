@@ -2,68 +2,22 @@
 #
 # run the channel and create plots comparable to keefe (92)
 #
-import os
 import sys
-
-sys.path.append("../channel/")
+sys.path.append("..")
 import channel 
 
 # for plotting
 import pylab as pl
 import numpy as np
 
-# try subprocess to 
-# redirect all the screen outputs in C  to a buffer
-#  which we can access in Python through channel.stdout
-#
-# http://docs.python.org/2/library/subprocess.html
-#
-# ------------------------------------------------------------------
-# main function
-# ------------------------------------------------------------------
-#
-# parameters
-#
-# number of pts. 
-Nx=16
-Ny=33
-Nz=16
-
-# box size
-Lx=1.6
-Lz=1.6
-
-# time step
-dt = .01
-
-# run up (or spin up) time
-ru_steps = 4000
-
-# steps
-nsteps=1000
-
-# restart flag: look for the largest steps in the currect directory
-restart_flag = 0
-for fname in os.listdir('.'):
-    if fname.startswith('data_t=') and fname.endswith('.h5'):
-        n = int(fname[len('data_t='):-len('.h5')])
-        restart_flag = max(n, restart_flag)
-
-# restart_flag = 10000
-print('restart from ', restart_flag)
-
-# flux (mean pressure gradient)
-flux = 2
-
 # reynolds number
-#Re=1190
-Re=2000
-
-# number of time chunks
-nchunk=1
+channel.Re=2000
 
 # invoke init
-channel.init(Nx,Ny,Nz,Lx,Lz,Re,flux,dt,ru_steps,nchunk,nsteps,restart_flag)
+n_steps = 1200
+ru_steps = 0
+
+channel.init(n_steps, ru_steps, 'keefe_runup')
 
 #
 # postprocess
@@ -84,26 +38,27 @@ channel.init(Nx,Ny,Nz,Lx,Lz,Re,flux,dt,ru_steps,nchunk,nsteps,restart_flag)
 #     # us[1+14][y] = u3u3;
 #     # us[1+18][y] = u1y;
 
-for i in range(0, nsteps + 1, 400):
-    C = channel.getsoln(i)
-    stats = channel.statistics(C)
+for i in range(0, n_steps + 1, 400):
+    stats = channel.statistics(i)
     ax = pl.subplot(2,1,1)
     if i == 0:
         pl.plot(stats[0], 3./2 * (1 - stats[0]**2), ':k')
+    pl.plot(stats[0], stats[1], '.-')
 
     # calculate u_tau by finite 
-    utau  = np.sqrt((1/Re)*((stats[1][1] - stats[1][0]) / (stats[0][1]-stats[0][0])))
-    retau = utau*Re
-    print "utau: ", utau 
-    print "re_tau: ", retau
+    utau  = np.sqrt((1/channel.Re)*((stats[1][1] - stats[1][0]) / (stats[0][1]-stats[0][0])))
+    retau = utau*channel.Re
+    print("utau: ", utau)
+    print("re_tau: ", retau)
     
-    ax.set_xscale('log')
+    # ax.set_xscale('log')
     yp = (stats[0]+1)*retau
     up = stats[1]/utau
-    pl.plot(yp, up, '.-')
+    # pl.plot(yp, up, '.-')
 
     pl.subplot(2,1,2)
-    pl.plot(stats[0], np.sqrt(stats[13] - stats[1]**2)/utau, '.-')
+    # pl.plot(stats[0], np.sqrt(stats[13] - stats[1]**2)/utau, '.-')
+    pl.plot(stats[0], np.sqrt(stats[13] - stats[1]**2), '.-')
 
 
 xl = pl.xlabel(r'$\mathrm{y/\delta}$')

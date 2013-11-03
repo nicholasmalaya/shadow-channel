@@ -9,7 +9,7 @@
 int comp_stat(double **us)
 {
 	/* External Variables */
-	extern int Nx, Nz, qpts, nums;
+	extern int Nx, Nz, qpts;
 	extern mcomplex ****U, ****IU, **GUxb, **GUzb, ishear;
 	extern FILE *fp, *fp2, *fp3, *fp4, *fp5, *fp6, *fp7, *fp8, *fp9, *fp10,
 	    *fp11;
@@ -75,7 +75,6 @@ int comp_stat(double **us)
 	iau2u2 = 0;
 	iau3u3 = 0;
 
-	nums = nums + 1;
 	/*fprintf(fp, "the time averge %d, %d\n", (n+1)-50, (n+1));
 	   for(j=0; j< qpts; j++)
 	   {

@@ -82,8 +82,6 @@ int qpts,                       /* 3Ny/2, Ny specified by user */
  Nx,                            /* specified by user */
  Nz;                            /* specified by user */
 
-int nums; 
-
 int nsteps;                     /* number of time steps that are saved in memory */
 
 double dt,                      /* time step */

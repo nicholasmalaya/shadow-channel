@@ -396,7 +396,7 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 *                                                              *
 ****************************************************************/
 
-void primal(int ru_steps, mcomplex ****C_given)
+void primal(int ru_steps, mcomplex *C_given)
 {
     /******************** Definition of all variables ********************/
     /* External Variables.  All external variables are defined in main.h */
@@ -458,7 +458,7 @@ void primal(int ru_steps, mcomplex ****C_given)
 
     /******************restart check ******************************/
     if (C_given != 0) {
-        memcpy(C[0][0][0], C_given[0][0][0],
+        memcpy(C[0][0][0], C_given,
                (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
         initAlphaBeta2();
     }
@@ -561,13 +561,18 @@ void primal(int ru_steps, mcomplex ****C_given)
 
         }        /* end for dctr... */
 
-        /* now writing the results to HDF file at selected time steps */
-        if (((n + 1) % 10000 == 0) ||
-                (n + 1 == nsteps + ru_steps)) {
-            /* when we need to store the current time step results */
-            write_data2(n + 1);
-        }
+        // /* now writing the results to HDF file at selected time steps */
+        // if (((n + 1) % 10000 == 0) ||
+        //         (n + 1 == nsteps + ru_steps)) {
+        //     /* when we need to store the current time step results */
+        //     write_data2(n + 1);
+        // }
     }            /* end for n... */
+
+    if (C_given != 0) {  /* copy the final solution back to given buffer */
+        memcpy(C_given, C[0][0][0],
+               (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+    }
 }
 
 /***************************************************************
@@ -576,7 +581,7 @@ void primal(int ru_steps, mcomplex ****C_given)
 *                                                              *
 ****************************************************************/
 
-void tangent(int start_step, int end_step, mcomplex ****IC_given, int inhomo)
+void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
 {
     /* Local variables */
     int n, dctr, count, z;
@@ -589,7 +594,7 @@ void tangent(int start_step, int end_step, mcomplex ****IC_given, int inhomo)
 
     memcpy(C[0][0][0], MC[start_step * 3][0][0][0],
            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
-    memcpy(IC[0][0][0], IC_given[0][0][0],
+    memcpy(IC[0][0][0], IC_given,
            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
     initAlphaBeta2();
@@ -674,7 +679,7 @@ void tangent(int start_step, int end_step, mcomplex ****IC_given, int inhomo)
         }        /* end for dctr... */
     }            /* end for n... */
 
-    memcpy(IC_given[0][0][0], IC[0][0][0],
+    memcpy(IC_given, IC[0][0][0],
            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 }
 
@@ -684,7 +689,7 @@ void tangent(int start_step, int end_step, mcomplex ****IC_given, int inhomo)
 *                                                              *
 ****************************************************************/
 
-void adjoint(int start_step, int end_step, mcomplex ****AC_given, int inhomo)
+void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo)
 {
    int n, dctr, count, z;
 
@@ -696,7 +701,7 @@ void adjoint(int start_step, int end_step, mcomplex ****AC_given, int inhomo)
 
     memcpy(C[0][0][0], MC[start_step * 3][0][0][0],
            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
-    memcpy(AC[0][0][0], AC_given[0][0][0],
+    memcpy(AC[0][0][0], AC_given,
            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
     /***************solving adjoint equations ****/
@@ -790,28 +795,8 @@ void adjoint(int start_step, int end_step, mcomplex ****AC_given, int inhomo)
         }
 	}
 
-    memcpy(AC_given[0][0][0], AC[0][0][0],
+    memcpy(AC_given, AC[0][0][0],
            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
-}
-
-/***************************************************************
-*                                                              *
-*                         GETSOLN FUNCTION                     *
-*                                                              *
-****************************************************************/
-
-// This is supposed to be used with ARGOUTVIEW_ARRAY4
-// Look for the c_v function in kuramoto.i
-void
-getsoln(int i_step, mcomplex ** MC_ptr,
-    int *Nz_ptr, int *Nvar_ptr, int *Ny_ptr, int *Nx_ptr)
-{
-    assert(i_step >= 0 && i_step <= nsteps);
-    (*MC_ptr) = MC[i_step * 3][0][0][0];
-    (*Nz_ptr) = Nz;
-    (*Nvar_ptr) = 2;
-    (*Ny_ptr) = dimR;
-    (*Nx_ptr) = Nx / 2;
 }
 
 /***************************************************************
@@ -820,38 +805,29 @@ getsoln(int i_step, mcomplex ** MC_ptr,
 *                                                              *
 ****************************************************************/
 
-void statistics(mcomplex * C_ptr,
-             int Nz_dup, int Nvar_dup, int Ny_dup, int Nx_dup,
-             double ** us_ptr, int * nstats_ptr, int * qpts_ptr)
+void statistics(mcomplex * C_ptr, double * us_ptr)
 {
     extern double * Qy;
-    double ** us;
+    extern int qpts, dimR, Nx, Nz;
+    double *us[21];
+    int i;
+    for (i = 0; i < 21; ++i)
+        us[i] = us_ptr + i * qpts;
 
     /* copy C_ptr to C */
-    assert(Nx_dup == Nx / 2);
-    assert(Ny_dup == dimR);
-    assert(Nz_dup == Nz);
-    assert(Nvar_dup == 2);
     memcpy(C[0][0][0], C_ptr, Nz * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
     /* Compute U from C */
     initAlphaBeta2();
 
     /* compute statistics */
-    us = dMatrix(21, qpts);     // memory leak here, not much though
     memcpy(us[0], Qy, qpts * sizeof(double));
     comp_stat(us + 1);
-
-    /* set return variables */
-    *us_ptr = us[0];
-    *nstats_ptr = 21;
-    *qpts_ptr = qpts;
 }
 
 // expose restart2 to python
-void restart2(int restart_flag)
+void read_solution(char * filename, mcomplex * C_ptr)
 {
-
     extern int qpts, dimR, dimQ, Nx, Nz;
     extern mcomplex ****U, ****C;
     extern mcomplex ****IU, ****IC;
@@ -859,8 +835,6 @@ void restart2(int restart_flag)
     hid_t file_id1, dataset_a, dataset_b;       /* file identifier */
     hid_t dataset_ia, dataset_ib;
     hid_t complex_id;
-    herr_t ret;
-    char filename[50];
 
     /* define compound datatype for the complex number */
     typedef struct {
@@ -881,8 +855,6 @@ void restart2(int restart_flag)
     complex_t IMatrix1[dimR][Nz][Nx / 2];
     complex_t IMatrix2[dimR][Nz][Nx / 2];
 
-    sprintf(filename, "data_t=%d.h5", restart_flag);
-
     // open the file and dataset 
     file_id1 = H5Fopen(filename, H5F_ACC_RDONLY, H5P_DEFAULT);
     dataset_a = H5Dopen1(file_id1, "/data_alpha");
@@ -891,28 +863,28 @@ void restart2(int restart_flag)
     dataset_ia = H5Dopen1(file_id1, "/data_ialpha");
     dataset_ib = H5Dopen1(file_id1, "/data_ibeta");
 
-    ret =
+    assert(EXIT_SUCCESS ==
         H5Dread(dataset_a, complex_id, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                Matrix1);
-    ret =
+                Matrix1));
+    assert(EXIT_SUCCESS ==
         H5Dread(dataset_b, complex_id, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                Matrix2);
+                Matrix2));
 
-    ret =
+    assert(EXIT_SUCCESS ==
         H5Dread(dataset_ia, complex_id, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                IMatrix1);
-    ret =
+                IMatrix1));
+    assert(EXIT_SUCCESS ==
         H5Dread(dataset_ib, complex_id, H5S_ALL, H5S_ALL, H5P_DEFAULT,
-                IMatrix2);
+                IMatrix2));
 
 
-    ret = H5Dclose(dataset_a);
-    ret = H5Dclose(dataset_b);
+    assert(EXIT_SUCCESS == H5Dclose(dataset_a));
+    assert(EXIT_SUCCESS == H5Dclose(dataset_b));
 
-    ret = H5Dclose(dataset_ia);
-    ret = H5Dclose(dataset_ib);
+    assert(EXIT_SUCCESS == H5Dclose(dataset_ia));
+    assert(EXIT_SUCCESS == H5Dclose(dataset_ib));
 
-    ret = H5Fclose(file_id1);
+    assert(EXIT_SUCCESS == H5Fclose(file_id1));
 
     for (y = 0; y < dimR; y++) {
         for (z = 0; z < Nz; ++z) {
@@ -947,10 +919,12 @@ void restart2(int restart_flag)
     memset(U[Nz / 2][0][0], 0, 5 * qpts * (Nx / 2) * sizeof(mcomplex));
     memset(IU[Nz / 2][0][0], 0, 5 * qpts * (Nx / 2) * sizeof(mcomplex));
 
+    memcpy(C_ptr, C[0][0][0], Nz * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 }
 
+
 // expose write_data2 to python
-int write_data2(int n)
+void save_solution(char * filename, mcomplex * C_ptr)
 {
     hid_t file_id1, dataset_a, dataset_b;       /* file identifier */
     hid_t fid1, dataset_ia, dataset_ib;
@@ -959,8 +933,6 @@ int write_data2(int n)
     hid_t complex_id;
     hsize_t fdim[] = { dimR, Nz, Nx / 2 };
     hsize_t fdim2[] = { 1 };
-    herr_t ret;
-    char filename[50];
 
     extern mcomplex ****C, ****IC;
     extern int qpts, Nx, Nz, dimR, dimQ;
@@ -972,6 +944,11 @@ int write_data2(int n)
         double re;              /*real part */
         double im;              /*imaginary part */
     } complex_t;
+
+    memcpy(C[0][0][0], C_ptr, Nz * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+
+    /* Compute U from C */
+    initAlphaBeta2();
 
     complex_id = H5Tcreate(H5T_COMPOUND, sizeof(complex_t));
     H5Tinsert(complex_id, "real", HOFFSET(complex_t, re),
@@ -1001,8 +978,6 @@ int write_data2(int n)
             }
         }
     }
-
-    sprintf(filename, "data_t=%d.h5", n);
 
     /* create File data.h5 for three data sets */
     file_id1 =
@@ -1041,53 +1016,51 @@ int write_data2(int n)
                    H5P_DEFAULT);
 
     /* write data to corresponding datasets */
-    ret =
+    assert(EXIT_SUCCESS ==
         H5Dwrite(dataset_a, complex_id, H5S_ALL, fid1, H5P_DEFAULT,
-                 Matrix1);
-    ret =
+                 Matrix1));
+    assert(EXIT_SUCCESS ==
         H5Dwrite(dataset_b, complex_id, H5S_ALL, fid1, H5P_DEFAULT,
-                 Matrix2);
-    ret =
+                 Matrix2));
+    assert(EXIT_SUCCESS ==
         H5Dwrite(dataset_ia, complex_id, H5S_ALL, fid1, H5P_DEFAULT,
-                 IMatrix1);
-    ret =
+                 IMatrix1));
+    assert(EXIT_SUCCESS ==
         H5Dwrite(dataset_ib, complex_id, H5S_ALL, fid1, H5P_DEFAULT,
-                 IMatrix2);
+                 IMatrix2));
 
-    ret =
+    assert(EXIT_SUCCESS ==
         H5Dwrite(dataset_Nx, H5T_NATIVE_INT, H5S_ALL, fid2, H5P_DEFAULT,
-                 &Nx);
-    ret =
+                 &Nx));
+    assert(EXIT_SUCCESS ==
         H5Dwrite(dataset_Ny, H5T_NATIVE_INT, H5S_ALL, fid2, H5P_DEFAULT,
-                 &Ny);
-    ret =
+                 &Ny));
+    assert(EXIT_SUCCESS ==
         H5Dwrite(dataset_Nz, H5T_NATIVE_INT, H5S_ALL, fid2, H5P_DEFAULT,
-                 &Nz);
-    ret =
+                 &Nz));
+    assert(EXIT_SUCCESS ==
         H5Dwrite(dataset_dt, H5T_IEEE_F64LE, H5S_ALL, fid2, H5P_DEFAULT,
-                 &dt);
-    ret =
+                 &dt));
+    assert(EXIT_SUCCESS ==
         H5Dwrite(dataset_Re, H5T_IEEE_F64LE, H5S_ALL, fid2, H5P_DEFAULT,
-                 &re);
-    ret =
+                 &re));
+    assert(EXIT_SUCCESS ==
         H5Dwrite(dataset_mpg, H5T_IEEE_F64LE, H5S_ALL, fid2, H5P_DEFAULT,
-                 &mpg);
+                 &mpg));
 
     /* close datasets and file */
-    ret = H5Dclose(dataset_a);
-    ret = H5Dclose(dataset_b);
-    ret = H5Dclose(dataset_ia);
-    ret = H5Dclose(dataset_ib);
-    ret = H5Dclose(dataset_Nx);
-    ret = H5Dclose(dataset_Ny);
-    ret = H5Dclose(dataset_Nz);
-    ret = H5Dclose(dataset_dt);
-    ret = H5Dclose(dataset_Re);
-    ret = H5Dclose(dataset_mpg);
+    assert(EXIT_SUCCESS == H5Dclose(dataset_a));
+    assert(EXIT_SUCCESS == H5Dclose(dataset_b));
+    assert(EXIT_SUCCESS == H5Dclose(dataset_ia));
+    assert(EXIT_SUCCESS == H5Dclose(dataset_ib));
+    assert(EXIT_SUCCESS == H5Dclose(dataset_Nx));
+    assert(EXIT_SUCCESS == H5Dclose(dataset_Ny));
+    assert(EXIT_SUCCESS == H5Dclose(dataset_Nz));
+    assert(EXIT_SUCCESS == H5Dclose(dataset_dt));
+    assert(EXIT_SUCCESS == H5Dclose(dataset_Re));
+    assert(EXIT_SUCCESS == H5Dclose(dataset_mpg));
 
-    ret = H5Sclose(fid1);
-    ret = H5Sclose(fid2);
-    ret = H5Fclose(file_id1);
-
-    return (EXIT_SUCCESS);
+    assert(EXIT_SUCCESS == H5Sclose(fid1));
+    assert(EXIT_SUCCESS == H5Sclose(fid2));
+    assert(EXIT_SUCCESS == H5Fclose(file_id1));
 }

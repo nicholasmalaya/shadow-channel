@@ -74,6 +74,8 @@ OBJS = LegendreSetup.o \
        increproject0.o \
        comp_stat.o \
        increproject.o \
+       write_data2.o \
+       restart2.o \
        channel.o \
        channel_wrap.o
 
@@ -87,7 +89,7 @@ SOURCESS = $(addsuffix .c,$(basename $(OBJS)))
 LIBS=$(FFTLIB) $(HDFLIB) $(OTHERLIBS) -lc -lm
 INCLUDE=$(FFTINC) $(HDFINC) $(OTHERINC)
 
-default: _channel.so
+default: _c_channel.so
 
 tar: $(SOURCES) makefile
 	tar -cjvf channel.tar.bz2 $^
