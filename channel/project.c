@@ -33,7 +33,6 @@ void project(int n, int k, int z, int x0, func_force_t force)
     extern double ***M;
     extern mcomplex **Uxb, **Uzb;
     extern mcomplex ****U, ****C;
-    extern mcomplex *****MC;
     /* Local variables */
     int i, j, x;
     double s, t[2];
@@ -209,22 +208,6 @@ void project(int n, int k, int z, int x0, func_force_t force)
 
     /* Compute betas */
     bsolve(M, C[z][BETA], RSDIAG - 1, RSDIAG - 1, dimR, Nx / 2, x0);
-
-
-    /*
-    for (i = 0; i < dimQ; i++) {
-        for (x = x0; x < Nx / 2; x++) {
-            Re(MC[count][z][ALPHA][i][x]) = Re(C[z][ALPHA][i][x]);
-            Im(MC[count][z][ALPHA][i][x]) = Im(C[z][ALPHA][i][x]);
-        }
-    }
-    for (i = 0; i < dimR; i++) {
-        for (x = x0; x < Nx / 2; x++) {
-            Re(MC[count][z][BETA][i][x]) = Re(C[z][BETA][i][x]);
-            Im(MC[count][z][BETA][i][x]) = Im(C[z][BETA][i][x]);
-        }
-    }
-    */
 
     /* NOW COMPUTE U HATS */
     /* v = uy_hat. */

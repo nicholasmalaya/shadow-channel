@@ -15,10 +15,10 @@ import numpy as np
 channel.Re=2000
 
 # invoke init
-n_steps = 1200
+n_steps = 1
 ru_steps = 0
 
-restart_file = 'keefe_runup_stage_2.hd5'
+restart_file = 'keefe_runup_stage_5.hd5'
 assert os.path.exists(restart_file)
 channel.init(n_steps, ru_steps, restart_file)
 

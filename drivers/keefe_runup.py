@@ -34,28 +34,23 @@ channel.dt = .01
 channel.meanU = 1
 
 # ============================================
-# STAGE 1 -- reynolds number
-channel.Re=10000
+# STAGES -- reynolds number
+Re = [10000, 5000, 3000, 2500, 2000]
+restart = None
 
-# STAGE 1 -- time steps
-ru_steps = 4999
-n_steps = 1
+for i in range(len(Re)):
+    channel.Re = Re[i]
+    
+    # STAGE i -- time steps
+    ru_steps = 4999
+    n_steps = 1
+    
+    # STAGE i -- invoke init
+    channel.init(n_steps, ru_steps, restart=restart)
 
-# STAGE 1 -- invoke init
-channel.init(n_steps, ru_steps, restart=None)
-channel.save_solution('keefe_runup_stage_1', channel.get_solution(0))
-channel.destroy()
+    filename = 'keefe_runup_stage_{0}'.format(i+1)
+    channel.save_solution(filename, channel.get_solution(0))
+    channel.destroy()
 
-# ============================================
-# STAGE 2 -- reynolds number
-channel.Re=2000
-
-# STAGE 1 -- time steps
-ru_steps = 1999
-n_steps = 1
-
-# STAGE 1 -- invoke init
-channel.init(n_steps, ru_steps, restart='keefe_runup_stage_1')
-channel.save_solution('keefe_runup_stage_2', channel.get_solution(0))
-channel.destroy()
+    restart = filename
 
