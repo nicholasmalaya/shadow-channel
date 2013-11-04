@@ -97,7 +97,7 @@ def primal(C_init):
                             c_channel.c_Nx() / 2)
     c_channel.c_primal(0, C_init)
 
-def tangent(start_step, end_step, IC_init):
+def tangent(start_step, end_step, IC_init, inhomo):
     '''
     Solve the tangent equation starting from IC_init for
     end_step - start_step time steps, starting from the start_step time step.
@@ -107,7 +107,7 @@ def tangent(start_step, end_step, IC_init):
     assert IC_init.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
                              c_channel.c_Nx() / 2)
     assert 0 <= start_step <= end_step <= c_channel.c_nsteps()
-    c_channel.c_tangent(start_step, end_step, IC_init)
+    c_channel.c_tangent(start_step, end_step, IC_init, inhomo)
 
 def adjoint(start_step, end_step, AC_init):
     assert AC_init.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),

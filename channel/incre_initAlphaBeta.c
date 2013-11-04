@@ -50,11 +50,11 @@ void incre_Alpha0(void)
         Im(IC[0][ALPHA][i][0]) = 0.0;
         for (j = 0; j < qpts; ++j) {
             Re(IC[0][ALPHA][i][0]) +=
-                Rw[i][j] * (Re(IU[0][XEL][j][0]) -
-                            Re(Uxb[0][0]) * (1 - Qy[j]) / 2.);
+                Rw[i][j] * (Re(IU[0][XEL][j][0])); // -
+                          //  Re(Uxb[0][0]) * (1 - Qy[j]) / 2.);
             Im(IC[0][ALPHA][i][0]) +=
-                Rw[i][j] * (Im(IU[0][XEL][j][0]) -
-                            Im(Uxb[0][0]) * (1 - Qy[j]) / 2.);
+                Rw[i][j] * (Im(IU[0][XEL][j][0])); // -
+                          //  Im(Uxb[0][0]) * (1 - Qy[j]) / 2.);
         }
     }
 
@@ -77,11 +77,11 @@ void incre_Beta0(void)
         Im(IC[0][BETA][i][0]) = 0.0;
         for (j = 0; j < qpts; ++j) {
             Re(IC[0][BETA][i][0]) +=
-                Rw[i][j] * (Re(IU[0][ZEL][j][0]) -
-                            Re(Uzb[0][0]) * (1 - Qy[j]) / 2.);
+                Rw[i][j] * (Re(IU[0][ZEL][j][0])); // -
+                           // Re(Uzb[0][0]) * (1 - Qy[j]) / 2.);
             Im(IC[0][BETA][i][0]) +=
-                Rw[i][j] * (Im(IU[0][ZEL][j][0]) -
-                            Im(Uzb[0][0]) * (1 - Qy[j]) / 2.);
+                Rw[i][j] * (Im(IU[0][ZEL][j][0])); // -
+                           // Im(Uzb[0][0]) * (1 - Qy[j]) / 2.);
         }
     }
 
@@ -117,17 +117,17 @@ void incre_Alpha(int z, int x0, int xdim)
         for (j = 0; j < qpts; ++j) {
             for (x = x0; x < xdim; ++x) {
                 Re(IC[z][ALPHA][i][x]) +=
-                    Qw[i][j] * (Re(IU[z][YEL][j][x]) -
+                    Qw[i][j] * (Re(IU[z][YEL][j][x]));/* -
                                 Re(Uzb[z][x]) / 4. * (1 - Qy[j]) * (1 -
                                                                     Qy[j] *
                                                                     Qy
-                                                                    [j]));
+                                                                    [j])); */
                 Im(IC[z][ALPHA][i][x]) +=
-                    Qw[i][j] * (Im(IU[z][YEL][j][x]) -
+                    Qw[i][j] * (Im(IU[z][YEL][j][x]));/* -
                                 Im(Uzb[z][x]) / 4. * (1 - Qy[j]) * (1 -
                                                                     Qy[j] *
                                                                     Qy
-                                                                    [j]));
+                                                                    [j])); */
             }
         }
     }
@@ -161,13 +161,13 @@ void incre_Beta(int z, int x0, int xdim)
             for (x = x0; x < xdim; ++x) {
                 Re(IC[z][BETA][i][x]) += Rw[i][j] *
                     ((Kx[x] * Im(IU[z][ZEL][j][x]) -
-                      Kz[z] * Im(IU[z][XEL][j][x])) -
-                     Re(Uxb[z][x]) / 2. * (1 - Qy[j]));
+                      Kz[z] * Im(IU[z][XEL][j][x]))); /* -
+                     Re(Uxb[z][x]) / 2. * (1 - Qy[j]));*/
                 Im(IC[z][BETA][i][x]) +=
                     Rw[i][j] *
                     ((Kz[z] * Re(IU[z][XEL][j][x]) -
-                      Kx[x] * Re(IU[z][ZEL][j][x])) -
-                     Im(Uxb[z][x]) / 2. * (1 - Qy[j]));
+                      Kx[x] * Re(IU[z][ZEL][j][x]))); /* -
+                     Im(Uxb[z][x]) / 2. * (1 - Qy[j]));*/
             }
         }
     }

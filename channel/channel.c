@@ -604,10 +604,11 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
     func_force_t forcing0 = NULL;
     func_force_t forcing = NULL;
 
-    // if (inhomo != 0) {
-    //     forcing0 = tangent_forcing0;
-    //     forcing = tangent_forcing;
-    // } 
+
+    //if (inhomo != 0) {
+    //    forcing0 = tangent_forcing0;
+    //    forcing = tangent_forcing;
+    //} 
 
     /***************solving state and incremental state equations ****/
 
@@ -652,11 +653,13 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
             /*now update the boundary condition using current time step
                solution of state equation */
             // TODO: change the boundary condition of the tangent to 0 ( look at how BC is enforced in the primal)
+            /*
             if (increBoundary() != NO_ERR) {
                 printf("increBoundary failure\n");
                 n = nsteps;
                 break;
-            }
+            }*/
+
 
             increproject0(dctr, n, 1, forcing0);
             increproject(dctr, 0, 1, n, forcing);

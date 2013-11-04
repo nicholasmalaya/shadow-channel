@@ -28,8 +28,8 @@ void incre_initAlphaBeta2(void)
             Re(IU[0][XEL][i][0]) += R[i][j] * Re(IC[0][ALPHA][j][0]);
             Im(IU[0][XEL][i][0]) += R[i][j] * Im(IC[0][ALPHA][j][0]);
         }
-        Re(IU[0][XEL][i][0]) += Re(Uxb[0][0]) * Uadd[i] / 2.;
-        Im(IU[0][XEL][i][0]) += Im(Uxb[0][0]) * Uadd[i] / 2.;
+        //Re(IU[0][XEL][i][0]) += Re(Uxb[0][0]) * Uadd[i] / 2.;
+        //Im(IU[0][XEL][i][0]) += Im(Uxb[0][0]) * Uadd[i] / 2.;
     }
 
     /* dIux_hat = Rp*a-c3/2 */
@@ -40,8 +40,8 @@ void incre_initAlphaBeta2(void)
             Re(IU[0][DXEL][i][0]) += Rp[i][j] * Re(IC[0][ALPHA][j][0]);
             Im(IU[0][DXEL][i][0]) += Rp[i][j] * Im(IC[0][ALPHA][j][0]);
         }
-        Re(IU[0][DXEL][i][0]) += -Re(Uxb[0][0]) / 2.;
-        Im(IU[0][DXEL][i][0]) += -Im(Uxb[0][0]) / 2.;
+        //Re(IU[0][DXEL][i][0]) += -Re(Uxb[0][0]) / 2.;
+        //Im(IU[0][DXEL][i][0]) += -Im(Uxb[0][0]) / 2.;
     }
 
     /* Iuy_hat = 0 */
@@ -58,8 +58,8 @@ void incre_initAlphaBeta2(void)
             Re(IU[0][ZEL][i][0]) += R[i][j] * Re(IC[0][BETA][j][0]);
             Im(IU[0][ZEL][i][0]) += R[i][j] * Im(IC[0][BETA][j][0]);
         }
-        Re(IU[0][ZEL][i][0]) += Re(Uzb[0][0]) * Uadd[i] / 2.;
-        Im(IU[0][ZEL][i][0]) += Im(Uzb[0][0]) * Uadd[i] / 2.;
+        //Re(IU[0][ZEL][i][0]) += Re(Uzb[0][0]) * Uadd[i] / 2.;
+        //Im(IU[0][ZEL][i][0]) += Im(Uzb[0][0]) * Uadd[i] / 2.;
     }
 
     /* duz_hat = Rp*b-c4/2 */
@@ -70,10 +70,11 @@ void incre_initAlphaBeta2(void)
             Re(IU[0][DZEL][i][0]) += Rp[i][j] * Re(IC[0][BETA][j][0]);
             Im(IU[0][DZEL][i][0]) += Rp[i][j] * Im(IC[0][BETA][j][0]);
         }
-        Re(IU[0][DZEL][i][0]) += -Re(Uzb[0][0]) / 2.;
-        Im(IU[0][DZEL][i][0]) += -Im(Uzb[0][0]) / 2.;
+        //Re(IU[0][DZEL][i][0]) += -Re(Uzb[0][0]) / 2.;
+        //Im(IU[0][DZEL][i][0]) += -Im(Uzb[0][0]) / 2.;
     }
-
+   
+    /* 
     memset(IUxb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
     memset(IUzb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
     for (j = 0; j < dimR; ++j) {
@@ -87,7 +88,7 @@ void incre_initAlphaBeta2(void)
     Re(IUxb[0][0]) -= Re(Uxb[0][0]) / 2.;
     Im(IUxb[0][0]) -= Im(Uxb[0][0]) / 2.;
     Re(IUzb[0][0]) -= Re(Uzb[0][0]) / 2.;
-    Im(IUzb[0][0]) -= Im(Uzb[0][0]) / 2.;
+    Im(IUzb[0][0]) -= Im(Uzb[0][0]) / 2.;*/
 
     incre_initAlphaBeta_2(0, 1);
     for (z = 1; z < Nz; ++z) {
@@ -119,8 +120,8 @@ void incre_initAlphaBeta_2(int z, int x0)
                 Re(IU[z][YEL][i][x]) += Q[i][j] * Re(IC[z][ALPHA][j][x]);
                 Im(IU[z][YEL][i][x]) += Q[i][j] * Im(IC[z][ALPHA][j][x]);
             }
-            Re(IU[z][YEL][i][x]) += Re(Uzb[z][x]) * Vadd[i] / 4.;
-            Im(IU[z][YEL][i][x]) += Im(Uzb[z][x]) * Vadd[i] / 4.;
+            //Re(IU[z][YEL][i][x]) += Re(Uzb[z][x]) * Vadd[i] / 4.;
+            //Im(IU[z][YEL][i][x]) += Im(Uzb[z][x]) * Vadd[i] / 4.;
         }
     }
 
@@ -136,8 +137,8 @@ void incre_initAlphaBeta_2(int z, int x0)
                 Re(IU[z][XEL][i][x]) -= Qp[i][j] * Re(IC[z][ALPHA][j][x]);
                 Im(IU[z][XEL][i][x]) -= Qp[i][j] * Im(IC[z][ALPHA][j][x]);
             }
-            Re(IU[z][XEL][i][x]) -= Re(Uzb[z][x]) * Vpadd[i] / 4.;
-            Im(IU[z][XEL][i][x]) -= Im(Uzb[z][x]) * Vpadd[i] / 4.;
+            //Re(IU[z][XEL][i][x]) -= Re(Uzb[z][x]) * Vpadd[i] / 4.;
+            //Im(IU[z][XEL][i][x]) -= Im(Uzb[z][x]) * Vpadd[i] / 4.;
         }
     }
 
@@ -149,15 +150,14 @@ void incre_initAlphaBeta_2(int z, int x0)
     for (i = 0; i < qpts; ++i) {
         for (x = x0; x < Nx / 2; ++x) {
             for (j = 0; j < dimQ; ++j) {
-                Re(IU[z][DXEL][i][x]) +=
-                    Qpp[i][j] * Re(IC[z][ALPHA][j][x]);
-                Im(IU[z][DXEL][i][x]) +=
-                    Qpp[i][j] * Im(IC[z][ALPHA][j][x]);
+                Re(IU[z][DXEL][i][x]) += Qpp[i][j] * Re(IC[z][ALPHA][j][x]);
+                Im(IU[z][DXEL][i][x]) += Qpp[i][j] * Im(IC[z][ALPHA][j][x]);
             }
+           /*
             Re(IU[z][DXEL][i][x]) +=
                 Re(Uzb[z][x]) * (-3 * Uadd[i] + 2) / 2.;
             Im(IU[z][DXEL][i][x]) +=
-                Im(Uzb[z][x]) * (-3 * Uadd[i] + 2) / 2.;
+                Im(Uzb[z][x]) * (-3 * Uadd[i] + 2) / 2.;*/
         }
     }
 
@@ -173,8 +173,8 @@ void incre_initAlphaBeta_2(int z, int x0)
                 Im(IU[z][ZEL][i][x]) += R[i][j] * Im(IC[z][BETA][j][x]);
             }
 
-            Re(IU[z][ZEL][i][x]) += Re(Uxb[z][x]) * Uadd[i] / 2.;
-            Im(IU[z][ZEL][i][x]) += Im(Uxb[z][x]) * Uadd[i] / 2.;
+            //Re(IU[z][ZEL][i][x]) += Re(Uxb[z][x]) * Uadd[i] / 2.;
+            //Im(IU[z][ZEL][i][x]) += Im(Uxb[z][x]) * Uadd[i] / 2.;
         }
     }
 
@@ -190,8 +190,8 @@ void incre_initAlphaBeta_2(int z, int x0)
                 Re(IU[z][DZEL][i][x]) += Rp[i][j] * Re(IC[z][BETA][j][x]);
                 Im(IU[z][DZEL][i][x]) += Rp[i][j] * Im(IC[z][BETA][j][x]);
             }
-            Re(IU[z][DZEL][i][x]) += -Re(Uxb[z][x]) / 2.;
-            Im(IU[z][DZEL][i][x]) += -Im(Uxb[z][x]) / 2.;
+            //Re(IU[z][DZEL][i][x]) += -Re(Uxb[z][x]) / 2.;
+            //Im(IU[z][DZEL][i][x]) += -Im(Uxb[z][x]) / 2.;
         }
     }
 
@@ -202,15 +202,12 @@ void incre_initAlphaBeta_2(int z, int x0)
             t[1] = Re(IU[z][ZEL][i][x]);        /* real part of g */
 
             Re(IU[z][XEL][i][x]) = (Kx[x] * Im(IU[z][XEL][i][x]) +
-                                    Kz[z] * Im(IU[z][ZEL][i][x])) /
-                K2[z][x];
-            Re(IU[z][ZEL][i][x]) =
-                (-Kx[x] * Im(IU[z][ZEL][i][x]) +
-                 Kz[z] * Im(IU[z][XEL][i][x])) / K2[z][x];
+                                    Kz[z] * Im(IU[z][ZEL][i][x])) / K2[z][x];
+            Re(IU[z][ZEL][i][x]) = (-Kx[x] * Im(IU[z][ZEL][i][x]) +
+                                    Kz[z] * Im(IU[z][XEL][i][x])) / K2[z][x];
             Im(IU[z][XEL][i][x]) =
                 -(Kx[x] * t[0] + Kz[z] * t[1]) / K2[z][x];
-            Im(IU[z][ZEL][i][x]) =
-                (Kx[x] * t[1] - Kz[z] * t[0]) / K2[z][x];
+            Im(IU[z][ZEL][i][x]) = (Kx[x] * t[1] - Kz[z] * t[0]) / K2[z][x];
         }
     }
 
@@ -232,7 +229,8 @@ void incre_initAlphaBeta_2(int z, int x0)
                 (Kx[x] * t[1] + Kz[z] * t[0]) / K2[z][x];
         }
     }
-
+    /* Boundary Condition Enforcement */
+    /*
     for (x = x0; x < Nx / 2; ++x) {
         for (j = 0; j < dimR; ++j) {
             Re(IUxb[z][x]) +=
@@ -272,6 +270,6 @@ void incre_initAlphaBeta_2(int z, int x0)
         Im(IUxb[z][x]) -= Re(Uzb[z][x]) * 2. * Kx[x] / K2[z][x];
         Re(IUzb[z][x]) -= -Im(Uzb[z][x]) * 2. * Kz[z] / K2[z][x];
         Im(IUzb[z][x]) -= Re(Uzb[z][x]) * 2 * Kz[z] / K2[z][x];
-    }
+    }*/
 
 }

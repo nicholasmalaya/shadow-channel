@@ -16,7 +16,7 @@ void increproject0(int k, int n, int flag, func_force_t force)
 
     /* External Variables */
     extern int qpts, dimR;
-    extern double dt, re;
+    extern double dt, re, flux;
     extern mcomplex *Ifa, *Ifb, *Itm;
     extern double **R, **Rp, **Rw, **Rs, **Rps, *W;
     extern double **MZ;
@@ -143,6 +143,13 @@ void increproject0(int k, int n, int flag, func_force_t force)
     /* Compute a's */
     bsolve0(MZ, IC[0][ALPHA], RSDIAG - 1, RSDIAG - 1, dimR);
 
+    /* MZ = M0 - (1/RE)b[k]dt*D0 */
+    for (i = 0; i < dimR; ++i) {
+        for (j = 0; j < T_RSDIAG; ++j) {
+            MZ[i][j] = Rs[i][j] + re * b[k] * dt * Rps[i][j];
+        }
+    } 
+
     /* array Ifb */
     memset(Ifb, 0, dimR * sizeof(mcomplex));
     for (i = 0; i < dimR; ++i) {
@@ -156,7 +163,7 @@ void increproject0(int k, int n, int flag, func_force_t force)
         Re(IC[0][BETA][i][0]) += dt * c[k] * Re(Ifb[i]);
     }
 
-    for (i = 0; i < dimR; ++i) {
+    /*for (i = 0; i < dimR; ++i) {
         for (j = 0; j < qpts; ++j) {
             Re(IC[0][BETA][i][0]) +=
                 Rw[i][j] * (1 - Qy[j]) * 0.5 * (Re(Uzbt[0][0]) -
@@ -167,7 +174,7 @@ void increproject0(int k, int n, int flag, func_force_t force)
         }
     }
 
-    /* Re(IC[0][BETA][0][0])=Re(IC[0][BETA][0][0])+e[0]*Re(Uzbt[0][0])-e[0]*Re(Uzb[0][0]);
+       Re(IC[0][BETA][0][0])=Re(IC[0][BETA][0][0])+e[0]*Re(Uzbt[0][0])-e[0]*Re(Uzb[0][0]);
        Re(IC[0][BETA][1][0])=Re(IC[0][BETA][1][0])+e[1]*Re(Uzbt[0][0])-e[1]*Re(Uzb[0][0]);
        Re(IC[0][BETA][2][0])=Re(IC[0][BETA][2][0])+e[2]*Re(Uzbt[0][0])-e[2]*Re(Uzb[0][0]);
        Re(IC[0][BETA][3][0])=Re(IC[0][BETA][3][0])+e[3]*Re(Uzbt[0][0])-e[3]*Re(Uzb[0][0]);
@@ -175,14 +182,8 @@ void increproject0(int k, int n, int flag, func_force_t force)
        Im(IC[0][BETA][0][0])=Im(IC[0][BETA][0][0])+e[0]*Im(Uzbt[0][0])-e[0]*Im(Uzb[0][0]);
        Im(IC[0][BETA][1][0])=Im(IC[0][BETA][1][0])+e[1]*Im(Uzbt[0][0])-e[1]*Im(Uzb[0][0]);
        Im(IC[0][BETA][2][0])=Im(IC[0][BETA][2][0])+e[2]*Im(Uzbt[0][0])-e[2]*Im(Uzb[0][0]);
-       Im(IC[0][BETA][3][0])=Im(IC[0][BETA][3][0])+e[3]*Im(Uzbt[0][0])-e[3]*Im(Uzb[0][0]); */
-
-
-    for (i = 0; i < dimR; ++i) {
-        for (j = 0; j < T_RSDIAG; ++j) {
-            MZ[i][j] = Rs[i][j] + re * b[k] * Rps[i][j] * dt;
-        }
-    }
+       Im(IC[0][BETA][3][0])=Im(IC[0][BETA][3][0])+e[3]*Im(Uzbt[0][0])-e[3]*Im(Uzb[0][0]); 
+   */
 
     /* Compute b's */
     bsolve0(MZ, IC[0][BETA], RSDIAG - 1, RSDIAG - 1, dimR);
@@ -190,7 +191,18 @@ void increproject0(int k, int n, int flag, func_force_t force)
 
     /* NOW COMPUTE IU HATS */
     /* Iux_hat = R*a+c3/2*(1-y) */
-    for (i = 0; i < qpts; ++i) {
+    flux_t = 0;
+
+    for (i = 0; i < dimR; ++i) {
+        for (j = 0; j < qpts; ++j) {
+            flux_t += Rw[i][j] * Re(IC[0][ALPHA][i][0]);
+        }
+    }
+    // printf("flux_t=%f\n", flux_t);
+
+    flux_t = - flux_t; 
+
+    /* for (i = 0; i < qpts; ++i) {
         Re(IU[0][XEL][i][0]) = 0.0;
         Im(IU[0][XEL][i][0]) = 0.0;
         for (j = 0; j < dimR; ++j) {
@@ -199,7 +211,7 @@ void increproject0(int k, int n, int flag, func_force_t force)
         }
         Re(IU[0][XEL][i][0]) += Re(Uxb[0][0]) * (1 - Qy[i]) * 0.5;
         Im(IU[0][XEL][i][0]) += Im(Uxb[0][0]) * (1 - Qy[i]) * 0.5;
-    }
+    } 
 
     flux_t = 0;
     for (i = 0; i < qpts; ++i) {
@@ -207,11 +219,13 @@ void increproject0(int k, int n, int flag, func_force_t force)
     }
 
     flux_t = -flux_t;
-    /* for (j = 0; j < dimR; ++j)
+    */
+
+    for (j = 0; j < dimR; ++j)
        {
        Re(IC[0][ALPHA][j][0])= Re(IC[0][ALPHA][j][0])+flux_t*Re(add[j]);
        Im(IC[0][ALPHA][j][0])= Im(IC[0][ALPHA][j][0])+flux_t*Im(add[j]);
-       } */
+       } 
 
     for (i = 0; i < qpts; ++i) {
         Re(IU[0][XEL][i][0]) = 0.0;
@@ -220,8 +234,8 @@ void increproject0(int k, int n, int flag, func_force_t force)
             Re(IU[0][XEL][i][0]) += R[i][j] * Re(IC[0][ALPHA][j][0]);
             Im(IU[0][XEL][i][0]) += R[i][j] * Im(IC[0][ALPHA][j][0]);
         }
-        Re(IU[0][XEL][i][0]) += Re(Uxb[0][0]) * (1 - Qy[i]) * 0.5;
-        Im(IU[0][XEL][i][0]) += Im(Uxb[0][0]) * (1 - Qy[i]) * 0.5;
+        //Re(IU[0][XEL][i][0]) += Re(Uxb[0][0]) * (1 - Qy[i]) * 0.5;
+        //Im(IU[0][XEL][i][0]) += Im(Uxb[0][0]) * (1 - Qy[i]) * 0.5;
     }
 
     /* dIux_hat = Rp*a-c3/2 */
@@ -232,8 +246,8 @@ void increproject0(int k, int n, int flag, func_force_t force)
             Re(IU[0][DXEL][i][0]) += Rp[i][j] * Re(IC[0][ALPHA][j][0]);
             Im(IU[0][DXEL][i][0]) += Rp[i][j] * Im(IC[0][ALPHA][j][0]);
         }
-        Re(IU[0][DXEL][i][0]) += -Re(Uxb[0][0]) / 2.;
-        Im(IU[0][DXEL][i][0]) += -Im(Uxb[0][0]) / 2.;
+        //Re(IU[0][DXEL][i][0]) += -Re(Uxb[0][0]) / 2.;
+        //Im(IU[0][DXEL][i][0]) += -Im(Uxb[0][0]) / 2.;
     }
 
     /* Iuy_hat = 0 */
@@ -241,7 +255,7 @@ void increproject0(int k, int n, int flag, func_force_t force)
         Re(IU[0][YEL][i][0]) = 0.0;
         Im(IU[0][YEL][i][0]) = 0.0;
     }
-/*
+
     // Iuz_hat = R*b +c4/2*(1-y) /
     for (i = 0; i < qpts; ++i) {
         Re(IU[0][ZEL][i][0]) = 0.0;
@@ -250,8 +264,8 @@ void increproject0(int k, int n, int flag, func_force_t force)
             Re(IU[0][ZEL][i][0]) += R[i][j] * Re(IC[0][BETA][j][0]);
             Im(IU[0][ZEL][i][0]) += R[i][j] * Im(IC[0][BETA][j][0]);
         }
-        Re(IU[0][ZEL][i][0]) += Re(Uzb[0][0]) * Uadd[i] / 2.;
-        Im(IU[0][ZEL][i][0]) += Im(Uzb[0][0]) * Uadd[i] / 2.;
+        //Re(IU[0][ZEL][i][0]) += Re(Uzb[0][0]) * Uadd[i] / 2.;
+        //Im(IU[0][ZEL][i][0]) += Im(Uzb[0][0]) * Uadd[i] / 2.;
     }
 
     // duz_hat = Rp*b-c4/2 /
@@ -262,10 +276,10 @@ void increproject0(int k, int n, int flag, func_force_t force)
             Re(IU[0][DZEL][i][0]) += Rp[i][j] * Re(IC[0][BETA][j][0]);
             Im(IU[0][DZEL][i][0]) += Rp[i][j] * Im(IC[0][BETA][j][0]);
         }
-        Re(IU[0][DZEL][i][0]) += -Re(Uzb[0][0]) / 2.;
-        Im(IU[0][DZEL][i][0]) += -Im(Uzb[0][0]) / 2.;
+        //Re(IU[0][DZEL][i][0]) += -Re(Uzb[0][0]) / 2.;
+        //Im(IU[0][DZEL][i][0]) += -Im(Uzb[0][0]) / 2.;
     }
-*/
+
     /*
     for (i = 0; i < dimR; i++) {
         Re(MIC[count][0][ALPHA][i][0]) = Re(IC[0][ALPHA][i][0]);

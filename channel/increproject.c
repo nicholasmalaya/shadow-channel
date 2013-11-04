@@ -267,8 +267,8 @@ void increproject(int k, int z, int x0, int n,
                 Re(IU[z][YEL][i][x]) += Q[i][j] * Re(IC[z][ALPHA][j][x]);
                 Im(IU[z][YEL][i][x]) += Q[i][j] * Im(IC[z][ALPHA][j][x]);
             }
-            Re(IU[z][YEL][i][x]) += Re(Uzb[z][x]) * Vadd[i] / 4.;
-            Im(IU[z][YEL][i][x]) += Im(Uzb[z][x]) * Vadd[i] / 4.;
+            //Re(IU[z][YEL][i][x]) += Re(Uzb[z][x]) * Vadd[i] / 4.;
+            //Im(IU[z][YEL][i][x]) += Im(Uzb[z][x]) * Vadd[i] / 4.;
         }
     }
 
@@ -284,8 +284,8 @@ void increproject(int k, int z, int x0, int n,
                 Re(IU[z][XEL][i][x]) -= Qp[i][j] * Re(IC[z][ALPHA][j][x]);
                 Im(IU[z][XEL][i][x]) -= Qp[i][j] * Im(IC[z][ALPHA][j][x]);
             }
-            Re(IU[z][XEL][i][x]) -= Re(Uzb[z][x]) * Vpadd[i] / 4.;
-            Im(IU[z][XEL][i][x]) -= Im(Uzb[z][x]) * Vpadd[i] / 4.;
+            //Re(IU[z][XEL][i][x]) -= Re(Uzb[z][x]) * Vpadd[i] / 4.;
+            //Im(IU[z][XEL][i][x]) -= Im(Uzb[z][x]) * Vpadd[i] / 4.;
         }
     }
 
@@ -302,10 +302,10 @@ void increproject(int k, int z, int x0, int n,
                 Im(IU[z][DXEL][i][x]) +=
                     Qpp[i][j] * Im(IC[z][ALPHA][j][x]);
             }
-            Re(IU[z][DXEL][i][x]) +=
-                Re(Uzb[z][x]) * (-3 * Uadd[i] + 2) / 2.;
-            Im(IU[z][DXEL][i][x]) +=
-                Im(Uzb[z][x]) * (-3 * Uadd[i] + 2) / 2.;
+            //Re(IU[z][DXEL][i][x]) +=
+            //    Re(Uzb[z][x]) * (-3 * Uadd[i] + 2) / 2.;
+            //Im(IU[z][DXEL][i][x]) +=
+            //    Im(Uzb[z][x]) * (-3 * Uadd[i] + 2) / 2.;
         }
     }
 
@@ -321,8 +321,8 @@ void increproject(int k, int z, int x0, int n,
                 Im(IU[z][ZEL][i][x]) += R[i][j] * Im(IC[z][BETA][j][x]);
             }
 
-            Re(IU[z][ZEL][i][x]) += Re(Uxb[z][x]) * Uadd[i] / 2.;
-            Im(IU[z][ZEL][i][x]) += Im(Uxb[z][x]) * Uadd[i] / 2.;
+            //Re(IU[z][ZEL][i][x]) += Re(Uxb[z][x]) * Uadd[i] / 2.;
+            //Im(IU[z][ZEL][i][x]) += Im(Uxb[z][x]) * Uadd[i] / 2.;
         }
     }
 
@@ -338,8 +338,8 @@ void increproject(int k, int z, int x0, int n,
                 Re(IU[z][DZEL][i][x]) += Rp[i][j] * Re(IC[z][BETA][j][x]);
                 Im(IU[z][DZEL][i][x]) += Rp[i][j] * Im(IC[z][BETA][j][x]);
             }
-            Re(IU[z][DZEL][i][x]) += -Re(Uxb[z][x]) / 2.;
-            Im(IU[z][DZEL][i][x]) += -Im(Uxb[z][x]) / 2.;
+            //Re(IU[z][DZEL][i][x]) += -Re(Uxb[z][x]) / 2.;
+            //Im(IU[z][DZEL][i][x]) += -Im(Uxb[z][x]) / 2.;
         }
     }
 
@@ -350,11 +350,9 @@ void increproject(int k, int z, int x0, int n,
             t[1] = Re(IU[z][ZEL][i][x]);        /* real part of g */
 
             Re(IU[z][XEL][i][x]) = (Kx[x] * Im(IU[z][XEL][i][x]) +
-                                    Kz[z] * Im(IU[z][ZEL][i][x])) /
-                K2[z][x];
-            Re(IU[z][ZEL][i][x]) =
-                (-Kx[x] * Im(IU[z][ZEL][i][x]) +
-                 Kz[z] * Im(IU[z][XEL][i][x])) / K2[z][x];
+                                    Kz[z] * Im(IU[z][ZEL][i][x])) / K2[z][x];
+            Re(IU[z][ZEL][i][x]) = (-Kx[x] * Im(IU[z][ZEL][i][x]) +
+                                    Kz[z] * Im(IU[z][XEL][i][x])) / K2[z][x];
             Im(IU[z][XEL][i][x]) =
                 -(Kx[x] * t[0] + Kz[z] * t[1]) / K2[z][x];
             Im(IU[z][ZEL][i][x]) =
