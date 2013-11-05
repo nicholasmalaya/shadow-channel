@@ -77,7 +77,9 @@ OBJS = LegendreSetup.o \
        write_data2.o \
        restart2.o \
        channel.o \
-       channel_wrap.o
+       channel_wrap.o \
+       tangent_forcing0.o \
+       tangent_forcing.o
 
 .SECONDARY: $(OBJS)
 

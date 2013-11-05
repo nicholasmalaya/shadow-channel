@@ -41,10 +41,15 @@ void increproject0(int k, int n, int flag, func_force_t force)
 
     //static double e[4] = { 2. / 3., -2. / 15., -2. / 15., 2. / 35. };
     //static double h[3] = { 1. / 2., 2. / 3., 1. };
-    mcomplex tmp[dimR], tmp2[dimR], add[dimR];
+    //mcomplex tmp[dimR], tmp2[dimR], add[dimR];
+    mcomplex add[dimR];
+
+    memset(Ifa, 0, dimR * sizeof(mcomplex));
+    memset(Ifb, 0, dimR * sizeof(mcomplex));
 
     if (force != NULL) {
-        force(n, k, 1, tmp, tmp2);
+        //force(n, k, 1, tmp, tmp2);
+        force(n, k, 1, Ifa, Ifb);
     }
 
     /* Create matrices for solving linear system. 
@@ -105,16 +110,16 @@ void increproject0(int k, int n, int flag, func_force_t force)
 
     /* Finish computing the right hand size */
     /* array Ifa */
-    memset(Ifa, 0, dimR * sizeof(mcomplex));
+    //memset(Ifa, 0, dimR * sizeof(mcomplex));
     for (i = 0; i < dimR; ++i) {
         for (j = 0; j < qpts; ++j) {
             /* no force */
             Re(Ifa[i]) += Rw[i][j] * (Re(IU[0][HXEL][j][0]));
         }
-        if (force != NULL) {
-            Re(Ifa[i]) += Re(tmp[i]);
-            Im(Ifa[i]) += Im(tmp[i]);
-        }
+        //if (force != NULL) {
+        //    Re(Ifa[i]) += Re(tmp[i]);
+        //    Im(Ifa[i]) += Im(tmp[i]);
+        //}
         Re(IC[0][ALPHA][i][0]) += dt * c[k] * Re(Ifa[i]);
     }
 
@@ -151,15 +156,15 @@ void increproject0(int k, int n, int flag, func_force_t force)
     } 
 
     /* array Ifb */
-    memset(Ifb, 0, dimR * sizeof(mcomplex));
+    //memset(Ifb, 0, dimR * sizeof(mcomplex));
     for (i = 0; i < dimR; ++i) {
         for (j = 0; j < qpts; ++j) {
             Re(Ifb[i]) += Rw[i][j] * Re(IU[0][HZEL][j][0]);
         }
-        if (force != NULL) {
-            Re(Ifb[i]) += Re(tmp2[i]);
-            Im(Ifb[i]) += Im(tmp2[i]);
-        }
+        //if (force != NULL) {
+        //    Re(Ifb[i]) += Re(tmp2[i]);
+        //    Im(Ifb[i]) += Im(tmp2[i]);
+        //}
         Re(IC[0][BETA][i][0]) += dt * c[k] * Re(Ifb[i]);
     }
 

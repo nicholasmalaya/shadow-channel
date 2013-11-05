@@ -75,5 +75,7 @@ acknowledgement of the original source.
 #define MIN(x,y)  ((x)<(y) ? (x):(y))
 #define MAGNITUDE(x)  (sqrt(Re((x))*Re((x)) + Im((x))*Im((x))))
 typedef void (*func_force_t) (int, int, int, mcomplex *, mcomplex *);
+typedef void (*func_force_tt) (int, int, int, mcomplex **, mcomplex **);
+
 
 #endif                          /* MINCHNL_H */

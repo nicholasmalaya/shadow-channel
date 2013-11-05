@@ -7,7 +7,7 @@
 #include "mvOps.h"
 
 
-void tangent_forcing0(int n, int k, int flag, mcomplex * fb, mcomplex * fa)
+void tangent_forcing0(int n, int k, int flag, mcomplex * fa, mcomplex * fb)
 {
     /* External Variables */
     extern int qpts, dimR, dimQ, Nx;
@@ -16,7 +16,7 @@ void tangent_forcing0(int n, int k, int flag, mcomplex * fb, mcomplex * fa)
     extern mcomplex **Fa, **Fb, **TM;
     extern double **Q, **Qp, **Qpp, **R, **Rp, **Qw, **Qpw, **Rw, **Qs,
         **Qps, **Qpps, **Rs, **Rps, *Rp0;
-    extern double **Mz;
+    extern double **MZ;
     extern mcomplex ****U, ****C;
     extern mcomplex *****MC;
    /* Local variables */
@@ -25,22 +25,10 @@ void tangent_forcing0(int n, int k, int flag, mcomplex * fb, mcomplex * fa)
 
     /* ALPHA Forcing */
 
-    /* compute diffusion matrix M = Dv for ALPHAS  */
-    if (k == 0) {               /* first step */
-        for (i = 0; i < dimR; ++i) {    /* MZ = -(1/RE^2) * D0 */
-            for (j = 0; j < T_RSDIAG; ++j) {
-                MZ[i][j] = - re * re * Rps[i][j]; 
-            }
-        }
-        /* compute MZ*C[0][ALPHA] and store the result in fa. */
-        smMult0(MZ, C[0][ALPHA], fa, RSDIAG - 1, RSDIAG - 1, dimR);
-        
-    }
-
     /* diffusion matrix M = -(1/RE)^2 * D0 for ALPHAS */
     for (i = 0; i < dimR; ++i) {
         for (j = 0; j < T_RSDIAG; ++j) {
-            MZ[i][j] = - re * re * Rps[i][j];  
+            MZ[i][j] = re * re * Rps[i][j];  
         }
     }
 

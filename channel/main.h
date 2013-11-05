@@ -38,7 +38,7 @@ void adjproject(int n, int k, int z, int x0, int count,
                 func_force_t force);
 void adjproject0(int k, int n, int count, func_force_t force);
 void increproject(int k, int z, int x0, int n,
-                  func_force_t force);
+                  func_force_tt force);
 void increproject0(int k, int n, int flag, func_force_t force);
 void increadjproject0(int k, int n, int count, func_force_t force);
 void increadjproject(int n, int k, int z, int x0, int count,

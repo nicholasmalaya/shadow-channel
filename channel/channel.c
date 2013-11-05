@@ -532,11 +532,11 @@ void primal(int ru_steps, mcomplex *C_given)
 
             /*now update the boundary condition using current time step
                solution of state equation */
-            if (increBoundary() != NO_ERR) {
+            /*if (increBoundary() != NO_ERR) {
                 printf("increBoundary failure\n");
                 n = nsteps + ru_steps;
                 break;
-            }
+            }*/
 
             increproject0(dctr, n, 1, NULL);
             increproject(dctr, 0, 1, n, NULL);
@@ -602,13 +602,13 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
 
     /* forcing function */
     func_force_t forcing0 = NULL;
-    func_force_t forcing = NULL;
+    func_force_tt forcing = NULL;
 
 
-    //if (inhomo != 0) {
-    //    forcing0 = tangent_forcing0;
-    //    forcing = tangent_forcing;
-    //} 
+    if (inhomo != 0) {
+        forcing0 = tangent_forcing0;
+        forcing = tangent_forcing;
+    } 
 
     /***************solving state and incremental state equations ****/
 
@@ -636,6 +636,29 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
                 break;
             }
 
+            /*now update the boundary condition using current time step
+               solution of state equation */
+            // TODO: change the boundary condition of the tangent to 0 ( look at how BC is enforced in the primal)
+            /*
+            if (increBoundary() != NO_ERR) {
+                printf("increBoundary failure\n");
+                n = nsteps;
+                break;
+            }*/
+
+            increproject0(dctr, n, 1, forcing0);
+            increproject(dctr, 0, 1, n, forcing);
+            for (z = 1; z < Nz; ++z) {
+                if (z == Nz / 2) {
+                    // SET U[z][XEL,YEL,ZEL,DXEL,DZEL] TO ZEROS 
+                    memset(IU[z][0][0], 0,
+                           5 * qpts * (Nx / 2) * sizeof(mcomplex));
+                    continue;
+                }
+
+                increproject(dctr, z, 0, n, forcing);
+            }
+
             project0(dctr, n, NULL);    /* (kx, kz)=(0, 0),
                                solve for a, b */
             project(n, dctr, 0, 1, NULL);    /* (kx, kz)!=(0, 0),
@@ -650,29 +673,6 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
                 project(n, dctr, z, 0, NULL);
             }
 
-            /*now update the boundary condition using current time step
-               solution of state equation */
-            // TODO: change the boundary condition of the tangent to 0 ( look at how BC is enforced in the primal)
-            /*
-            if (increBoundary() != NO_ERR) {
-                printf("increBoundary failure\n");
-                n = nsteps;
-                break;
-            }*/
-
-
-            increproject0(dctr, n, 1, forcing0);
-            increproject(dctr, 0, 1, n, forcing);
-            for (z = 1; z < Nz; ++z) {
-                if (z == Nz / 2) {
-                    // SET U[z][XEL,YEL,ZEL,DXEL,DZEL] TO ZEROS 
-                    memset(IU[z][0][0], 0,
-                           5 * qpts * (Nx / 2) * sizeof(mcomplex));
-                    continue;
-                }
-
-                increproject(dctr, z, 0, n, forcing);
-            }
 
             count = n * 3 + dctr + 1;
             assert (count >= 0);

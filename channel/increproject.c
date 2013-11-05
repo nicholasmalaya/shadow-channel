@@ -11,10 +11,11 @@ New piece of code used to solve the linear system for (kx, kx)!=(0,0)
 #include <math.h>
 #include "minChnl.h"
 #include "mvOps.h"
+#include "channel.h"
 
 /* project when (Kx,Kz) != (0,0) */
 void increproject(int k, int z, int x0, int n,
-                  func_force_t force)
+                  func_force_tt force)
 {
 
     /* External Variables */
@@ -43,20 +44,30 @@ void increproject(int k, int z, int x0, int n,
     static double c[3] = { 1. / 2, 1. / 3., 1., };
     static double d[3] = { 0., -1. / 6, -2. / 3 };
 
-    static double e[4] = { 4. / 3., -4. / 15., -4. / 15., 4. / 35. };
+    /*static double e[4] = { 4. / 3., -4. / 15., -4. / 15., 4. / 35. };
     static double r[8] =
         { -16. / 15., 16. / 35., 32. / 105., -32. / 105., -16. / 315.,
 16. / 231., 0., 0. };
     static double xx[8] =
         { 8. / 35., -8. / 315., -8. / 105., 8. / 385., 8. / 385.,
--8. / 1001., -8. / 3003., 8. / 6435. };
+-8. / 1001., -8. / 3003., 8. / 6435. };*/
     //   static  double h[3] = { 0., 1./2., 2./3.};
     //   static  double h[3] = { 0., 8./15., 2./3.};
 
-    mcomplex tmp[Nx / 2][dimR], tmp2[Nx / 2][dimQ];
+//    mcomplex tmp[Nx / 2][dimR], tmp2[Nx / 2][dimQ];
+//
+//    if (force != NULL) {
+//        force(n, k, z, tmp[0], tmp2[0]);
+//    }
+
+    /* Apply Forcing */
+    memset(IFa[0], 0, dimR * (Nx / 2) * sizeof(mcomplex));
+    memset(IFb[0], 0, dimR * (Nx / 2) * sizeof(mcomplex));
+
     if (force != NULL) {
-        force(n, k, z, tmp[0], tmp2[0]);
+        force(n, k, z, IFa, IFb);
     }
+
 
     /* FIRST COMPUTE ALPHAS */
     /* Create matrices for solving linear system. 
@@ -105,7 +116,7 @@ void increproject(int k, int z, int x0, int n,
 
     /* Finish computing the right hand size */
     /* array IFa */
-    memset(IFa[0], 0, dimR * (Nx / 2) * sizeof(mcomplex));
+    //memset(IFa[0], 0, dimR * (Nx / 2) * sizeof(mcomplex));
     for (i = 0; i < dimQ; ++i) {
         for (j = 0; j < qpts; ++j) {
             for (x = x0; x < Nx / 2; ++x) {
@@ -123,14 +134,14 @@ void increproject(int k, int z, int x0, int n,
         }
     }
 
-    if (force != NULL) {
-        for (x = x0; x < Nx / 2; ++x) {
-            for (i = 0; i < dimQ; ++i) {
-                Im(IFa[i][x]) += Im(tmp2[x][i]);
-                Re(IFa[i][x]) += Re(tmp2[x][i]);
-            }
-        }
-    }
+    //if (force != NULL) {
+    //    for (x = x0; x < Nx / 2; ++x) {
+    //        for (i = 0; i < dimQ; ++i) {
+    //            Im(IFa[i][x]) += Im(tmp[x][i]);
+    //            Re(IFa[i][x]) += Re(tmp[x][i]);
+    //        }
+    //    }
+    //}
 
     for (i = 0; i < dimQ; ++i) {
         for (x = x0; x < Nx / 2; ++x) {
@@ -208,7 +219,7 @@ void increproject(int k, int z, int x0, int n,
 
     /* Finish computing the right hand size */
     /* array Fb */
-    memset(IFb[0], 0, dimR * (Nx / 2) * sizeof(mcomplex));
+    //memset(IFb[0], 0, dimR * (Nx / 2) * sizeof(mcomplex));
     for (i = 0; i < dimR; ++i) {
         for (j = 0; j < qpts; ++j) {
             for (x = x0; x < Nx / 2; ++x) {
@@ -222,14 +233,14 @@ void increproject(int k, int z, int x0, int n,
         }
     }
 
-    if (force != NULL) {
-        for (x = x0; x < Nx / 2; ++x) {
-            for (i = 0; i < dimR; ++i) {
-                Im(IFb[i][x]) += Im(tmp[x][i]);
-                Re(IFb[i][x]) += Re(tmp[x][i]);
-            }
-        }
-    }
+//     if (force != NULL) {
+//         for (x = x0; x < Nx / 2; ++x) {
+//             for (i = 0; i < dimR; ++i) {
+//                 Im(IFb[i][x]) += Im(tmp2[x][i]);
+//                 Re(IFb[i][x]) += Re(tmp2[x][i]);
+//             }
+//         }
+//     }
     for (i = 0; i < dimR; ++i) {
         for (x = x0; x < Nx / 2; ++x) {
             Re(IC[z][BETA][i][x]) += dt * c[k] * Re(IFb[i][x]);
