@@ -44,13 +44,41 @@ void increproject0(int k, int n, int flag, func_force_t force)
     //mcomplex tmp[dimR], tmp2[dimR], add[dimR];
     mcomplex add[dimR];
 
+    /* Apply Forcing */
+    if ((force != NULL)&&(k==0)) {
+        memset(Ifa, 0, dimR * sizeof(mcomplex));
+        memset(Ifb, 0, dimR * sizeof(mcomplex));
+        force(n, k, 1, Ifa, Ifb);
+
+        /* Solve for forcing cotribution to da/dt, db/dt */
+        /* MZ = M0 */
+        //memset(MZ[0], 0, dimR * 9 * sizeof(double));
+        for (i = 0; i < dimR; ++i) {
+            for (j = 0; j < T_RSDIAG; ++j) {
+                MZ[i][j] = Rs[i][j];
+            }
+        }
+        bsolve_0(MZ, Ifa, RSDIAG - 1, RSDIAG - 1, dimR);
+        bsolve_0(MZ, Ifb, RSDIAG - 1, RSDIAG - 1, dimR);
+
+        for (i = 0; i < dimR; ++i) {
+            Re(IC[0][ALPHA][i][0]) += dt * Re(Ifa[i]);
+            Im(IC[0][ALPHA][i][0]) += dt * Im(Ifa[i]);
+            Re(IC[0][BETA][i][0]) += dt * Re(Ifb[i]);
+            Im(IC[0][BETA][i][0]) += dt * Im(Ifb[i]);
+
+        }
+
+
+    }
+
     memset(Ifa, 0, dimR * sizeof(mcomplex));
     memset(Ifb, 0, dimR * sizeof(mcomplex));
 
-    if (force != NULL) {
-        //force(n, k, 1, tmp, tmp2);
-        force(n, k, 1, Ifa, Ifb);
-    }
+//    if (force != NULL) {
+//        //force(n, k, 1, tmp, tmp2);
+//        force(n, k, 1, Ifa, Ifb);
+//    }
 
     /* Create matrices for solving linear system. 
        Right hand side of system:  If this is the first step in the Runge-Kutta
@@ -62,6 +90,7 @@ void increproject0(int k, int n, int flag, func_force_t force)
        Lhs matrix:  M0 - (1/RE)b[k]dt*D0                          */
 
     if (k == 0) {               /* first step */
+        //memset(MZ[0], 0, dimR * 9 * sizeof(double));
         for (i = 0; i < dimR; ++i) {    /* MZ = M0 + (1/RE)a[k]dt*D0 */
             for (j = 0; j < T_RSDIAG; ++j) {
                 MZ[i][j] = Rs[i][j] - re * a[0] * dt * Rps[i][j];
@@ -85,6 +114,7 @@ void increproject0(int k, int n, int flag, func_force_t force)
     }
 
     /* MZ = M0 - (1/RE)b[k]dt*D0 */
+    //memset(MZ[0], 0, dimR * 9 * sizeof(double));
     for (i = 0; i < dimR; ++i) {
         for (j = 0; j < T_RSDIAG; ++j) {
             MZ[i][j] = Rs[i][j] + re * b[k] * dt * Rps[i][j];
@@ -102,6 +132,7 @@ void increproject0(int k, int n, int flag, func_force_t force)
 
 
     /* MZ = M0 - (1/RE)b[k]dt*D0 */
+    //memset(MZ[0], 0, dimR * 9 * sizeof(double));
     for (i = 0; i < dimR; ++i) {
         for (j = 0; j < T_RSDIAG; ++j) {
             MZ[i][j] = Rs[i][j] + re * b[k] * dt * Rps[i][j];
@@ -149,6 +180,7 @@ void increproject0(int k, int n, int flag, func_force_t force)
     bsolve0(MZ, IC[0][ALPHA], RSDIAG - 1, RSDIAG - 1, dimR);
 
     /* MZ = M0 - (1/RE)b[k]dt*D0 */
+    //memset(MZ[0], 0, dimR * 9 * sizeof(double));
     for (i = 0; i < dimR; ++i) {
         for (j = 0; j < T_RSDIAG; ++j) {
             MZ[i][j] = Rs[i][j] + re * b[k] * dt * Rps[i][j];
@@ -294,9 +326,14 @@ void increproject0(int k, int n, int flag, func_force_t force)
     }
     */
 
+
+
+
+
     /* UPDATE RHS FOR NEXT TIME */
     if (k != 2) {               /* not last step */
         /* MZ = M0 + (1/RE)a[k+1]dt*D0 */
+        //memset(MZ[0], 0, dimR * 9 * sizeof(double));
         for (i = 0; i < dimR; ++i) {
             for (j = 0; j < T_RSDIAG; ++j) {
                 MZ[i][j] = Rs[i][j] - re * a[k + 1] * dt * Rps[i][j];

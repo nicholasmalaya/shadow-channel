@@ -2,7 +2,7 @@ import sys
 sys.path.append("..")
 import channel
 from numpy import *
-
+'''
 # UNFORCED TANGENT
 
 n_steps = 10
@@ -34,26 +34,34 @@ print linalg.norm(C1p-C1-IC)
 channel.destroy()
 '''
 # TANGENT WITH FORCING
-Re = 5000
-dRe = 1E-5
+Re = 2000
+dRe = 1E-6
 ru_steps = 0
 n_steps = 1
+restart = 'keefe_runup_stage_5.hd5'
+channel.dt = 0.01
 # positive perturbation
 channel.Re = Re + dRe
-channel.init(n_steps, ru_steps, restart=None)
-Cp = channel.get_solution(0)
+channel.init(n_steps, ru_steps, restart=restart)
+Cp = channel.get_solution(n_steps,copy=True)
 channel.destroy()
 
 # negative perturbation
 channel.Re = Re - dRe
-channel.init(n_steps, ru_steps, restart=None)
-Cm = channel.get_solution(0)
+channel.init(n_steps, ru_steps, restart=restart)
+Cm = channel.get_solution(n_steps,copy=True)
 channel.destroy()
 
 # tangent 
 channel.Re = Re
-channel.init(n_steps, ru_steps, restart=None)
+channel.init(n_steps, ru_steps, restart=restart)
 IC = zeros(Cm.shape,complex)
 channel.tangent(0, n_steps, IC,1)
+
+dC = (1./(2*dRe))*(Cp - Cm)
+
+print linalg.norm(dC)
+print linalg.norm(IC)
+print linalg.norm(dC-IC)
 channel.destroy()
-'''
+

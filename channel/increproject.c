@@ -61,12 +61,58 @@ void increproject(int k, int z, int x0, int n,
 //    }
 
     /* Apply Forcing */
-    memset(IFa[0], 0, dimR * (Nx / 2) * sizeof(mcomplex));
+ 
+    if ((force != NULL)&&(k==0)) {
+        memset(IFa[0], 0, dimQ * (Nx / 2) * sizeof(mcomplex));
+        memset(IFb[0], 0, dimR * (Nx / 2) * sizeof(mcomplex));
+        force(n, k, z, IFa, IFb);
+        
+        /* form mass matrix, solve for forcing contribution to da/dt */
+        /* Left hand side M = Mv */
+        memset(M[0][0], 0, dimR * 9 * (Nx / 2) * sizeof(double));
+        for (i = 0; i < dimQ; ++i) {
+            for (j = 0; j < T_QSDIAG; ++j) {
+                for (x = x0; x < Nx / 2; ++x) {
+                    M[i][j][x] = -(K2[z][x] * Qs[i][j] + Qps[i][j]);      
+                }
+            }
+        }
+        bsolve(M, IFa, QSDIAG - 1, QSDIAG - 1, dimQ, Nx / 2, x0);
+       
+       /* form mass matrix, solve for forcing contribution to db/dt */
+        /* Left hand side M = Mv */
+        memset(M[0][0], 0, dimR * 9 * (Nx / 2) * sizeof(double));
+        for (i = 0; i < dimR; ++i) {
+            for (j = 0; j < T_RSDIAG; ++j) {
+                for (x = x0; x < Nx / 2; ++x) {
+                    M[i][j][x] = Rs[i][j];      
+                }
+            }
+        }
+        bsolve(M, IFb, RSDIAG - 1, RSDIAG - 1, dimR, Nx / 2, x0);
+       
+
+        for (x = x0; x < Nx / 2; ++x) {
+             for (i = 0; i < dimQ; ++i) {
+                Re(IC[z][ALPHA][i][x]) += dt * Re(IFa[i][x]);
+                Im(IC[z][ALPHA][i][x]) += dt * Im(IFa[i][x]);
+             }
+            
+             for (i = 0; i < dimR; ++i) {
+                Re(IC[z][BETA][i][x]) += dt * Re(IFb[i][x]);
+                Im(IC[z][BETA][i][x]) += dt * Im(IFb[i][x]);
+             }
+        }
+    
+    }
+
+    /* Apply Forcing */
+    memset(IFa[0], 0, dimQ * (Nx / 2) * sizeof(mcomplex));
     memset(IFb[0], 0, dimR * (Nx / 2) * sizeof(mcomplex));
 
-    if (force != NULL) {
-        force(n, k, z, IFa, IFb);
-    }
+//    if (force != NULL) {
+//        force(n, k, z, IFa, IFb);
+//    }
 
 
     /* FIRST COMPUTE ALPHAS */
@@ -389,6 +435,8 @@ void increproject(int k, int z, int x0, int n,
                 (Kx[x] * t[1] + Kz[z] * t[0]) / K2[z][x];
         }
     }
+
+
 
 
     /*
