@@ -125,7 +125,7 @@ def statistics(solution):
     assert solution.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
                               c_channel.c_Nx() / 2)
 
-    stats = np.zeros([21, c_channel.c_qpts()], np.float64)
+    stats = np.zeros([20, c_channel.c_qpts()], np.float64)
     c_channel.c_statistics(solution, stats)
     return stats
 

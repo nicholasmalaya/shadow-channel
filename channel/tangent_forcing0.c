@@ -7,7 +7,7 @@
 #include "mvOps.h"
 
 
-void tangent_forcing0(int n, int k, int flag, mcomplex * fa, mcomplex * fb)
+void tangent_forcing0(int n, int k, int flag, mcomplex * f_a, mcomplex * f_b)
 {
     /* External Variables */
     extern int qpts, dimR, dimQ, Nx;
@@ -26,6 +26,7 @@ void tangent_forcing0(int n, int k, int flag, mcomplex * fa, mcomplex * fb)
     /* ALPHA Forcing */
 
     /* diffusion matrix M = -(1/RE)^2 * D0 for ALPHAS */
+    // memset(MZ[0], 0, dimR * 9 * sizeof(double)); 
     for (i = 0; i < dimR; ++i) {
         for (j = 0; j < T_RSDIAG; ++j) {
             MZ[i][j] = re * re * Rps[i][j];  
@@ -33,12 +34,12 @@ void tangent_forcing0(int n, int k, int flag, mcomplex * fa, mcomplex * fb)
     }
 
     /* Compute alpha forcing  */
-    smMult0(MZ, C[0][ALPHA], fa, RSDIAG - 1, RSDIAG - 1, dimR);    
+    smMult0(MZ, MC[3*n][0][ALPHA], f_a, RSDIAG - 1, RSDIAG - 1, dimR);    
 
     /* BETA Forcing */
     
     /* Compute beta forcing  */
-    smMult0(MZ, C[0][BETA], fb, RSDIAG - 1, RSDIAG - 1, dimR);
-    
+    smMult0(MZ, MC[3*n][0][BETA], f_b, RSDIAG - 1, RSDIAG - 1, dimR);
+
 }
 

@@ -69,7 +69,6 @@ OBJS = LegendreSetup.o \
        initAlphaBeta.o \
        initAlphaBeta2.o \
        incre_initAlphaBeta2.o \
-       adjoint_initAlphaBeta2.o \
        project.o \
        project0.o \
        increproject0.o \
@@ -103,7 +102,7 @@ clean:
 	@echo 'files cleaned'
 
 ## build library ## 
-_%.so:  $(OBJS)
+_c_channel.so:  $(OBJS)
 #	$(CC) $(INCLUDE) $(OBJS) -o $@ $(LIBS) 
 	$(LD) $^ $(INCLUDE) -o $@ $(LIBS) 
 

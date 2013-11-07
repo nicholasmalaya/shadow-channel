@@ -161,11 +161,11 @@ void adjproject0(int k, int n, int count, func_force_t force)
 
     flux_t = -flux_t;
 
-    /* for (j = 0; j < dimR; ++j)
+    for (j = 0; j < dimR; ++j)
        {
-       Re(AC[0][ALPHA][j][0])= Re(AC[0][ALPHA][j][0])+flux_t*Re(add[j]);
-       Im(AC[0][ALPHA][j][0])= Im(AC[0][ALPHA][j][0])+flux_t*Im(add[j]);
-       } */
+       Re(AC[0][ALPHA][j][0])= Re(AC[0][ALPHA][j][0])+flux_t*Re(add[j]) * 0.5;
+       Im(AC[0][ALPHA][j][0])= Im(AC[0][ALPHA][j][0])+flux_t*Im(add[j]) * 0.5;
+    }
 
 
     /* NOW COMPUTE U HATS */

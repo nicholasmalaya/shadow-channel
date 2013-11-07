@@ -123,7 +123,7 @@ void c_statistics(mcomplex * C_ptr,
     assert(Nz_dup == Nz);
     assert(Nvar_dup == 2);
 
-    assert (nstats_dup == 21);
+    assert (nstats_dup == 20);
     assert (qpts_dup == qpts);
 
     statistics(C_ptr, us_ptr);

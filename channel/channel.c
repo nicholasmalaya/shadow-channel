@@ -713,38 +713,15 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo)
     for (n = start_step; n > end_step; --n) {
         for (dctr = 0; dctr < 3; ++dctr) {    /* RK steps */
 
-			// TODO: figure out the adjoint boundary condition and the Uxb, Uxbt etc hell
-            /* copy the result to Uxbt, Uzbt. Uxb and Uzb will be used later for boundary condition
-               of current time stage */
-            memcpy(Uxbt[0], Uxb[0],
-                   (Nz) * (Nx / 2) * sizeof(fftw_complex));
-            memcpy(Uzbt[0], Uzb[0],
-                   (Nz) * (Nx / 2) * sizeof(fftw_complex));
-            memset(Uxb[0], 0,
-                   Nz * (Nx / 2) * sizeof(fftw_complex));
-            memset(Uzb[0], 0,
-                   Nz * (Nx / 2) * sizeof(fftw_complex));
-            memset(AUxb[0], 0,
-                   Nz * (Nx / 2) * sizeof(fftw_complex));
-            memset(AUzb[0], 0,
-                   Nz * (Nx / 2) * sizeof(fftw_complex));
-
             count = n * 3 - dctr - 1;
 
             /*read data from memery */
             if (dctr < 2) {
                 memcpy(C[0][0][0], MC[count - 1][0][0][0],
                         (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
-                memcpy(IC[0][0][0], MIC[count - 1][0][0][0],
-                        (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
                 /*reconstruct the state and incremental state solution u, iu from alpha and beta */
                 initAlphaBeta2();
-                if (increBoundary() != NO_ERR) {
-                    printf
-                        ("increBoundary failure\n");
-                }
-                incre_initAlphaBeta2();
 
                 if (pass2(dctr, n) != NO_ERR) {
                     printf("Pass2 failure\n");
@@ -752,28 +729,14 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo)
                     break;
                 }
                 memcpy(LU[0][0][0], U[0][0][0],
-                       (Nz) * 5 * qpts * (Nx / 2) *
-                       sizeof(mcomplex));
-                memcpy(LIU[0][0][0], IU[0][0][0],
-                       (Nz) * 5 * qpts * (Nx / 2) *
-                       sizeof(mcomplex));
-
+                       (Nz) * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
             }
             /*read data from memery */
             memcpy(C[0][0][0], MC[count][0][0][0],
                    (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
-            memcpy(IC[0][0][0], MIC[count][0][0][0],
-                   (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
             /*reconstruct the state and incremental state solution u, iu from alpha and beta */
             initAlphaBeta2();
-            if (increBoundary() != NO_ERR) {
-                printf("increBoundary failure\n");
-            }
-            incre_initAlphaBeta2();
-
-            memcpy(AUxb[0], Uxb[0], (Nz) * (Nx / 2) * sizeof(fftw_complex));
-            memcpy(AUzb[0], Uzb[0], (Nz) * (Nx / 2) * sizeof(fftw_complex));
 
             if (pass2(dctr, n) != NO_ERR) {
                 printf("Pass2 failure\n");
@@ -835,9 +798,9 @@ void statistics(mcomplex * C_ptr, double * us_ptr)
 {
     extern double * Qy;
     extern int qpts, dimR, Nx, Nz;
-    double *us[21];
+    double *us[20];
     int i;
-    for (i = 0; i < 21; ++i)
+    for (i = 0; i < 20; ++i)
         us[i] = us_ptr + i * qpts;
 
     /* copy C_ptr to C */
@@ -847,8 +810,7 @@ void statistics(mcomplex * C_ptr, double * us_ptr)
     initAlphaBeta2();
 
     /* compute statistics */
-    memcpy(us[0], Qy, qpts * sizeof(double));
-    comp_stat(us + 1);
+    comp_stat(us);
 }
 
 /***************************************************************
