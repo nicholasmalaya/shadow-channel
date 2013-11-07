@@ -58,8 +58,25 @@ void increproject0(int k, int n, int flag, func_force_t force)
                 MZ[i][j] = Rs[i][j];
             }
         }
+        
         bsolve_0(MZ, Ifa, RSDIAG - 1, RSDIAG - 1, dimR);
+        
+        for (i = 0; i < dimR; ++i) {
+            for (j = 0; j < T_RSDIAG; ++j) {
+                MZ[i][j] = Rs[i][j];
+            }
+        }
+
         bsolve_0(MZ, Ifb, RSDIAG - 1, RSDIAG - 1, dimR);
+
+//    f_a_norm = 0.0;
+//    f_b_norm = 0.0;
+//    for (i = 0; i < dimR; ++i) {
+//       f_a_norm += pow(MAGNITUDE(Ifa[i]), 2);
+//       f_b_norm += pow(MAGNITUDE(Ifb[i]), 2);
+//    }
+//    printf("f_a_norm = %e, f_b_norm = %e\n", sqrt(f_a_norm),sqrt(f_b_norm));
+
 
         for (i = 0; i < dimR; ++i) {
             Re(IC[0][ALPHA][i][0]) += dt * Re(Ifa[i]);

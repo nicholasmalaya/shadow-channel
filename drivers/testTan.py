@@ -37,10 +37,10 @@ channel.destroy()
 Re = 2000
 dRe = 1E-6
 ru_steps = 0
-n_steps = 1
+n_steps = 10
 restart = 'keefe_runup_stage_5.hd5'
 # restart = None
-channel.dt = 0.001
+channel.dt = 0.01
 channel.meanU = 1.0
 # positive perturbation
 channel.Re = Re + dRe
@@ -67,6 +67,7 @@ print linalg.norm(IC)
 print linalg.norm(dC-IC)
 # channel.destroy()
 
+import numpy
 n = int((channel.Ny - 1) * 3 / 2 + 1)
 y, w = numpy.polynomial.legendre.leggauss(n)
 
