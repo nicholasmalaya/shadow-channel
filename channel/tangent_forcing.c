@@ -40,6 +40,14 @@ void tangent_forcing(int n, int k, int z, mcomplex ** f_a, mcomplex ** f_b)
 
     /* Compute alpha forcing  */
     smMult(M, MC[3*n][z][ALPHA], f_a, QSDIAG - 1, QSDIAG - 1, dimQ, Nx / 2, x0);
+
+    double f_a_norm = 0.0;
+    for (i = 0; i < dimR; ++i) {
+        for (x = x0; x < Nx / 2; ++x) {
+            f_a_norm += pow(MAGNITUDE(f_a[i][x]), 2);
+        }
+    }
+    printf("z = %d, f_a_norm = %e\n", z, sqrt(f_a_norm));
     
 
     /* BETA Forcing */
@@ -56,6 +64,13 @@ void tangent_forcing(int n, int k, int z, mcomplex ** f_a, mcomplex ** f_b)
     /* compute M*C[z][BETA] and store the result in f_b.*/
     smMult(M, MC[3*n][z][BETA], f_b, RSDIAG - 1, RSDIAG - 1, dimR, Nx / 2, x0);
 
+    double f_b_norm = 0.0;
+    for (i = 0; i < dimR; ++i) {
+        for (x = x0; x < Nx / 2; ++x) {
+            f_b_norm += pow(MAGNITUDE(f_b[i][x]), 2);
+        }
+    }
+    printf("z = %d, f_b_norm = %e\n", z, sqrt(f_b_norm));
 
 }
 

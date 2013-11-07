@@ -466,7 +466,7 @@ void primal(int ru_steps, mcomplex *C_given)
     {
         memset(U[0][0][0], 0, Nz * 5 * qpts * Nx / 2 * sizeof(mcomplex));
         for (i = 0; i < qpts; i++) {
-            Re(U[0][XEL][i][0]) = (1.0 - Qy[i] * Qy[i]) * flux * 3./4.;
+            Re(U[0][XEL][i][0]) = (1.0 - Qy[i] * Qy[i]) * flux * 3./4;
             Im(U[0][XEL][i][0]) = 0.0;
         }
         // perturbation
@@ -638,7 +638,6 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
 
             /*now update the boundary condition using current time step
                solution of state equation */
-            // TODO: change the boundary condition of the tangent to 0 ( look at how BC is enforced in the primal)
             /*
             if (increBoundary() != NO_ERR) {
                 printf("increBoundary failure\n");

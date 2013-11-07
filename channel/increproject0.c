@@ -117,7 +117,7 @@ void increproject0(int k, int n, int flag, func_force_t force)
     //memset(MZ[0], 0, dimR * 9 * sizeof(double));
     for (i = 0; i < dimR; ++i) {
         for (j = 0; j < T_RSDIAG; ++j) {
-            MZ[i][j] = Rs[i][j] + re * b[k] * dt * Rps[i][j];
+            MZ[i][j] = Rs[i][j]; // + re * b[k] * dt * Rps[i][j];
         }
     }
 
@@ -237,12 +237,12 @@ void increproject0(int k, int n, int flag, func_force_t force)
     }
     // printf("Before: incre_flux_t=%f\n", flux_t);
 
-    flux_t = - 0.5 * flux_t;
+    flux_t = - flux_t;
 
     for (j = 0; j < dimR; ++j)
        {
-       Re(IC[0][ALPHA][j][0])= Re(IC[0][ALPHA][j][0])+flux_t*Re(add[j]);
-       Im(IC[0][ALPHA][j][0])= Im(IC[0][ALPHA][j][0])+flux_t*Im(add[j]);
+       Re(IC[0][ALPHA][j][0])= Re(IC[0][ALPHA][j][0])+flux_t*Re(add[j]) * 0.5;
+       Im(IC[0][ALPHA][j][0])= Im(IC[0][ALPHA][j][0])+flux_t*Im(add[j]) * 0.5;
        } 
 
     // flux_t = 0;
