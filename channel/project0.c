@@ -84,7 +84,7 @@ void project0(int k, int n, func_force_t force)
     /* MZ = M0 - (1/RE)b[k]dt*D0 */
     for (i = 0; i < dimR; ++i) {
         for (j = 0; j < T_RSDIAG; ++j) {
-            MZ[i][j] = Rs[i][j] + re * b[k] * dt * Rps[i][j];
+            MZ[i][j] = Rs[i][j]; // + re * b[k] * dt * Rps[i][j];
         }
     }
 
@@ -163,8 +163,8 @@ void project0(int k, int n, func_force_t force)
 
     for (j = 0; j < dimR; ++j)
        {
-       Re(C[0][ALPHA][j][0])= Re(C[0][ALPHA][j][0])+flux_t*Re(add[j]);
-       Im(C[0][ALPHA][j][0])= Im(C[0][ALPHA][j][0])+flux_t*Im(add[j]);
+       Re(C[0][ALPHA][j][0])= Re(C[0][ALPHA][j][0])+flux_t*Re(add[j]) * 0.5;
+       Im(C[0][ALPHA][j][0])= Im(C[0][ALPHA][j][0])+flux_t*Im(add[j]) * 0.5;
     }
 
     for (i = 0; i < qpts; ++i) {

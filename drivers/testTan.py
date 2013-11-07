@@ -39,7 +39,9 @@ dRe = 1E-6
 ru_steps = 0
 n_steps = 1
 restart = 'keefe_runup_stage_5.hd5'
-channel.dt = 0.01
+# restart = None
+channel.dt = 0.001
+channel.meanU = 1.0
 # positive perturbation
 channel.Re = Re + dRe
 channel.init(n_steps, ru_steps, restart=restart)
@@ -63,5 +65,12 @@ dC = (1./(2*dRe))*(Cp - Cm)
 print linalg.norm(dC)
 print linalg.norm(IC)
 print linalg.norm(dC-IC)
-channel.destroy()
+# channel.destroy()
 
+ds = channel.statistics(dC)
+incre_s = channel.statistics(IC)
+from pylab import *; plot(ds[0], ds[1])
+plot(ds[0], incre_s[1])
+s = channel.statistics(Cp)
+figure(); plot(s[0], s[1])
+show()
