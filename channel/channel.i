@@ -72,7 +72,7 @@ void c_tangent(int start_step, int end_step,
 
 
 %apply (mcomplex * INPLACE_ARRAY4, int DIM1, int DIM2, int DIM3, int DIM4)
-      {(mcomplex * IC_given, int Nz_dup, int Nvar_dup, int Ny_dup, int Nx_dup)}
+      {(mcomplex * AC_given, int Nz_dup, int Nvar_dup, int Ny_dup, int Nx_dup)}
 
 %inline %{
 void c_adjoint(int start_step, int end_step,

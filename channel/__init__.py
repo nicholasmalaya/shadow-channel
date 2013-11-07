@@ -109,11 +109,11 @@ def tangent(start_step, end_step, IC_init, inhomo):
     assert 0 <= start_step <= end_step <= c_channel.c_nsteps()
     c_channel.c_tangent(start_step, end_step, IC_init, inhomo)
 
-def adjoint(start_step, end_step, AC_init):
+def adjoint(start_step, end_step, AC_init, inhomo):
     assert AC_init.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
                              c_channel.c_Nx() / 2)
     assert 0 <= end_step <= start_step <= c_channel.c_nsteps()
-    c_channel.c_tangent(start_step, end_step, AC_init)
+    c_channel.c_adjoint(start_step, end_step, AC_init, inhomo)
 
 def statistics(solution):
     if isinstance(solution, str):

@@ -470,10 +470,10 @@ void primal(int ru_steps, mcomplex *C_given)
             Im(U[0][XEL][i][0]) = 0.0;
         }
         // perturbation
-        for (i = 0; i < qpts; i++) {
-            Re(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
-            Im(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
-        }
+        // for (i = 0; i < qpts; i++) {
+        //     Re(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
+        //     Im(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
+        // }
         initAlphaBeta();
     }
 
@@ -804,6 +804,29 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo)
 
 /***************************************************************
 *                                                              *
+*                  INNER PRODUCT TANGENT / ADJOINT             *
+*                                                              *
+****************************************************************/
+
+double inner_product(mcomplex *IC_given, mcomplex *AC_given)
+{
+    /* AC_given -> AU */
+    memcpy(IC[0][0][0], AC_given,
+           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+    incre_initAlphaBeta2();
+    memcpy(AU[0][0][0], IU[0][0][0],
+           Nz * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
+
+    /* IC_given -> IU */
+    memcpy(IC[0][0][0], IC_given,
+           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+    incre_initAlphaBeta2();
+
+    return 0.0;
+}
+
+/***************************************************************
+*                                                              *
 *                       STATISTICS FUNCTION                    *
 *                                                              *
 ****************************************************************/
@@ -827,6 +850,12 @@ void statistics(mcomplex * C_ptr, double * us_ptr)
     memcpy(us[0], Qy, qpts * sizeof(double));
     comp_stat(us + 1);
 }
+
+/***************************************************************
+*                                                              *
+*                           SOLUTION IO                        *
+*                                                              *
+****************************************************************/
 
 // expose restart2 to python
 void read_solution(char * filename, mcomplex * C_ptr)

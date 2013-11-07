@@ -69,6 +69,7 @@ OBJS = LegendreSetup.o \
        initAlphaBeta.o \
        initAlphaBeta2.o \
        incre_initAlphaBeta2.o \
+       adjoint_initAlphaBeta2.o \
        project.o \
        project0.o \
        increproject0.o \
