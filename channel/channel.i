@@ -110,23 +110,26 @@ void c_getsoln(int i_step, mcomplex ** MC_ptr,
 
 %apply (mcomplex * INPLACE_ARRAY4, int DIM1, int DIM2, int DIM3, int DIM4)
       {(mcomplex * C_ptr, int Nz_dup, int Nvar_dup, int Ny_dup, int Nx_dup)}
-%apply (double * INPLACE_ARRAY2, int DIM1, int DIM2)
-      {(double * us_ptr, int nstats_dup, int qpts_dup)}
+%apply (double * INPLACE_ARRAY4, int DIM1, int DIM2, int DIM3, int DIM4)
+      {(double * flow_ptr, int Nd_flow, int Nx_flow, int Ny_flow, int Nz_flow)}
 
 %inline %{
-void c_statistics(mcomplex * C_ptr,
-             int Nz_dup, int Nvar_dup, int Ny_dup, int Nx_dup,
-             double * us_ptr, int nstats_dup, int qpts_dup)
+void c_spec2phys(mcomplex * C_ptr,
+                 int Nz_dup, int Nvar_dup, int Ny_dup, int Nx_dup,
+                 double * flow_ptr,
+                 int Nd_flow, int Nx_flow, int Ny_flow, int Nz_flow)
 {
     assert(Nx_dup == Nx / 2);
     assert(Ny_dup == dimR);
     assert(Nz_dup == Nz);
     assert(Nvar_dup == 2);
 
-    assert (nstats_dup == 20);
-    assert (qpts_dup == qpts);
+    assert (Nd_flow == 3);
+    assert (Nx_flow == 3 * Nx / 2);
+    assert (Ny_flow == qpts);
+    assert (Nz_flow == 3 * Nz / 2);
 
-    statistics(C_ptr, us_ptr);
+    spec2phys(C_ptr, flow_ptr);
 }
 %}
 

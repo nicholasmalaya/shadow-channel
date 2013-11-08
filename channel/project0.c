@@ -19,7 +19,7 @@ acknowledgement of the original source.
 #include "mvOps.h"
 
 /* project when (Kx,Kz) = (0,0) */
-void project0(int k, int n, func_force_t force)
+void project0(int count, int k, func_force_t force)
 {
     /* External Variables */
     extern int qpts, dimR, Nz, Nx;
@@ -28,7 +28,7 @@ void project0(int k, int n, func_force_t force)
     extern double **R, **Rp, **Rw, **Rs, **Rps, *Rp0;
     extern double **MZ;
     extern mcomplex **Uxb, **Uzb;
-    extern mcomplex ****U, ****C;
+    extern mcomplex ****U, ****C, *****MC;
     /* Local variables */
     int i, j;
     mcomplex tmp[dimR], tmp2[dimR], add[dimR];
@@ -46,7 +46,7 @@ void project0(int k, int n, func_force_t force)
     static double d[3] = { 0., -1. / 6, -2. / 3 };
 
     if (force != NULL) {
-        force(n, k, 0, tmp, tmp2);
+        force(0, k, 0, tmp, tmp2);
     }
 
     /* Create matrices for solving linear system. 
@@ -232,6 +232,17 @@ void project0(int k, int n, func_force_t force)
         Re(Uzb[0][0]) += Rp0[j] * Re(C[0][BETA][j][0]);
         Im(Uzb[0][0]) += Rp0[j] * Im(C[0][BETA][j][0]);
     }
+
+    if (count >= 0) {
+    for (i=0; i< dimR; i++)
+    {
+	    Re(MC[count][0][ALPHA][i][0])=Re(C[0][ALPHA][i][0]);
+	    Im(MC[count][0][ALPHA][i][0])=Im(C[0][ALPHA][i][0]);
+	    Re(MC[count][0][BETA][i][0])=Re(C[0][BETA][i][0]);
+	    Im(MC[count][0][BETA][i][0])=Im(C[0][BETA][i][0]);
+    }
+    }
+
 
     /* UPDATE RHS FOR NEXT TIME */
     if (k != 2) {               /* not last step */

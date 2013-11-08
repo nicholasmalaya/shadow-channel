@@ -32,11 +32,11 @@ int LegendreSetup(void);
 int waveNums(int x, int z, double Lx, double Lz);
 int cflVars(double Lx, double Lz);
 int getMem(void);
-void project0(int k, int n, func_force_t force);
-void project(int n, int k, int z, int x0, func_force_t force);
-void adjproject(int n, int k, int z, int x0, int count,
+void project0(int count, int k, func_force_t force);
+void project(int count, int k, int z, int x0, func_force_t force);
+void adjproject(int count, int k, int z, int x0,
                 func_force_t force);
-void adjproject0(int k, int n, int count, func_force_t force);
+void adjproject0(int count, int k, func_force_t force);
 void increproject(int k, int z, int x0, int n,
                   func_force_tt force);
 void increproject0(int k, int n, int flag, func_force_t force);
@@ -44,6 +44,7 @@ void increadjproject0(int k, int n, int count, func_force_t force);
 void increadjproject(int n, int k, int z, int x0, int count,
                      func_force_t force);
 int comp_stat(double **us);
+void spec2phys(mcomplex * C_ptr, double * flow);
 
 
 FILE *fp, *fp2;

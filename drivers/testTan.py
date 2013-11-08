@@ -2,7 +2,6 @@ import sys
 sys.path.append("..")
 import channel
 from numpy import *
-'''
 # UNFORCED TANGENT
 
 n_steps = 10
@@ -15,12 +14,12 @@ C1 = channel.get_solution(n_steps, copy=True)
 
 # perturbation
 IC0 = 0.000001*(random.rand(C.shape[0],C.shape[1],C.shape[2],C.shape[3]) + 1j * random.rand(C.shape[0],C.shape[1],C.shape[2],C.shape[3]))
-print linalg.norm(IC0)
+print(linalg.norm(IC0))
 # run perturbed primal
 channel.primal(C + IC0)
 
 C1p = channel.get_solution(n_steps, copy=True)
-print linalg.norm(C1p-C1)
+print(linalg.norm(C1p-C1))
 # run tangent
 #ICh = zeros(C.shape,complex)
 #channel.tangent(0, n_steps, ICh,0)
@@ -28,8 +27,8 @@ print linalg.norm(C1p-C1)
 
 IC = copy(IC0)
 channel.tangent(0, n_steps, IC,0)
-print linalg.norm(IC)
-print linalg.norm(C1p-C1-IC)
+print(linalg.norm(IC))
+print(linalg.norm(C1p-C1-IC))
 
 channel.destroy()
 '''
@@ -79,3 +78,4 @@ plot(y, incre_s[0])
 s = channel.statistics(Cp)
 figure(); plot(y, s[0])
 show()
+'''

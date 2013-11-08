@@ -21,7 +21,7 @@ acknowledgement of the original source.
 #include "mvOps.h"
 
 /* project when (Kx,Kz) != (0,0) */
-void project(int n, int k, int z, int x0, func_force_t force)
+void project(int count, int k, int z, int x0, func_force_t force)
 {
     /* External Variables */
     extern int qpts, dimR, dimQ, Nx;
@@ -32,7 +32,7 @@ void project(int n, int k, int z, int x0, func_force_t force)
         **Qps, **Qpps, **Rs, **Rps, *Rp0;
     extern double ***M;
     extern mcomplex **Uxb, **Uzb;
-    extern mcomplex ****U, ****C;
+    extern mcomplex ****U, ****C, *****MC;
     /* Local variables */
     int i, j, x;
     double s, t[2];
@@ -48,7 +48,7 @@ void project(int n, int k, int z, int x0, func_force_t force)
     mcomplex tmp[Nx / 2][dimR], tmp2[Nx / 2][dimQ];
 
     if (force != NULL) {
-        force(n, k, z, tmp[0], tmp2[0]);
+        force(0, k, z, tmp[0], tmp2[0]);
     }
     /* FIRST COMPUTE ALPHAS */
     /* Create matrices for solving linear system. 
@@ -208,6 +208,25 @@ void project(int n, int k, int z, int x0, func_force_t force)
 
     /* Compute betas */
     bsolve(M, C[z][BETA], RSDIAG - 1, RSDIAG - 1, dimR, Nx / 2, x0);
+
+    if (count >= 0) {
+        for (i=0; i< dimQ; i++)
+          {
+	    for (x=x0; x<Nx/2; x++)
+	      {
+	        Re(MC[count][z][ALPHA][i][x])=Re(C[z][ALPHA][i][x]);
+	        Im(MC[count][z][ALPHA][i][x])=Im(C[z][ALPHA][i][x]);
+	      }
+          }
+        for (i=0; i< dimR; i++)
+          {
+	    for (x=x0; x<Nx/2; x++)
+	      {
+	        Re(MC[count][z][BETA][i][x])=Re(C[z][BETA][i][x]);
+	        Im(MC[count][z][BETA][i][x])=Im(C[z][BETA][i][x]);
+	      }
+          }
+    }
 
     /* NOW COMPUTE U HATS */
     /* v = uy_hat. */

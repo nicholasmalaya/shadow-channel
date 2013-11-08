@@ -470,10 +470,10 @@ void primal(int ru_steps, mcomplex *C_given)
             Im(U[0][XEL][i][0]) = 0.0;
         }
         // perturbation
-        // for (i = 0; i < qpts; i++) {
-        //     Re(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
-        //     Im(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
-        // }
+        for (i = 0; i < qpts; i++) {
+            Re(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
+            Im(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
+        }
         initAlphaBeta();
     }
 
@@ -516,9 +516,11 @@ void primal(int ru_steps, mcomplex *C_given)
                 break;
             }
 
-            project0(dctr, n, NULL);    /* (kx, kz)=(0, 0),
+            count = (n - ru_steps) * 3 + dctr + 1;
+
+            project0(count, dctr, NULL);    /* (kx, kz)=(0, 0),
                                solve for a, b */
-            project(n, dctr, 0, 1, NULL);    /* (kx, kz)!=(0, 0),
+            project(count, dctr, 0, 1, NULL);    /* (kx, kz)!=(0, 0),
                                solve for alpha, beta */
             for (z = 1; z < Nz; ++z) {
                 if (z == Nz / 2) {
@@ -527,7 +529,7 @@ void primal(int ru_steps, mcomplex *C_given)
                     continue;
                 }
 
-                project(n, dctr, z, 0, NULL);
+                project(count, dctr, z, 0, NULL);
             }
 
             /*now update the boundary condition using current time step
@@ -549,14 +551,6 @@ void primal(int ru_steps, mcomplex *C_given)
                 }
 
                 increproject(dctr, z, 0, n, NULL);
-            }
-
-            count = (n - ru_steps) * 3 + dctr + 1;
-            if (count >= 0) {
-                memcpy(MC[count][0][0][0], C[0][0][0],
-                       (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
-                memcpy(MIC[count][0][0][0], IC[0][0][0],
-                       (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
             }
 
         }        /* end for dctr... */
@@ -658,9 +652,9 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
                 increproject(dctr, z, 0, n, forcing);
             }
 
-            project0(dctr, n, NULL);    /* (kx, kz)=(0, 0),
+            project0(-1, dctr, NULL);    /* (kx, kz)=(0, 0),
                                solve for a, b */
-            project(n, dctr, 0, 1, NULL);    /* (kx, kz)!=(0, 0),
+            project(-1, dctr, 0, 1, NULL);    /* (kx, kz)!=(0, 0),
                                solve for alpha, beta */
             for (z = 1; z < Nz; ++z) {
                 if (z == Nz / 2) {
@@ -669,9 +663,8 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
                     continue;
                 }
 
-                project(n, dctr, z, 0, NULL);
+                project(-1, dctr, z, 0, NULL);
             }
-
 
             count = n * 3 + dctr + 1;
             assert (count >= 0);
@@ -746,16 +739,15 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo)
             memset(Uxb[0], 0, Nz * (Nx / 2) * sizeof(mcomplex));
             memset(Uzb[0], 0, Nz * (Nx / 2) * sizeof(mcomplex));
 
-            adjproject0(dctr, n, count, NULL);
-            adjproject(n, dctr, 0, 1, count, NULL);
+            adjproject0(count, dctr, NULL);
+            adjproject(count, dctr, 0, 1, NULL);
             for (z = 1; z < Nz; ++z) {
                 if (z == Nz / 2) {
                     memset(AU[z][0][0], 0,
                            5 * qpts * (Nx / 2) * sizeof(mcomplex));
                     continue;
                 }
-
-                adjproject(n, dctr, z, 0, count, NULL);
+                adjproject(count, dctr, z, 0, NULL);
             }
         }
 	}
@@ -764,28 +756,6 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo)
            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 }
 
-/***************************************************************
-*                                                              *
-*                  INNER PRODUCT TANGENT / ADJOINT             *
-*                                                              *
-****************************************************************/
-
-double inner_product(mcomplex *IC_given, mcomplex *AC_given)
-{
-    /* AC_given -> AU */
-    memcpy(IC[0][0][0], AC_given,
-           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
-    incre_initAlphaBeta2();
-    memcpy(AU[0][0][0], IU[0][0][0],
-           Nz * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
-
-    /* IC_given -> IU */
-    memcpy(IC[0][0][0], IC_given,
-           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
-    incre_initAlphaBeta2();
-
-    return 0.0;
-}
 
 /***************************************************************
 *                                                              *

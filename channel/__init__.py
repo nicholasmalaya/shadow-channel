@@ -21,6 +21,10 @@ meanU = 1.
 # reynolds number
 Re=5000
 
+def quad():
+    n = int((Ny - 1) * 3 / 2 + 1)
+    return np.polynomial.legendre.leggauss(n)
+
 def save_solution(filename, C):
     '''
     Save the solution C to a .hd5 file.  Must be called after init()
@@ -115,6 +119,7 @@ def adjoint(start_step, end_step, AC_init, inhomo):
     assert 0 <= end_step <= start_step <= c_channel.c_nsteps()
     c_channel.c_adjoint(start_step, end_step, AC_init, inhomo)
 
+"""
 def statistics(solution):
     if isinstance(solution, str):
         solution = read_solution(solution)
@@ -128,4 +133,20 @@ def statistics(solution):
     stats = np.zeros([20, c_channel.c_qpts()], np.float64)
     c_channel.c_statistics(solution, stats)
     return stats
+"""
+
+def spec2phys(solution):
+    if isinstance(solution, str):
+        solution = read_solution(solution)
+    if isinstance(solution, int):
+        solution = get_solution(solution, copy=False)
+
+    assert solution.dtype == complex
+    assert solution.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
+                              c_channel.c_Nx() / 2)
+
+    flow = np.zeros([3, int(c_channel.c_Nx() * 3 / 2), c_channel.c_qpts(),
+                     int(c_channel.c_Nz() * 3 / 2)], np.float64)
+    c_channel.c_spec2phys(solution, flow)
+    return flow
 
