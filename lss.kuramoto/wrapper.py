@@ -85,7 +85,7 @@ class Callback:
         if self.n == 1 or self.n % 10 == 0:
             resnorm = norm(self.pde.matvec(x, 1))
             gradient = kuramoto.c_grad()
-            print 'iter ', self.n, resnorm, gradient
+            print('iter ', self.n, resnorm, gradient)
             self.hist.append([self.n, resnorm, gradient])
         sys.stdout.flush()
 

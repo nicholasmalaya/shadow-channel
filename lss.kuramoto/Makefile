@@ -8,7 +8,7 @@ else
 endif
 
 CC = gcc
-PY_INC = $(shell python-config --includes)
+PY_INC = $(shell python-config --includes) $(shell python3-config --includes)
 #CFLAGS = -O0 -g --std=c99 $(PY_INC)
 CFLAGS = -O3 $(CFLAGS_FPIC) --std=c99 $(PY_INC)
 SWIG = swig -python

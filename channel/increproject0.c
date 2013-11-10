@@ -11,19 +11,17 @@ as the state equation.
 
 /* note for myself: need a new mpg for the incremental state solution */
 
-void increproject0(int k, int n, int flag, func_force_t force)
+void increproject0(int count, int k, int flag, func_force_t force)
 {
 
     /* External Variables */
     extern int qpts, dimR;
-    extern double dt, re, flux;
+    extern double dt, re;
     extern mcomplex *Ifa, *Ifb, *Itm;
-    extern double **R, **Rp, **Rw, **Rs, **Rps, *W;
+    extern double **R, **Rp, **Rw, **Rs, **Rps;
     extern double **MZ;
-    extern mcomplex **Uxb, **Uzb, **Uxbt, **Uzbt;
     extern mcomplex ****IU, ****IC;
     extern mcomplex *****MIC;
-    extern double *Uadd, *Qy;
     /* Local variables */
     int i, j;
     double flux_t;
@@ -48,7 +46,7 @@ void increproject0(int k, int n, int flag, func_force_t force)
     if ((force != NULL)&&(k==0)) {
         memset(Ifa, 0, dimR * sizeof(mcomplex));
         memset(Ifb, 0, dimR * sizeof(mcomplex));
-        force(n, k, 1, Ifa, Ifb);
+        force(0, k, 1, Ifa, Ifb);
 
         /* Solve for forcing cotribution to da/dt, db/dt */
         /* MZ = M0 */
@@ -323,18 +321,14 @@ void increproject0(int k, int n, int flag, func_force_t force)
         //Im(IU[0][DZEL][i][0]) += -Im(Uzb[0][0]) / 2.;
     }
 
-    /*
-    for (i = 0; i < dimR; i++) {
-        Re(MIC[count][0][ALPHA][i][0]) = Re(IC[0][ALPHA][i][0]);
-        Im(MIC[count][0][ALPHA][i][0]) = Im(IC[0][ALPHA][i][0]);
-        Re(MIC[count][0][BETA][i][0]) = Re(IC[0][BETA][i][0]);
-        Im(MIC[count][0][BETA][i][0]) = Im(IC[0][BETA][i][0]);
+    if (count >= 0) {
+        for (i = 0; i < dimR; i++) {
+            Re(MIC[count][0][ALPHA][i][0]) = Re(IC[0][ALPHA][i][0]);
+            Im(MIC[count][0][ALPHA][i][0]) = Im(IC[0][ALPHA][i][0]);
+            Re(MIC[count][0][BETA][i][0]) = Re(IC[0][BETA][i][0]);
+            Im(MIC[count][0][BETA][i][0]) = Im(IC[0][BETA][i][0]);
+        }
     }
-    */
-
-
-
-
 
     /* UPDATE RHS FOR NEXT TIME */
     if (k != 2) {               /* not last step */

@@ -10,7 +10,7 @@ void primal(int ru_steps, mcomplex *C_given);
 
 void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo);
 
-void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo);
+void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo, double strength);
 
 void tangent_forcing0(int n, int k, int flag, mcomplex * f_a, mcomplex * f_b);
 

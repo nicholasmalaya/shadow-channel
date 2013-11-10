@@ -14,12 +14,12 @@ New piece of code used to solve the linear system for (kx, kx)!=(0,0)
 #include "channel.h"
 
 /* project when (Kx,Kz) != (0,0) */
-void increproject(int k, int z, int x0, int n,
+void increproject(int count, int k, int z, int x0,
                   func_force_tt force)
 {
 
     /* External Variables */
-    extern int qpts, dimR, dimQ, Nx, Nz;
+    extern int qpts, dimR, dimQ, Nx;
     extern double dt, re;
     extern double *Kx, *Kz, **K2;
     extern mcomplex **IFa, **IFb, **ITM;
@@ -27,8 +27,6 @@ void increproject(int k, int z, int x0, int n,
         **Qps, **Qpps, **Rs, **Rps;
     extern double ***M;
     extern mcomplex ****IU, ****IC;
-    extern mcomplex **Uxb, **Uzb, **Uxbt, **Uzbt;
-    extern double *Uadd, *Vadd, *Vpadd;
     extern mcomplex *****MIC;
     /* Local variables */
     int i, j, x;
@@ -65,7 +63,7 @@ void increproject(int k, int z, int x0, int n,
     if ((force != NULL)&&(k==0)) {
         memset(IFa[0], 0, dimQ * (Nx / 2) * sizeof(mcomplex));
         memset(IFb[0], 0, dimR * (Nx / 2) * sizeof(mcomplex));
-        force(n, k, z, IFa, IFb);
+        force(0, k, z, IFa, IFb);
         
         /* form mass matrix, solve for forcing contribution to da/dt */
         /* Left hand side M = Mv */
@@ -111,7 +109,7 @@ void increproject(int k, int z, int x0, int n,
     memset(IFb[0], 0, dimR * (Nx / 2) * sizeof(mcomplex));
 
 //    if (force != NULL) {
-//        force(n, k, z, IFa, IFb);
+//        force(0, k, z, IFa, IFb);
 //    }
 
 
@@ -436,23 +434,21 @@ void increproject(int k, int z, int x0, int n,
         }
     }
 
-
-
-
-    /*
-    for (i = 0; i < dimQ; i++) {
-        for (x = x0; x < Nx / 2; x++) {
-            Re(MIC[count][z][ALPHA][i][x]) = Re(IC[z][ALPHA][i][x]);
-            Im(MIC[count][z][ALPHA][i][x]) = Im(IC[z][ALPHA][i][x]);
+    if (count >= 0) {
+        for (i = 0; i < dimQ; i++) {
+            for (x = x0; x < Nx / 2; x++) {
+                Re(MIC[count][z][ALPHA][i][x]) = Re(IC[z][ALPHA][i][x]);
+                Im(MIC[count][z][ALPHA][i][x]) = Im(IC[z][ALPHA][i][x]);
+            }
+        }
+        for (i = 0; i < dimR; i++) {
+            for (x = x0; x < Nx / 2; x++) {
+                Re(MIC[count][z][BETA][i][x]) = Re(IC[z][BETA][i][x]);
+                Im(MIC[count][z][BETA][i][x]) = Im(IC[z][BETA][i][x]);
+            }
         }
     }
-    for (i = 0; i < dimR; i++) {
-        for (x = x0; x < Nx / 2; x++) {
-            Re(MIC[count][z][BETA][i][x]) = Re(IC[z][BETA][i][x]);
-            Im(MIC[count][z][BETA][i][x]) = Im(IC[z][BETA][i][x]);
-        }
-    }
-    */
+
     /* UPDATE RHS FOR NEXT TIME */
     if (k != 2) {               /* not last step */
         /* first alphas */

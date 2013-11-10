@@ -35,7 +35,7 @@ print('done')
 AC = zeros(C.shape, complex)
 AC[0,0,:,0] = random.normal(size=C.shape[2])
 AC = random.normal(size=C.shape) + 0j
-channel.adjoint(n_steps, n_steps-1, AC, 0)
+channel.adjoint(n_steps, n_steps-1, AC, 0, strength=0.0)
 AC0 = AC.copy()
 
 # run adjoint

@@ -77,14 +77,14 @@ void c_tangent(int start_step, int end_step,
 %inline %{
 void c_adjoint(int start_step, int end_step,
         mcomplex *AC_given, int Nz_dup, int Nvar_dup, int Ny_dup, int Nx_dup,
-        int inhomo)
+        int inhomo, double strength)
 {
     assert(Nx_dup == Nx / 2);
     assert(Ny_dup == dimR);
     assert(Nz_dup == Nz);
     assert(Nvar_dup == 2);
 
-    adjoint(start_step, end_step, AC_given, inhomo);
+    adjoint(start_step, end_step, AC_given, inhomo, strength);
 }
 %}
 
