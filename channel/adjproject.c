@@ -7,7 +7,7 @@
 #include "mvOps.h"
 
 /* project when (Kx,Kz) != (0,0) */
-void adjproject(int n, int k, int z, int x0, int count, func_force_t force)
+void adjproject(int count, int k, int z, int x0, func_force_t force)
 {
     /* External Variables */
     extern int qpts, dimR, dimQ, Nx;
@@ -39,7 +39,7 @@ void adjproject(int n, int k, int z, int x0, int count, func_force_t force)
     mcomplex tmp[Nx / 2][dimR], tmp2[Nx / 2][dimQ];
 
     if (force != NULL) {
-        force(n, k, z, tmp[0], tmp2[0]);
+        force(0, k, z, tmp[0], tmp2[0]);
     }
     /* FIRST COMPUTE ALPHAS */
     /* Create matrices for solving linear system. 
@@ -392,7 +392,7 @@ void adjproject(int n, int k, int z, int x0, int count, func_force_t force)
     /* UPDATE RHS FOR NEXT TIME */
     if (k != 2) {               /* not last step */
         if (force != NULL) {
-            force(n, k + 1, z, tmp[0], tmp2[0]);
+            force(0, k + 1, z, tmp[0], tmp2[0]);
         }
 
         /* first alphas */

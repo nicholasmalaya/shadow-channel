@@ -5,7 +5,7 @@
 #include "mvOps.h"
 
 /* project when (Kx,Kz) = (0,0) */
-void adjproject0(int k, int n, int count, func_force_t force)
+void adjproject0(int count, int k, func_force_t force)
 {
     /* External Variables */
     extern int qpts, dimR, Nx, Nz;
@@ -32,7 +32,7 @@ void adjproject0(int k, int n, int count, func_force_t force)
     static double d[3] = { 0., -2. / 3, -1. / 6 };
 
     if (force != NULL) {
-        force(n, k, 0, tmp, tmp2);
+        force(0, k, 0, tmp, tmp2);
     }
 
     /* Create matrices for solving linear system. 
@@ -238,7 +238,7 @@ void adjproject0(int k, int n, int count, func_force_t force)
     if (k != 2) {               /* not last step */
 
         if (force != NULL) {
-            force(n, k + 1, 0, tmp, tmp2);
+            force(0, k + 1, 0, tmp, tmp2);
         }
 
         /* MZ = M0 + (1/RE)a[k+1]dt*D0 */

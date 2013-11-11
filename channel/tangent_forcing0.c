@@ -7,7 +7,7 @@
 #include "mvOps.h"
 
 
-void tangent_forcing0(int n, int k, int flag, mcomplex * f_a, mcomplex * f_b)
+void tangent_forcing0(int count, int k, int flag, mcomplex * f_a, mcomplex * f_b)
 {
     /* External Variables */
     extern int qpts, dimR, dimQ, Nx;
@@ -34,12 +34,12 @@ void tangent_forcing0(int n, int k, int flag, mcomplex * f_a, mcomplex * f_b)
     }
 
     /* Compute alpha forcing  */
-    smMult0(MZ, MC[3*n][0][ALPHA], f_a, RSDIAG - 1, RSDIAG - 1, dimR);    
+    smMult0(MZ, MC[count][0][ALPHA], f_a, RSDIAG - 1, RSDIAG - 1, dimR);    
 
     /* BETA Forcing */
     
     /* Compute beta forcing  */
-    smMult0(MZ, MC[3*n][0][BETA], f_b, RSDIAG - 1, RSDIAG - 1, dimR);
+    smMult0(MZ, MC[count][0][BETA], f_b, RSDIAG - 1, RSDIAG - 1, dimR);
 
 }
 

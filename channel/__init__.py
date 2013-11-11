@@ -21,6 +21,13 @@ meanU = 1.
 # reynolds number
 Re=5000
 
+def quad():
+    '''
+    return y, w
+    '''
+    n = int((Ny - 1) * 3 / 2 + 1)
+    return np.polynomial.legendre.leggauss(n)
+
 def save_solution(filename, C):
     '''
     Save the solution C to a .hd5 file.  Must be called after init()
@@ -109,12 +116,13 @@ def tangent(start_step, end_step, IC_init, inhomo):
     assert 0 <= start_step <= end_step <= c_channel.c_nsteps()
     c_channel.c_tangent(start_step, end_step, IC_init, inhomo)
 
-def adjoint(start_step, end_step, AC_init, inhomo):
+def adjoint(start_step, end_step, AC_init, inhomo, strength):
     assert AC_init.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
                              c_channel.c_Nx() / 2)
     assert 0 <= end_step <= start_step <= c_channel.c_nsteps()
-    c_channel.c_adjoint(start_step, end_step, AC_init, inhomo)
+    c_channel.c_adjoint(start_step, end_step, AC_init, inhomo, strength)
 
+"""
 def statistics(solution):
     if isinstance(solution, str):
         solution = read_solution(solution)
@@ -128,4 +136,24 @@ def statistics(solution):
     stats = np.zeros([20, c_channel.c_qpts()], np.float64)
     c_channel.c_statistics(solution, stats)
     return stats
+"""
+
+def spec2phys(C):
+    '''
+    returns the physical solution in the physical domain.
+    flow: array of dimension [3 (x,y,z velocity), 3Nx/2, qpts, 3Nz/2]
+    '''
+    if isinstance(C, str):
+        C = read_C(C)
+    if isinstance(C, int):
+        C = get_C(C, copy=False)
+
+    assert C.dtype == complex
+    assert C.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
+                              c_channel.c_Nx() / 2)
+
+    flow = np.zeros([3, int(c_channel.c_Nx() * 3 / 2), c_channel.c_qpts(),
+                     int(c_channel.c_Nz() * 3 / 2)], np.float64)
+    c_channel.c_spec2phys(C, flow)
+    return flow
 

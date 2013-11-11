@@ -254,6 +254,10 @@ project_ddt(int i_chunk, int i_step, double * v)
     double dudt[N_GRID];
     ddt(SOLN_U[i_chunk][i_step], dudt);
 
+    int i = (i_chunk == 0 && i_step == 0) ? 0 : i_step - 1;
+    for (int j = 0; j < N_GRID; ++ j)
+        dudt[j] = (SOLN_U[i_chunk][i+1][j] - SOLN_U[i_chunk][i][j]) / DT_STEP;
+
     double vDotUt = cblas_ddot(N_GRID, v, 1, dudt, 1);
     double utDotUt = cblas_ddot(N_GRID, dudt, 1, dudt, 1);
 
