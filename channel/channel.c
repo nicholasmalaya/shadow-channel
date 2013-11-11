@@ -398,7 +398,7 @@ init(int _Nx, int _Ny, int _Nz, double _Lx, double _Lz, double _Re,
 
 void primal(int ru_steps, mcomplex *C_given)
 {
-    int i, n, z, dctr, count;
+   int i, n, z, dctr, count;
 
     /******************restart check ******************************/
     if (C_given != 0) {
@@ -409,10 +409,10 @@ void primal(int ru_steps, mcomplex *C_given)
     else            // provide laminar solution with perturbations
     {
         memset(U[0][0][0], 0, Nz * 5 * qpts * Nx / 2 * sizeof(mcomplex));
-        // for (i = 0; i < qpts; i++) {
-        //     Re(U[0][XEL][i][0]) = (1.0 - Qy[i] * Qy[i]) * flux * 3./4;
-        //     Im(U[0][XEL][i][0]) = 0.0;
-        // }
+        for (i = 0; i < qpts; i++) {
+            Re(U[0][XEL][i][0]) = (1.0 - Qy[i] * Qy[i]) * flux * 3./4;
+            Im(U[0][XEL][i][0]) = 0.0;
+        }
         // // perturbation
         // for (i = 0; i < qpts; i++) {
         //     Re(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
@@ -437,6 +437,16 @@ void primal(int ru_steps, mcomplex *C_given)
             printf("Step %d/%d\n", n, nsteps + ru_steps);
         }
         for (dctr = 0; dctr < 3; ++dctr) {    /* RK steps */
+
+            /* copy the result to Uxbt, Uzbt. Uxb and Uzb will be used
+               later for boundary condition of current time stage */
+            memcpy(Uxbt[0], Uxb[0],
+                   (Nz) * (Nx / 2) * sizeof(fftw_complex));
+            memcpy(Uzbt[0], Uzb[0],
+                   (Nz) * (Nx / 2) * sizeof(fftw_complex));
+            memset(Uxb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
+            memset(Uzb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
+
             /* do FFTs to get H_hats.  After this we have for each (Kx,y,Kz)
                Hx_hat   -->  U[z][HXEL][y][x]
                Hy_hat   -->  U[z][HYEL][y][x]
@@ -463,6 +473,36 @@ void primal(int ru_steps, mcomplex *C_given)
 
                 project(count, dctr, z, 0, NULL);
             }
+
+            /*now update the boundary condition using current time step
+               solution of state equation */
+            /*if (increBoundary() != NO_ERR) {
+                printf("increBoundary failure\n");
+                n = nsteps + ru_steps;
+                break;
+            }*/
+
+            increproject0(count, dctr, 1, NULL);
+            increproject(count, dctr, 0, 1, NULL);
+            for (z = 1; z < Nz; ++z) {
+                if (z == Nz / 2) {
+                    // SET U[z][XEL,YEL,ZEL,DXEL,DZEL] TO ZEROS 
+                    memset(IU[z][0][0], 0,
+                           5 * qpts * (Nx / 2) * sizeof(mcomplex));
+                    continue;
+                }
+
+                increproject(count, dctr, z, 0, NULL);
+            }
+
+            count = (n - ru_steps) * 3 + dctr + 1;
+            if (count >= 0) {
+                memcpy(MC[count][0][0][0], C[0][0][0],
+                       (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+                memcpy(MIC[count][0][0][0], IC[0][0][0],
+                       (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+            }
+
         }        /* end for dctr... */
     }            /* end for n... */
 
@@ -510,6 +550,16 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
     /* time step for forward problem */
     for (n = start_step; n < end_step; ++n) {
         for (dctr = 0; dctr < 3; ++dctr) {    /* RK steps */
+
+            /* copy the result to Uxbt, Uzbt. Uxb and Uzb will be used
+               later for boundary condition of current time stage */
+            memcpy(Uxbt[0], Uxb[0],
+                   (Nz) * (Nx / 2) * sizeof(fftw_complex));
+            memcpy(Uzbt[0], Uzb[0],
+                   (Nz) * (Nx / 2) * sizeof(fftw_complex));
+            memset(Uxb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
+            memset(Uzb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
+
             /* do FFTs to get H_hats.  After this we have for each (Kx,y,Kz)
                Hx_hat   -->  U[z][HXEL][y][x]
                Hy_hat   -->  U[z][HYEL][y][x]
