@@ -78,6 +78,14 @@ void increproject(int k, int z, int x0, int n,
             }
         }
         bsolve(M, IFa, QSDIAG - 1, QSDIAG - 1, dimQ, Nx / 2, x0);
+
+//    double f_a_norm = 0.0;
+//    for (i = 0; i < dimR; ++i) {
+//        for (x = x0; x < Nx / 2; ++x) {
+//            f_a_norm += pow(MAGNITUDE(IFa[i][x]), 2);
+//        }
+//    }
+
        
        /* form mass matrix, solve for forcing contribution to db/dt */
         /* Left hand side M = Mv */
@@ -90,7 +98,15 @@ void increproject(int k, int z, int x0, int n,
             }
         }
         bsolve(M, IFb, RSDIAG - 1, RSDIAG - 1, dimR, Nx / 2, x0);
-       
+      
+//    double f_b_norm = 0.0;
+//    for (i = 0; i < dimR; ++i) {
+//        for (x = x0; x < Nx / 2; ++x) {
+//            f_b_norm += pow(MAGNITUDE(IFb[i][x]), 2);
+//        }
+//    }
+//    printf("z = %d, f_a_norm  = %e, f_b_norm = %e\n", z, sqrt(f_a_norm), sqrt(f_b_norm));
+
 
         for (x = x0; x < Nx / 2; ++x) {
              for (i = 0; i < dimQ; ++i) {
