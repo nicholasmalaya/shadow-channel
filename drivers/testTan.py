@@ -2,7 +2,7 @@ import sys
 sys.path.append("..")
 import channel
 from numpy import *
-'''
+
 # UNFORCED TANGENT
 
 n_steps = 10
@@ -37,10 +37,10 @@ channel.destroy()
 Re = 2000
 dRe = 1E-6
 ru_steps = 0
-n_steps = 10
+n_steps = 1000
 restart = 'keefe_runup_stage_5.hd5'
 # restart = None
-channel.dt = 0.01
+channel.dt = 0.001
 channel.meanU = 1.0
 # positive perturbation
 channel.Re = Re + dRe
@@ -79,3 +79,4 @@ plot(y, incre_s[0])
 s = channel.statistics(Cp)
 figure(); plot(y, s[0])
 show()
+'''
