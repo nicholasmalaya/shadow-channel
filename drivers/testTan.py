@@ -2,6 +2,7 @@ import sys
 sys.path.append("..")
 import channel
 from numpy import *
+
 # UNFORCED TANGENT
 
 n_steps = 10
@@ -31,6 +32,7 @@ print(linalg.norm(IC))
 print(linalg.norm(C1p-C1-IC))
 
 channel.destroy()
+
 '''
 # TANGENT WITH FORCING
 Re = 2000

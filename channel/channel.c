@@ -409,15 +409,15 @@ void primal(int ru_steps, mcomplex *C_given)
     else            // provide laminar solution with perturbations
     {
         memset(U[0][0][0], 0, Nz * 5 * qpts * Nx / 2 * sizeof(mcomplex));
-        for (i = 0; i < qpts; i++) {
-            Re(U[0][XEL][i][0]) = (1.0 - Qy[i] * Qy[i]) * flux * 3./4;
-            Im(U[0][XEL][i][0]) = 0.0;
-        }
-        // perturbation
-        for (i = 0; i < qpts; i++) {
-            Re(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
-            Im(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
-        }
+        // for (i = 0; i < qpts; i++) {
+        //     Re(U[0][XEL][i][0]) = (1.0 - Qy[i] * Qy[i]) * flux * 3./4;
+        //     Im(U[0][XEL][i][0]) = 0.0;
+        // }
+        // // perturbation
+        // for (i = 0; i < qpts; i++) {
+        //     Re(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
+        //     Im(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
+        // }
         initAlphaBeta();
     }
 

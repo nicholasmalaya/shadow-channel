@@ -22,6 +22,9 @@ meanU = 1.
 Re=5000
 
 def quad():
+    '''
+    return y, w
+    '''
     n = int((Ny - 1) * 3 / 2 + 1)
     return np.polynomial.legendre.leggauss(n)
 
@@ -135,18 +138,22 @@ def statistics(solution):
     return stats
 """
 
-def spec2phys(solution):
-    if isinstance(solution, str):
-        solution = read_solution(solution)
-    if isinstance(solution, int):
-        solution = get_solution(solution, copy=False)
+def spec2phys(C):
+    '''
+    returns the physical solution in the physical domain.
+    flow: array of dimension [3 (x,y,z velocity), 3Nx/2, qpts, 3Nz/2]
+    '''
+    if isinstance(C, str):
+        C = read_C(C)
+    if isinstance(C, int):
+        C = get_C(C, copy=False)
 
-    assert solution.dtype == complex
-    assert solution.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
+    assert C.dtype == complex
+    assert C.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
                               c_channel.c_Nx() / 2)
 
     flow = np.zeros([3, int(c_channel.c_Nx() * 3 / 2), c_channel.c_qpts(),
                      int(c_channel.c_Nz() * 3 / 2)], np.float64)
-    c_channel.c_spec2phys(solution, flow)
+    c_channel.c_spec2phys(C, flow)
     return flow
 

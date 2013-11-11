@@ -63,7 +63,7 @@ void increproject(int count, int k, int z, int x0,
     if ((force != NULL)&&(k==0)) {
         memset(IFa[0], 0, dimQ * (Nx / 2) * sizeof(mcomplex));
         memset(IFb[0], 0, dimR * (Nx / 2) * sizeof(mcomplex));
-        force(0, k, z, IFa, IFb);
+        force(count, k, z, IFa, IFb);
         
         /* form mass matrix, solve for forcing contribution to da/dt */
         /* Left hand side M = Mv */
@@ -104,7 +104,6 @@ void increproject(int count, int k, int z, int x0,
     
     }
 
-    /* Apply Forcing */
     memset(IFa[0], 0, dimQ * (Nx / 2) * sizeof(mcomplex));
     memset(IFb[0], 0, dimR * (Nx / 2) * sizeof(mcomplex));
 
