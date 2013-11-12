@@ -150,3 +150,26 @@ def spec2phys(solution):
     c_channel.c_spec2phys(solution, flow)
     return flow
 
+def ddt_project(i_step,v):
+    '''
+    returns the magnitude of the projection of the array v onto the primal 
+    time derivative dudt at time step i_step.  
+    Makes v orthogonal to dudt at time step i_step
+    '''
+
+    if i_step == 0:
+        dudt = (get_solution(i_step+1, copy=False) - get_solution(i_step, copy=False)) / dt
+    else:
+        dudt = (get_solution(i_step, copy=False) - get_solution(i_step-1, copy=False)) / dt
+
+    dudt_p = spec2phys(dudt)
+    v_p = spec2phys(v)
+
+    y, w = quad()
+
+    num = np.sum(dudt_p * v_p * w[np.newaxis,np.newaxis,:,np.newaxis])
+    den = np.sum(dudt_p * dudt_p * w[np.newaxis,np.newaxis,:,np.newaxis])
+
+    v -= dudt * (num/den)
+    return (num/den)
+

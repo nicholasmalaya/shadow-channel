@@ -34,7 +34,6 @@ class Wrapper(object):
 
     # ------------------ KKT matvec ----------------------
     def matvec(self, x, inhomo=0):
-        print "matvec called, inhomo =", inhomo
         n_v = self.m * self.n
         n_w = self.m * (self.n - 1)
         assert x.shape == (n_v + n_w,)
