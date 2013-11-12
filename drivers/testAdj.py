@@ -29,6 +29,8 @@ IC0 = IC.copy()
 # run tangent
 print('tangent')
 channel.tangent(1, n_steps-1, IC, 0)
+IC_tmp = IC.copy()
+channel.tangent(n_steps-1, n_steps, IC_tmp, 0)
 print('done')
 
 # linear functional
@@ -40,7 +42,7 @@ AC0 = AC.copy()
 
 # run adjoint
 print('adjoint')
-channel.adjoint(n_steps-1, 1, AC, 0)
+channel.adjoint(n_steps-1, 1, AC, 0, strength=0.0)
 print('done')
 
 y, w = channel.quad()

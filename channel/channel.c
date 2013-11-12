@@ -474,32 +474,8 @@ void primal(int ru_steps, mcomplex *C_given)
                 project(count, dctr, z, 0, NULL);
             }
 
-            /*now update the boundary condition using current time step
-               solution of state equation */
-            /*if (increBoundary() != NO_ERR) {
-                printf("increBoundary failure\n");
-                n = nsteps + ru_steps;
-                break;
-            }*/
-
-            increproject0(count, dctr, 1, NULL);
-            increproject(count, dctr, 0, 1, NULL);
-            for (z = 1; z < Nz; ++z) {
-                if (z == Nz / 2) {
-                    // SET U[z][XEL,YEL,ZEL,DXEL,DZEL] TO ZEROS 
-                    memset(IU[z][0][0], 0,
-                           5 * qpts * (Nx / 2) * sizeof(mcomplex));
-                    continue;
-                }
-
-                increproject(count, dctr, z, 0, NULL);
-            }
-
-            count = (n - ru_steps) * 3 + dctr + 1;
-            if (count >= 0) {
+            if (count >= 0 && count % 3 == 0) {
                 memcpy(MC[count][0][0][0], C[0][0][0],
-                       (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
-                memcpy(MIC[count][0][0][0], IC[0][0][0],
                        (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
             }
 

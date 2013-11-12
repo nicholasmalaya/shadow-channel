@@ -22,11 +22,8 @@ meanU = 1.
 Re=5000
 
 def quad():
-    '''
-    return y, w
-    '''
-    n = int((Ny - 1) * 3 / 2 + 1)
-    return np.polynomial.legendre.leggauss(n)
+    y, w = c_channel.c_quad()
+    return y.copy(), w.copy()
 
 def save_solution(filename, C):
     '''
@@ -138,48 +135,18 @@ def statistics(solution):
     return stats
 """
 
-def spec2phys(C):
-    '''
-    returns the physical solution in the physical domain.
-    flow: array of dimension [3 (x,y,z velocity), 3Nx/2, qpts, 3Nz/2]
-    '''
-    if isinstance(C, str):
-        C = read_C(C)
-    if isinstance(C, int):
-        C = get_C(C, copy=False)
+def spec2phys(solution):
+    if isinstance(solution, str):
+        solution = read_solution(solution)
+    if isinstance(solution, int):
+        solution = get_solution(solution, copy=False)
 
-    assert C.dtype == complex
-    assert C.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
+    assert solution.dtype == complex
+    assert solution.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
                               c_channel.c_Nx() / 2)
 
     flow = np.zeros([3, int(c_channel.c_Nx() * 3 / 2), c_channel.c_qpts(),
                      int(c_channel.c_Nz() * 3 / 2)], np.float64)
-    c_channel.c_spec2phys(C, flow)
+    c_channel.c_spec2phys(solution, flow)
     return flow
-
-def ddt_project(i_step,v):
-    '''
-    returns the magnitude of the projection of the array v onto the primal 
-    time derivative dudt at time step i_step.  
-    Makes v orthogonal to dudt at time step i_step
-    '''
-    if i_step == 0:
-        dudt = (get_solution(i_step+1, copy=False) - get_solution(i_step, copy=False)) / dt
-    else:
-        dudt = (get_solution(i_step, copy=False) - get_solution(i_step-1, copy=False)) / dt
-    
-    
-    dudt_p = spec2phys(dudt)
-    v_p = spec2phys(v)
-    
-    y, w = quad()
-     
-    num = np.sum(dudt_p * v_p * w[np.newaxis,np.newaxis,:,np.newaxis])
-    den = np.sum(dudt_p * dudt_p * w[np.newaxis,np.newaxis,:,np.newaxis])
-    v -= dudt * (num/den)
-    
-    return (num/den)
-
-
-
 
