@@ -2,7 +2,6 @@ import sys
 sys.path.append("..")
 import channel
 from numpy import *
-'''
 # UNFORCED TANGENT
 
 n_steps = 10
@@ -87,6 +86,7 @@ print linalg.norm(dC)
 print linalg.norm(IC)
 print linalg.norm(dC-IC)
 # channel.destroy()
+'''
 '''
 import numpy
 n = int((channel.Ny - 1) * 3 / 2 + 1)

@@ -168,6 +168,21 @@ void c_save_solution(char * filename,
 %}
 
 
+%apply (double ** ARGOUTVIEW_ARRAY1, int * DIM1)
+      {(double ** y_ptr, int * qpts_ptr1)}
+%apply (double ** ARGOUTVIEW_ARRAY1, int * DIM1)
+      {(double ** w_ptr, int * qpts_ptr2)}
+
+%inline %{
+void c_quad(double ** y_ptr, int * qpts_ptr1, double ** w_ptr, int * qpts_ptr2)
+{       
+    (*y_ptr) = Qy;
+    (*w_ptr) = W;
+    (*qpts_ptr1) = (*qpts_ptr2) = qpts;
+}
+%}
+
+
 /* global variables */
 %inline %{
 int c_qpts() { return qpts; }
