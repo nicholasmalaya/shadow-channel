@@ -23,12 +23,12 @@ class Wrapper(object):
         eta = self._proj(end_step, v1)
         return v1, eta
         
-    def backward(self, i, w0, strength, inhomo):
+    def backward(self, i, w0, strength):
         w1 = w0.copy()
         start_step = self.nb[i+1]
         end_step = self.nb[i]
         self._proj(start_step, w1)
-        self._adj(start_step, end_step, w1, inhomo, strength)
+        self._adj(start_step, end_step, w1, 0, strength)
         self._proj(end_step, w1)
         return w1
 
@@ -47,7 +47,7 @@ class Wrapper(object):
         for i in range(self.n):
             vip, eta = self.forward(i, v[i], inhomo)
             self.zeta[i] = eta / self.dT
-            wim = self.backward(i, w[i], strength=1.0, inhomo=0)
+            wim = self.backward(i, w[i], strength=0.01)
             if i < self.n - 1:
                 R_w[i] = v[i+1] - vip
             if i > 0:
@@ -60,14 +60,14 @@ class Wrapper(object):
 import channel 
 # Key Parameters
 # Re, {Nx, Ny, Nz} ru_steps, n_chunk, t_chunk, dt
-channel.Re = 2000
+channel.Re = 500
 channel.Nx = 16
 channel.Ny = 33
 channel.Nz = 16
 channel.dt = 0.01
 
-ru_steps = 0
-n_chunk = 3
+ru_steps = 100
+n_chunk = 4
 chunk_steps = 5
 n_steps = n_chunk * chunk_steps + 1 
 
@@ -79,7 +79,8 @@ channel.Lz = 1.6
 channel.meanU = 1.0
 
 # Initial Condition
-restart = "keefe_runup_stage_5"
+#restart = "keefe_runup_stage_5"
+restart = None
 
 channel.init(n_steps,ru_steps, restart = restart)
 
@@ -88,9 +89,9 @@ pde = Wrapper(channel.Nx, channel.Ny, channel.Nz, n_chunk, chunk_bounds,
               channel.tangent, channel.adjoint, channel.ddt_project)
 
 # construct matrix rhs
-x = zeros(2 * pde.m * (2 * pde.n - 1),complex)
+x = zeros(2 * pde.m * (2 * pde.n - 1))
 rhs = -pde.matvec(x, 1) - pde.matvec(x, 0)
-
+print "RHS norm: ", norm(rhs)
 # solve
 from scipy import sparse
 import scipy.sparse.linalg as splinalg
@@ -116,7 +117,7 @@ class Callback:
 # --- solve with minres (if cg converges this should converge -#
 callback = Callback(pde)
 callback(rhs * 0)
-#vw, info = splinalg.gmres(oper, rhs, tol = 1e-6, maxiter=10, 
+#vw, info = splinalg.gmres(oper, rhs, tol = 1e-6, maxiter=50, 
 #                           callback=callback)
 vw, info = splinalg.minres(oper, rhs, maxiter=100, tol=1E-6,
                            callback=callback)
