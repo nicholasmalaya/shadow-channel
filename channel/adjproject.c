@@ -81,16 +81,16 @@ void adjproject(int count, int k, int z, int x0, func_force_t force)
                 }
             }
         }
-        smMult(M, MC[count][z][ALPHA], TM, QSDIAG - 1, QSDIAG - 1, dimQ,
-               Nx / 2, x0);
-        for (i = 0; i < dimQ; ++i) {
-            for (x = x0; x < Nx / 2; x++) {
-                Re(AC[z][ALPHA][i][x]) +=
-                    Re(TM[i][x]) * re * dt * (a[0] + b[0]);
-                Im(AC[z][ALPHA][i][x]) +=
-                    Im(TM[i][x]) * re * dt * (a[0] + b[0]);
-            }
-        }
+        // smMult(M, MC[count][z][ALPHA], TM, QSDIAG - 1, QSDIAG - 1, dimQ,
+        //        Nx / 2, x0);
+        // for (i = 0; i < dimQ; ++i) {
+        //     for (x = x0; x < Nx / 2; x++) {
+        //         Re(AC[z][ALPHA][i][x]) +=
+        //             Re(TM[i][x]) * re * dt * (a[0] + b[0]);
+        //         Im(AC[z][ALPHA][i][x]) +=
+        //             Im(TM[i][x]) * re * dt * (a[0] + b[0]);
+        //     }
+        // }
 
     }
 
@@ -190,16 +190,16 @@ void adjproject(int count, int k, int z, int x0, func_force_t force)
             }
         }
 
-        smMult(M, MC[count][z][BETA], TM, RSDIAG - 1, RSDIAG - 1, dimR,
-               Nx / 2, x0);
-        for (i = 0; i < dimR; ++i) {
-            for (x = x0; x < Nx / 2; x++) {
-                Re(AC[z][BETA][i][x]) +=
-                    Re(TM[i][x]) * re * dt * (a[0] + b[0]);
-                Im(AC[z][BETA][i][x]) +=
-                    Im(TM[i][x]) * re * dt * (a[0] + b[0]);
-            }
-        }
+        // smMult(M, MC[count][z][BETA], TM, RSDIAG - 1, RSDIAG - 1, dimR,
+        //        Nx / 2, x0);
+        // for (i = 0; i < dimR; ++i) {
+        //     for (x = x0; x < Nx / 2; x++) {
+        //         Re(AC[z][BETA][i][x]) +=
+        //             Re(TM[i][x]) * re * dt * (a[0] + b[0]);
+        //         Im(AC[z][BETA][i][x]) +=
+        //             Im(TM[i][x]) * re * dt * (a[0] + b[0]);
+        //     }
+        // }
     }
 
     /* left hand side M = Mg - (1/RE)b[k]dt*Dg */
@@ -463,17 +463,17 @@ void adjproject(int count, int k, int z, int x0, func_force_t force)
                 }
             }
         }
-        smMult(M, MC[count - 1][z][ALPHA], TM, QSDIAG - 1, QSDIAG - 1,
-               dimQ, Nx / 2, x0);
+        // smMult(M, MC[count - 1][z][ALPHA], TM, QSDIAG - 1, QSDIAG - 1,
+        //        dimQ, Nx / 2, x0);
 
-        for (i = 0; i < dimQ; ++i) {
-            for (x = x0; x < Nx / 2; x++) {
-                Re(AC[z][ALPHA][i][x]) +=
-                    Re(TM[i][x]) * re * dt * (a[k + 1] + b[k + 1]);
-                Im(AC[z][ALPHA][i][x]) +=
-                    Im(TM[i][x]) * re * dt * (a[k + 1] + b[k + 1]);
-            }
-        }
+        // for (i = 0; i < dimQ; ++i) {
+        //     for (x = x0; x < Nx / 2; x++) {
+        //         Re(AC[z][ALPHA][i][x]) +=
+        //             Re(TM[i][x]) * re * dt * (a[k + 1] + b[k + 1]);
+        //         Im(AC[z][ALPHA][i][x]) +=
+        //             Im(TM[i][x]) * re * dt * (a[k + 1] + b[k + 1]);
+        //     }
+        // }
 
         /* now betas */
         memset(M[0][0], 0, dimR * 9 * (Nx / 2) * sizeof(double));
@@ -535,16 +535,16 @@ void adjproject(int count, int k, int z, int x0, func_force_t force)
                 }
             }
         }
-        smMult(M, MC[count - 1][z][BETA], TM, RSDIAG - 1, RSDIAG - 1, dimR,
-               Nx / 2, x0);
-        for (i = 0; i < dimR; ++i) {
-            for (x = x0; x < Nx / 2; x++) {
-                Re(AC[z][BETA][i][x]) +=
-                    Re(TM[i][x]) * re * dt * (a[k + 1] + b[k + 1]);
-                Im(AC[z][BETA][i][x]) +=
-                    Im(TM[i][x]) * re * dt * (a[k + 1] + b[k + 1]);
-            }
-        }
+        // smMult(M, MC[count - 1][z][BETA], TM, RSDIAG - 1, RSDIAG - 1, dimR,
+        //        Nx / 2, x0);
+        // for (i = 0; i < dimR; ++i) {
+        //     for (x = x0; x < Nx / 2; x++) {
+        //         Re(AC[z][BETA][i][x]) +=
+        //             Re(TM[i][x]) * re * dt * (a[k + 1] + b[k + 1]);
+        //         Im(AC[z][BETA][i][x]) +=
+        //             Im(TM[i][x]) * re * dt * (a[k + 1] + b[k + 1]);
+        //     }
+        // }
 
     }
 }                               /* end project for nonzero (Kx,Kz) */

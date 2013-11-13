@@ -58,12 +58,12 @@ void adjproject0(int count, int k, func_force_t force)
             Im(AC[0][ALPHA][i][0]) = Im(tm[i]);
         }
 
-        smMult0(Rps, MC[count][0][ALPHA], tm, RSDIAG - 1, RSDIAG - 1,
-                dimR);
-        for (i = 0; i < dimR; ++i) {
-            Re(AC[0][ALPHA][i][0]) -= Re(tm[i]) * dt * re * (a[0] + b[0]);
-            Im(AC[0][ALPHA][i][0]) -= Im(tm[i]) * dt * re * (a[0] + b[0]);
-        }
+        //smMult0(Rps, MC[count][0][ALPHA], tm, RSDIAG - 1, RSDIAG - 1,
+        //        dimR);
+        // for (i = 0; i < dimR; ++i) {
+        //     Re(AC[0][ALPHA][i][0]) -= Re(tm[i]) * dt * re * (a[0] + b[0]);
+        //     Im(AC[0][ALPHA][i][0]) -= Im(tm[i]) * dt * re * (a[0] + b[0]);
+        // }
 
         /*beta */
         smMult0(MZ, AC[0][BETA], tm, RSDIAG - 1, RSDIAG - 1, dimR);
@@ -71,11 +71,11 @@ void adjproject0(int count, int k, func_force_t force)
             Re(AC[0][BETA][i][0]) = Re(tm[i]);
             Im(AC[0][BETA][i][0]) = Im(tm[i]);
         }
-        smMult0(Rps, MC[count][0][BETA], tm, RSDIAG - 1, RSDIAG - 1, dimR);
-        for (i = 0; i < dimR; ++i) {
-            Re(AC[0][BETA][i][0]) -= Re(tm[i]) * dt * re * (a[0] + b[0]);
-            Im(AC[0][BETA][i][0]) -= Im(tm[i]) * dt * re * (a[0] + b[0]);
-        }
+        // smMult0(Rps, MC[count][0][BETA], tm, RSDIAG - 1, RSDIAG - 1, dimR);
+        // for (i = 0; i < dimR; ++i) {
+        //     Re(AC[0][BETA][i][0]) -= Re(tm[i]) * dt * re * (a[0] + b[0]);
+        //     Im(AC[0][BETA][i][0]) -= Im(tm[i]) * dt * re * (a[0] + b[0]);
+        // }
     }
 
     /* MZ = M0 - (1/RE)b[k]dt*D0 */
@@ -149,7 +149,6 @@ void adjproject0(int count, int k, func_force_t force)
 
     /* Compute b's */
     bsolve0(MZ, AC[0][BETA], RSDIAG - 1, RSDIAG - 1, dimR);
-
 
     flux_t = 0;
 
@@ -269,14 +268,14 @@ void adjproject0(int count, int k, func_force_t force)
             Re(AC[0][ALPHA][i][0]) = Re(tm[i]) + dt * d[k + 1] * Re(fa[i]);
             Im(AC[0][ALPHA][i][0]) = Im(tm[i]) + dt * d[k + 1] * Im(fa[i]);
         }
-        smMult0(Rps, MC[count - 1][0][ALPHA], tm, RSDIAG - 1, RSDIAG - 1,
-                dimR);
-        for (i = 0; i < dimR; ++i) {
-            Re(AC[0][ALPHA][i][0]) -=
-                Re(tm[i]) * dt * re * (a[k + 1] + b[k + 1]);
-            Im(AC[0][ALPHA][i][0]) -=
-                Im(tm[i]) * dt * re * (a[k + 1] + b[k + 1]);
-        }
+        // smMult0(Rps, MC[count - 1][0][ALPHA], tm, RSDIAG - 1, RSDIAG - 1,
+        //         dimR);
+        // for (i = 0; i < dimR; ++i) {
+        //     Re(AC[0][ALPHA][i][0]) -=
+        //         Re(tm[i]) * dt * re * (a[k + 1] + b[k + 1]);
+        //     Im(AC[0][ALPHA][i][0]) -=
+        //         Im(tm[i]) * dt * re * (a[k + 1] + b[k + 1]);
+        // }
 
         /* now b's */
         smMult0(MZ, AC[0][BETA], tm, RSDIAG - 1, RSDIAG - 1, dimR);
@@ -299,13 +298,13 @@ void adjproject0(int count, int k, func_force_t force)
             Re(AC[0][BETA][i][0]) = Re(tm[i]) + dt * d[k + 1] * Re(fb[i]);
             Im(AC[0][BETA][i][0]) = Im(tm[i]) + dt * d[k + 1] * Im(fb[i]);
         }
-        smMult0(Rps, MC[count - 1][0][BETA], tm, RSDIAG - 1, RSDIAG - 1,
-                dimR);
-        for (i = 0; i < dimR; ++i) {
-            Re(AC[0][BETA][i][0]) -=
-                Re(tm[i]) * dt * re * (a[k + 1] + b[k + 1]);
-            Im(AC[0][BETA][i][0]) -=
-                Im(tm[i]) * dt * re * (a[k + 1] + b[k + 1]);
-        }
+        // smMult0(Rps, MC[count - 1][0][BETA], tm, RSDIAG - 1, RSDIAG - 1,
+        //         dimR);
+        // for (i = 0; i < dimR; ++i) {
+        //     Re(AC[0][BETA][i][0]) -=
+        //         Re(tm[i]) * dt * re * (a[k + 1] + b[k + 1]);
+        //     Im(AC[0][BETA][i][0]) -=
+        //         Im(tm[i]) * dt * re * (a[k + 1] + b[k + 1]);
+        // }
     }
 }                               /* end project zero (Kx,Kz) */
