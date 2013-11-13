@@ -600,11 +600,11 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
     memcpy(AC[0][0][0], AC_given,
            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
-    ========= HERE ===== IF ZERO OUT, ADJOINT DOES NOT MATCH TANGENT
-    memset(U[0][0][0], 0, (Nz) * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
 
+    
     /***************solving adjoint equations ****/
 
+    adj_initAlphaBeta2();
     strength *= dt;
 
     /* time step for adjoint problem */

@@ -67,6 +67,7 @@ void initAlphaBeta(void);
 void initAlphaBeta2(void);
 void incre_initAlphaBeta(void);
 void incre_initAlphaBeta2(void);
+void adj_initAlphaBeta2(void);
 void restart(int restart_flag);
 void restart2(int restart_flag);
 int write_data2(int n);
