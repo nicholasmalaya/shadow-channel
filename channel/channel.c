@@ -426,6 +426,8 @@ void primal(int ru_steps, mcomplex *C_given)
     /* store current Fourier coefficient into MC
        used for solving the adjoint system. */
     // destination // source
+    memset(MC[0][0][0][0], 0, (nsteps * 3 + 1) *
+           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
     memcpy(MC[0][0][0][0], C[0][0][0],
            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
@@ -468,6 +470,8 @@ void primal(int ru_steps, mcomplex *C_given)
                 if (z == Nz / 2) {
                     memset(U[z][0][0], 0,
                            5 * qpts * (Nx / 2) * sizeof(mcomplex));
+                    memset(C[z][0][0], 0,
+                           2 * dimR * (Nx / 2) * sizeof(mcomplex));
                     continue;
                 }
 
@@ -475,6 +479,20 @@ void primal(int ru_steps, mcomplex *C_given)
             }
 
             if (count >= 0 && count % 3 == 0) {
+                for (z = 0; z < (Nz) * 2 * dimR * (Nx / 2); ++ z) {
+                    if (Re(MC[count][0][0][0][z]) != Re(C[0][0][0][z]))
+                    {
+                        printf("MC!=C,count=%d,z=%d/(%d,2,%d,%d)-Re\n",
+                               count, z, Nz, dimR, Nx/2);
+                        exit(-1);
+                    }
+                    if (Im(MC[count][0][0][0][z]) != Im(C[0][0][0][z]))
+                    {
+                        printf("MC!=C,count=%d,z=%d/(%d,2,%d,%d)-Im\n",
+                               count, z, Nz, dimR, Nx/2);
+                        exit(-1);
+                    }
+                }
                 memcpy(MC[count][0][0][0], C[0][0][0],
                        (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
             }
@@ -556,6 +574,8 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
                     // SET U[z][XEL,YEL,ZEL,DXEL,DZEL] TO ZEROS 
                     memset(IU[z][0][0], 0,
                            5 * qpts * (Nx / 2) * sizeof(mcomplex));
+                    memset(IC[z][0][0], 0,
+                           2 * dimR * (Nx / 2) * sizeof(mcomplex));
                     continue;
                 }
 
@@ -569,6 +589,8 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
                 if (z == Nz / 2) {
                     memset(U[z][0][0], 0,
                            5 * qpts * (Nx / 2) * sizeof(mcomplex));
+                    memset(C[z][0][0], 0,
+                           2 * dimR * (Nx / 2) * sizeof(mcomplex));
                     continue;
                 }
                 project(-1, dctr, z, 0, NULL);
@@ -650,15 +672,14 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
                 break;
             }
 
-            memset(Uxb[0], 0, Nz * (Nx / 2) * sizeof(mcomplex));
-            memset(Uzb[0], 0, Nz * (Nx / 2) * sizeof(mcomplex));
-
             adjproject0(count, dctr, NULL);
             adjproject(count, dctr, 0, 1, NULL);
             for (z = 1; z < Nz; ++z) {
                 if (z == Nz / 2) {
                     memset(AU[z][0][0], 0,
                            5 * qpts * (Nx / 2) * sizeof(mcomplex));
+                    memset(AC[z][0][0], 0,
+                           2 * dimR * (Nx / 2) * sizeof(mcomplex));
                     continue;
                 }
                 adjproject(count, dctr, z, 0, NULL);

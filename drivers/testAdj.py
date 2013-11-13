@@ -22,7 +22,7 @@ C = channel.get_solution(0)
 # perturbation
 IC = zeros(C.shape, complex)
 IC[0,0,:,0] = random.normal(size=C.shape[2])
-IC = random.normal(size=C.shape) + 0j
+# IC = random.normal(size=C.shape) + 0j
 channel.tangent(0, 1, IC, 0)
 IC0 = IC.copy()
 
@@ -36,7 +36,7 @@ print('done')
 # linear functional
 AC = zeros(C.shape, complex)
 AC[0,0,:,0] = random.normal(size=C.shape[2])
-AC = random.normal(size=C.shape) + 0j
+# AC = random.normal(size=C.shape) + 0j
 channel.adjoint(n_steps, n_steps-1, AC, 0, strength=0.0)
 AC0 = AC.copy()
 
