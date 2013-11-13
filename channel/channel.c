@@ -604,6 +604,8 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
 
     /***************solving adjoint equations ****/
 
+    strength *= dt;
+
     /* time step for adjoint problem */
     for (n = start_step; n > end_step; --n) {
 

@@ -55,3 +55,22 @@ Iu0 = channel.spec2phys(IC0)
 print((Au0 * Iu * w[:,newaxis]).sum())
 print((Au * Iu0 * w[:,newaxis]).sum())
 
+# run adjoint again
+AC1 = zeros_like(AC0)
+print('adjoint again')
+channel.adjoint(n_steps-1, 1, AC1, 0, strength=1.0)
+print('done')
+
+Au1 = channel.spec2phys(AC1)
+print((Au1 * Iu0 * w[:,newaxis]).sum())
+
+IC = IC0.copy()
+compare = 0
+for i in range(1, n_steps-1):
+    Iu = channel.spec2phys(IC)
+    compare += 0.5 * (Iu * Iu * w[:,newaxis]).sum()
+    channel.tangent(i, i+1, IC, 0)
+    Iu = channel.spec2phys(IC)
+    compare += 0.5 * (Iu * Iu * w[:,newaxis]).sum()
+
+print(compare * channel.dt)

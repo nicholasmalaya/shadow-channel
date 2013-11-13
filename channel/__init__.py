@@ -47,7 +47,7 @@ def read_solution(filename):
         filename += '.hd5'
     shp = (c_channel.c_Nz(), 2, c_channel.c_dimR(), c_channel.c_Nx() / 2)
     C = np.zeros(shp, complex)
-    c_channel.c_read_solution(filename, C)
+    c_channel.c_read_solution(str(filename), C)
     return C
 
 def get_solution(i_step, copy=True):
@@ -57,7 +57,7 @@ def get_solution(i_step, copy=True):
     If copy is True (default), make a copy of the solution.
                                otherwise return a view of the solution (danger)
     '''
-    C = c_channel.c_getsoln(i_step)
+    C = c_channel.c_getsoln(int(i_step))
     assert C.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
                        c_channel.c_Nx() / 2)
     if copy:
@@ -74,14 +74,16 @@ def init(n_steps, ru_steps=0, restart=None):
              If a filename, read the .hd5 file as the restart file.
     '''
     assert n_steps >= 0 and ru_steps >= 0
-    c_channel.c_init(Nx,Ny,Nz,Lx,Lz,Re,meanU*2,dt,n_steps)
+    c_channel.c_init(int(Nx),int(Ny),int(Nz),
+                     float(Lx),float(Lz),float(Re),
+                     float(meanU*2),float(dt),int(n_steps))
     if restart is None:
-        c_channel.c_primal(ru_steps, np.zeros([0,0,0,0], complex))
+        c_channel.c_primal(int(ru_steps), np.zeros([0,0,0,0], complex))
     else:
         C = read_solution(restart)
         assert C.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
                            c_channel.c_Nx() / 2)
-        c_channel.c_primal(ru_steps, C)
+        c_channel.c_primal(int(ru_steps), C)
 
 def destroy():
     '''
@@ -111,29 +113,14 @@ def tangent(start_step, end_step, IC_init, inhomo):
     assert IC_init.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
                              c_channel.c_Nx() / 2)
     assert 0 <= start_step <= end_step <= c_channel.c_nsteps()
-    c_channel.c_tangent(start_step, end_step, IC_init, inhomo)
+    c_channel.c_tangent(int(start_step), int(end_step), IC_init, int(inhomo))
 
 def adjoint(start_step, end_step, AC_init, inhomo, strength):
     assert AC_init.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
                              c_channel.c_Nx() / 2)
     assert 0 <= end_step <= start_step <= c_channel.c_nsteps()
-    c_channel.c_adjoint(start_step, end_step, AC_init, inhomo, strength)
-
-"""
-def statistics(solution):
-    if isinstance(solution, str):
-        solution = read_solution(solution)
-    if isinstance(solution, int):
-        solution = get_solution(solution, copy=False)
-
-    assert solution.dtype == complex
-    assert solution.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
-                              c_channel.c_Nx() / 2)
-
-    stats = np.zeros([20, c_channel.c_qpts()], np.float64)
-    c_channel.c_statistics(solution, stats)
-    return stats
-"""
+    c_channel.c_adjoint(int(start_step), int(end_step), AC_init, int(inhomo),
+                        float(strength))
 
 def spec2phys(solution):
     if isinstance(solution, str):

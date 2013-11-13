@@ -11,7 +11,7 @@ channel.init(n_steps, ru_steps=100, restart=None)
 
 C = channel.get_solution(0, copy=True)
 C1 = channel.get_solution(n_steps, copy=True)
-print "Primal"
+print("Primal")
 for i in range(0,n_steps):
     Ctmp = channel.get_solution(i, copy=True)
     print(linalg.norm(Ctmp))
@@ -19,7 +19,7 @@ for i in range(0,n_steps):
 # perturbation
 random.seed(0)
 IC0 = 0.000001*(random.rand(C.shape[0],C.shape[1],C.shape[2],C.shape[3]) + 1j * random.rand(C.shape[0],C.shape[1],C.shape[2],C.shape[3]))
-print "Perturbation"
+print("Perturbation")
 print(linalg.norm(IC0))
 
 channel.primal(C + IC0)
@@ -29,14 +29,14 @@ channel.primal(C + IC0)
 # run perturbed primal
 # channel.init(n_steps, ru_steps=0, restart='perturbed_C.hd5')
 
-print "Perturbed Primal"
+print("Perturbed Primal")
 for i in range(0,n_steps):
     Ctmp = channel.get_solution(i, copy=True)
     print(linalg.norm(Ctmp))
 
 
 C1p = channel.get_solution(n_steps, copy=True)
-print "Norm of difference"
+print("Norm of difference")
 print(linalg.norm(C1p-C1))
 # run tangent
 #ICh = zeros(C.shape,complex)
@@ -45,9 +45,9 @@ print(linalg.norm(C1p-C1))
 
 IC = copy(IC0)
 channel.tangent(0, n_steps, IC,0)
-print "Norm of tangent"
+print("Norm of tangent")
 print(linalg.norm(IC))
-print "Difference of Norms"
+print("Difference of Norms")
 print(linalg.norm(C1p-C1-IC))
 
 channel.destroy()
@@ -82,9 +82,9 @@ channel.tangent(0, n_steps, IC,1)
 
 dC = (1./(2*dRe))*(Cp - Cm)
 
-print linalg.norm(dC)
-print linalg.norm(IC)
-print linalg.norm(dC-IC)
+print(linalg.norm(dC))
+print(linalg.norm(IC))
+print(linalg.norm(dC-IC))
 # channel.destroy()
 '''
 '''
