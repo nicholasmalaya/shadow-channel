@@ -21,6 +21,7 @@ class Wrapper(object):
         self._proj(start_step, v1)
         self._tan(start_step, end_step, v1, inhomo)
         eta = self._proj(end_step, v1)
+        #print "fwd", i, norm(v1)
         return v1, eta
         
     def backward(self, i, w0, strength):
@@ -30,6 +31,7 @@ class Wrapper(object):
         self._proj(start_step, w1)
         self._adj(start_step, end_step, w1, 0, strength)
         self._proj(end_step, w1)
+        #print "bwk", i, norm(w1)
         return w1
 
     # ------------------ KKT matvec ----------------------
@@ -47,7 +49,7 @@ class Wrapper(object):
         for i in range(self.n):
             vip, eta = self.forward(i, v[i], inhomo)
             self.zeta[i] = eta / self.dT
-            wim = self.backward(i, w[i], strength=0.01)
+            wim = self.backward(i, w[i], strength=1.0)
             if i < self.n - 1:
                 R_w[i] = v[i+1] - vip
             if i > 0:
@@ -60,13 +62,13 @@ class Wrapper(object):
 import channel 
 # Key Parameters
 # Re, {Nx, Ny, Nz} ru_steps, n_chunk, t_chunk, dt
-channel.Re = 500
+channel.Re = 2000
 channel.Nx = 16
 channel.Ny = 33
 channel.Nz = 16
 channel.dt = 0.01
 
-ru_steps = 100
+ru_steps = 0
 n_chunk = 4
 chunk_steps = 5
 n_steps = n_chunk * chunk_steps + 1 
@@ -79,8 +81,8 @@ channel.Lz = 1.6
 channel.meanU = 1.0
 
 # Initial Condition
-#restart = "keefe_runup_stage_5"
-restart = None
+restart = "keefe_runup_stage_5"
+#restart = None
 
 channel.init(n_steps,ru_steps, restart = restart)
 
@@ -123,5 +125,5 @@ vw, info = splinalg.minres(oper, rhs, maxiter=100, tol=1E-6,
                            callback=callback)
 
 
-#pde.matvec(vw, 1)
+pde.matvec(vw, 1)
 #channel.destroy()
