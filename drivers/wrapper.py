@@ -36,10 +36,11 @@ class Wrapper(object):
     def matvec(self, x, inhomo=0):
         n_v = self.m * self.n
         n_w = self.m * (self.n - 1)
-        assert x.shape == (n_v + n_w,)
+        assert x.shape == (2*n_v + 2*n_w,)
+        x = x[::2] + 1j * x[1::2]
+
         v = x[:n_v].reshape([-1,self.Nz,2,self.Ny-2,self.Nx/2])
         w = vstack([x[n_v:].reshape([-1,self.Nz,2,self.Ny-2,self.Nx/2]), zeros([1,self.Nz,2,self.Ny-2,self.Nx/2],complex)])
-
         R_w = zeros([self.n - 1, self.Nz,2,self.Ny-2,self.Nx/2],complex)
         R_v = zeros([self.n, self.Nz,2,self.Ny-2,self.Nx/2],complex)
         self.zeta = zeros(self.n)
@@ -53,7 +54,7 @@ class Wrapper(object):
                 R_v[i] = w[i-1] - wim
             else:
                 R_v[i] = - wim
-        return hstack([ravel(R_v), ravel(R_w)])
+        return hstack([ravel(R_v), ravel(R_w)]).view(dtype=float)
 
 
 import channel 
@@ -67,7 +68,7 @@ channel.dt = 0.01
 
 ru_steps = 0
 n_chunk = 3
-chunk_steps = 10
+chunk_steps = 5
 n_steps = n_chunk * chunk_steps + 1 
 
 # defined vector with indicies of start and end steps for each time chunk
@@ -87,7 +88,7 @@ pde = Wrapper(channel.Nx, channel.Ny, channel.Nz, n_chunk, chunk_bounds,
               channel.tangent, channel.adjoint, channel.ddt_project)
 
 # construct matrix rhs
-x = zeros(pde.m * (2 * pde.n - 1),complex)
+x = zeros(2 * pde.m * (2 * pde.n - 1),complex)
 rhs = -pde.matvec(x, 1) - pde.matvec(x, 0)
 
 # solve
@@ -115,8 +116,11 @@ class Callback:
 # --- solve with minres (if cg converges this should converge -#
 callback = Callback(pde)
 callback(rhs * 0)
+#vw, info = splinalg.gmres(oper, rhs, tol = 1e-6, maxiter=10, 
+#                           callback=callback)
 vw, info = splinalg.minres(oper, rhs, maxiter=100, tol=1E-6,
                            callback=callback)
+
 
 #pde.matvec(vw, 1)
 #channel.destroy()
