@@ -10,7 +10,7 @@ if not os.path.exists(restart_file):
     print('Please download\n{0}\nand name it\n{1}\n'.format(url, restart_file))
 
 # Primal
-n_steps = 100
+n_steps = 3
 
 channel.Re = 2000
 channel.init(n_steps, ru_steps=0, restart=restart_file) # turbulent
@@ -22,9 +22,10 @@ C = channel.get_solution(0)
 # perturbation
 IC = zeros(C.shape, complex)
 IC[0,0,:,0] = random.normal(size=C.shape[2])
-# IC = random.normal(size=C.shape) + 0j
+IC = random.normal(size=C.shape) + 0j
 channel.tangent(0, 1, IC, 0)
 IC0 = IC.copy()
+print(IC0[0,0,0,0])
 
 # run tangent
 print('tangent')
@@ -36,7 +37,7 @@ print('done')
 # linear functional
 AC = zeros(C.shape, complex)
 AC[0,0,:,0] = random.normal(size=C.shape[2])
-# AC = random.normal(size=C.shape) + 0j
+AC = random.normal(size=C.shape) + 0j
 channel.adjoint(n_steps, n_steps-1, AC, 0, strength=0.0)
 AC0 = AC.copy()
 
@@ -71,6 +72,6 @@ for i in range(1, n_steps-1):
     compare += 0.5 * (Iu * Iu * w[:,newaxis]).sum()
     channel.tangent(i, i+1, IC, 0)
     Iu = channel.spec2phys(IC)
-    compare += 0.5 * (Iu * Iu * w[:,newaxis]).sum()
+    # compare += 0.5 * (Iu * Iu * w[:,newaxis]).sum()
 
 print(compare * channel.dt)

@@ -440,15 +440,6 @@ void primal(int ru_steps, mcomplex *C_given)
         }
         for (dctr = 0; dctr < 3; ++dctr) {    /* RK steps */
 
-            /* copy the result to Uxbt, Uzbt. Uxb and Uzb will be used
-               later for boundary condition of current time stage */
-            memcpy(Uxbt[0], Uxb[0],
-                   (Nz) * (Nx / 2) * sizeof(fftw_complex));
-            memcpy(Uzbt[0], Uzb[0],
-                   (Nz) * (Nx / 2) * sizeof(fftw_complex));
-            memset(Uxb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
-            memset(Uzb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
-
             /* do FFTs to get H_hats.  After this we have for each (Kx,y,Kz)
                Hx_hat   -->  U[z][HXEL][y][x]
                Hy_hat   -->  U[z][HYEL][y][x]
@@ -477,26 +468,6 @@ void primal(int ru_steps, mcomplex *C_given)
 
                 project(count, dctr, z, 0, NULL);
             }
-
-            if (count >= 0 && count % 3 == 0) {
-                for (z = 0; z < (Nz) * 2 * dimR * (Nx / 2); ++ z) {
-                    if (Re(MC[count][0][0][0][z]) != Re(C[0][0][0][z]))
-                    {
-                        printf("MC!=C,count=%d,z=%d/(%d,2,%d,%d)-Re\n",
-                               count, z, Nz, dimR, Nx/2);
-                        exit(-1);
-                    }
-                    if (Im(MC[count][0][0][0][z]) != Im(C[0][0][0][z]))
-                    {
-                        printf("MC!=C,count=%d,z=%d/(%d,2,%d,%d)-Im\n",
-                               count, z, Nz, dimR, Nx/2);
-                        exit(-1);
-                    }
-                }
-                memcpy(MC[count][0][0][0], C[0][0][0],
-                       (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
-            }
-
         }        /* end for dctr... */
     }            /* end for n... */
 
@@ -528,6 +499,17 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
     memcpy(IC[0][0][0], IC_given,
            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
+    // memset(U[0][0][0], 0, (Nz) * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
+    // memset(AU[0][0][0], 0, (Nz) * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
+    // memset(IU[0][0][0], 0, (Nz) * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
+    // memset(IAU[0][0][0], 0, (Nz) * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
+
+    // memset(LU[0][0][0], 0, (Nz) * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
+    // memset(LIU[0][0][0], 0, (Nz) * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
+
+    // memset(Uxb[0], 0, Nz * (Nx / 2) * sizeof(mcomplex));
+    // memset(Uzb[0], 0, Nz * (Nx / 2) * sizeof(mcomplex));
+
     initAlphaBeta2();
     incre_initAlphaBeta2();
 
@@ -540,19 +522,13 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
     } 
 
     /***************solving state and incremental state equations ****/
+    count = start_step * 3;
+    memcpy(MIC[count][0][0][0], IC[0][0][0],
+           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
     /* time step for forward problem */
     for (n = start_step; n < end_step; ++n) {
         for (dctr = 0; dctr < 3; ++dctr) {    /* RK steps */
-
-            /* copy the result to Uxbt, Uzbt. Uxb and Uzb will be used
-               later for boundary condition of current time stage */
-            memcpy(Uxbt[0], Uxb[0],
-                   (Nz) * (Nx / 2) * sizeof(fftw_complex));
-            memcpy(Uzbt[0], Uzb[0],
-                   (Nz) * (Nx / 2) * sizeof(fftw_complex));
-            memset(Uxb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
-            memset(Uzb[0], 0, Nz * (Nx / 2) * sizeof(fftw_complex));
 
             /* do FFTs to get H_hats.  After this we have for each (Kx,y,Kz)
                Hx_hat   -->  U[z][HXEL][y][x]
@@ -624,6 +600,9 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
     memcpy(AC[0][0][0], AC_given,
            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
+    ========= HERE ===== IF ZERO OUT, ADJOINT DOES NOT MATCH TANGENT
+    memset(U[0][0][0], 0, (Nz) * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
+
     /***************solving adjoint equations ****/
 
     strength *= dt;
@@ -633,8 +612,8 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
 
         count = n * 3;
         for (z = 0; z < (Nz) * 2 * dimR * (Nx / 2); ++ z) {
-            Re(AC[0][0][0][z]) += 0.5 * strength * Re(MIC[count][0][0][0][z]);
-            Im(AC[0][0][0][z]) += 0.5 * strength * Im(MIC[count][0][0][0][z]);
+            //Re(AC[0][0][0][z]) += 0.5 * strength * Re(MIC[count][0][0][0][z]);
+            //Im(AC[0][0][0][z]) += 0.5 * strength * Im(MIC[count][0][0][0][z]);
         }
 
         for (dctr = 0; dctr < 3; ++dctr) {    /* RK steps */

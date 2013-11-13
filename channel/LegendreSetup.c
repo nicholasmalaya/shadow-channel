@@ -625,6 +625,7 @@ int Qpoints(int n, double *x, int len, double (*poly) (int, double))
             // printf("iter %d/%d, fabs(x2 - x1)=%g/%g\n", r, ITMAX, fabs(x2 - x1), TOL);
         }                       /* while test... */
         if (r == ITMAX) {
+            printf("NO CONVERGENCE\n");
             return (NO_CONVERGENCE);
         }
 

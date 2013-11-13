@@ -450,7 +450,7 @@ void increproject(int count, int k, int z, int x0,
     }
 
     if (count >= 0) {
-        for (i = 0; i < dimQ; i++) {
+        for (i = 0; i < dimR; i++) {
             for (x = x0; x < Nx / 2; x++) {
                 Re(MIC[count][z][ALPHA][i][x]) = Re(IC[z][ALPHA][i][x]);
                 Im(MIC[count][z][ALPHA][i][x]) = Im(IC[z][ALPHA][i][x]);
