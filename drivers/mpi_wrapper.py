@@ -126,19 +126,23 @@ ru_steps = 0 if mpi_rank == 0 else 0
 # initial condition
 u0 = zeros([channel.Nz,2,channel.Ny-2,channel.Nx/2],complex) 
 
+# solve portion of primal on each processor
+if mpi_rank == 0:
+    print "Starting Primal ..."
+
 if mpi_rank > 0:
     mpi_comm.Recv(u0, mpi_rank - 1, 1)
-    restart = 'primal_restart_{0}'.format(mpi_rank)
-    channel.init(0,0, restart = None)
-    channel.save_solution(restart, u0)
+    channel.para_init(n_steps, u0)
 else:
     restart = "keefe_runup_stage_5"
-
-channel.init(n_steps,ru_steps, restart = restart)
+    channel.init(n_steps,ru_steps, restart = restart)
 
 if mpi_rank < mpi_size - 1:
     u0 = channel.get_solution(n_steps, copy=True)
     mpi_comm.Send(u0, mpi_rank + 1, 1)
+
+if mpi_rank == (mpi_size-1):
+    print "Primal Complete!"
 
 # Compute time averaged objective function over all time (and processors), Jbar
 # Jbar = mpi_comm.allreduce(kuramoto.cvar.JBAR)

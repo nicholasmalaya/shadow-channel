@@ -85,6 +85,20 @@ def init(n_steps, ru_steps=0, restart=None):
                            c_channel.c_Nx() / 2)
         c_channel.c_primal(int(ru_steps), C)
 
+def para_init(n_steps, C):
+    '''
+    Like init, but takes a complex array of dimension (Nz, 2, dimR, Nx/2) 
+    as an input for the initial condition instead of a restart file.  
+    Used in parallel LSS.
+    '''
+    assert n_steps >= 0 
+    c_channel.c_init(int(Nx),int(Ny),int(Nz),
+                     float(Lx),float(Lz),float(Re),
+                     float(meanU*2),float(dt),int(n_steps))
+    assert C.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
+                           c_channel.c_Nx() / 2)
+    c_channel.c_primal(0, C)
+
 def destroy():
     '''
     Must be called before calling init again to initialize another channel
