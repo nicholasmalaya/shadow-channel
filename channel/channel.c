@@ -612,8 +612,8 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
 
         count = n * 3;
         for (z = 0; z < (Nz) * 2 * dimR * (Nx / 2); ++ z) {
-            //Re(AC[0][0][0][z]) += 0.5 * strength * Re(MIC[count][0][0][0][z]);
-            //Im(AC[0][0][0][z]) += 0.5 * strength * Im(MIC[count][0][0][0][z]);
+            Re(AC[0][0][0][z]) += 0.5 * strength * Re(MIC[count][0][0][0][z]);
+            Im(AC[0][0][0][z]) += 0.5 * strength * Im(MIC[count][0][0][0][z]);
         }
 
         for (dctr = 0; dctr < 3; ++dctr) {    /* RK steps */
