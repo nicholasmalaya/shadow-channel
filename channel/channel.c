@@ -617,7 +617,7 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
         count = n * 3;
         memcpy(ICtmp, MIC[count][0][0][0],
                    (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
-        //tmp = ddt_project(count, ICtmp);
+        tmp = ddt_project(n, ICtmp);
         for (z = 0; z < (Nz) * 2 * dimR * (Nx / 2); ++ z) {
             Re(AC[0][0][0][z]) += 0.5 * strength * Re(ICtmp[z]);
             Im(AC[0][0][0][z]) += 0.5 * strength * Im(ICtmp[z]);
@@ -675,7 +675,7 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
         count = (n - 1) * 3;
         memcpy(ICtmp, MIC[count][0][0][0],
                    (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
-        //tmp = ddt_project(count, ICtmp);
+        tmp = ddt_project(n-1, ICtmp);
         for (z = 0; z < (Nz) * 2 * dimR * (Nx / 2); ++ z) {
             Re(AC[0][0][0][z]) += 0.5 * strength * Re(ICtmp[z]);
             Im(AC[0][0][0][z]) += 0.5 * strength * Im(ICtmp[z]);
