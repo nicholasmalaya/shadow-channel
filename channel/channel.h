@@ -12,6 +12,8 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo);
 
 void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo, double strength);
 
+double ddt_project(int i_step, mcomplex * IC_ptr);
+
 void tangent_forcing0(int n, int k, int flag, mcomplex * f_a, mcomplex * f_b);
 
 void tangent_forcing(int n, int k, int z, mcomplex ** f_a, mcomplex ** f_b);

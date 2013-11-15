@@ -573,10 +573,11 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
             }
         }        /* end for dctr... */
     }            /* end for n... */
-
+ 
     memcpy(IC_given, IC[0][0][0],
            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 }
+
 
 /***************************************************************
 *                                                              *
@@ -588,7 +589,10 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
              double strength)
 {
     int n, dctr, count, z;
-
+    double tmp;
+    mcomplex *ICtmp;
+    int len1 = (Nz * 2 * dimR * (Nx / 2));
+    ICtmp = cVector(len1); 
     /* retrieve solution */
     assert (end_step < start_step);
     assert (end_step >= 0);
@@ -611,9 +615,12 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
     for (n = start_step; n > end_step; --n) {
 
         count = n * 3;
+        memcpy(ICtmp, MIC[count][0][0][0],
+                   (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+        //tmp = ddt_project(count, ICtmp);
         for (z = 0; z < (Nz) * 2 * dimR * (Nx / 2); ++ z) {
-            Re(AC[0][0][0][z]) += 0.5 * strength * Re(MIC[count][0][0][0][z]);
-            Im(AC[0][0][0][z]) += 0.5 * strength * Im(MIC[count][0][0][0][z]);
+            Re(AC[0][0][0][z]) += 0.5 * strength * Re(ICtmp[z]);
+            Im(AC[0][0][0][z]) += 0.5 * strength * Im(ICtmp[z]);
         }
 
         for (dctr = 0; dctr < 3; ++dctr) {    /* RK steps */
@@ -666,15 +673,105 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
         }
 
         count = (n - 1) * 3;
+        memcpy(ICtmp, MIC[count][0][0][0],
+                   (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+        //tmp = ddt_project(count, ICtmp);
         for (z = 0; z < (Nz) * 2 * dimR * (Nx / 2); ++ z) {
-            Re(AC[0][0][0][z]) += 0.5 * strength * Re(MIC[count][0][0][0][z]);
-            Im(AC[0][0][0][z]) += 0.5 * strength * Im(MIC[count][0][0][0][z]);
+            Re(AC[0][0][0][z]) += 0.5 * strength * Re(ICtmp[z]);
+            Im(AC[0][0][0][z]) += 0.5 * strength * Im(ICtmp[z]);
         }
+
 	}
 
     memcpy(AC_given, AC[0][0][0],
            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+    freecVector( ICtmp );
 }
+
+/***************************************************************
+*                                                              *
+*                  PRIMAL DERIVATIVE PROJECTION                *
+*                                                              *
+****************************************************************/
+
+double ddt_project(int i_step, mcomplex * IC_given)
+{
+
+    mcomplex *dCdt;
+    double *dudt; 
+    double *v; 
+    double num, den;
+    int x, y, z, i;
+    int XFLOW, YFLOW, ZFLOW;
+    int len1 = (Nz * 2 * dimR * (Nx / 2));
+    int len2 = (3 * 3 * (Nx / 2) * qpts * 3 * (Nz /2));
+    int i_plus, i_minus;
+
+    // Allocate memory
+    dCdt = cVector(len1);
+    dudt = dVector(len2);
+    v = dVector(len2);
+    memset(dCdt, 0,
+           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+    memset(dudt, 0,
+           3 * (3 * Nx / 2) * qpts * (3 * Nz / 2) * sizeof(double));
+    memset(v, 0,
+           3 * (3 * Nx / 2) * qpts * (3 * Nz / 2) * sizeof(double));
+
+    // compute time derivative with finite difference
+    if (i_step == 0) {
+        i_plus = 3*(i_step + 1);
+        i_minus = 3*i_step;
+    } else {
+        i_plus = 3*i_step;
+        i_minus = 3*(i_step - 1);   
+    }
+
+    for (z = 0; z < (Nz) * 2 * dimR * (Nx / 2); ++ z) {
+        Re(dCdt[z]) = (1.0/dt) * (Re(MC[i_plus][0][0][0][z])-Re(MC[i_minus][0][0][0][z]));
+        Im(dCdt[z]) = (1.0/dt) * (Im(MC[i_plus][0][0][0][z])-Im(MC[i_minus][0][0][0][z]));
+    }
+    // find physical derivative, sensitivity
+    spec2phys(dCdt,dudt);
+    spec2phys(IC_given,v);
+    
+    //compute numerator and denominator of projection
+    num = 0.0;
+    den = 0.0;
+    XFLOW = 0 * (3 * Nx / 2) * qpts * (3 * Nz / 2);
+    YFLOW = 1 * (3 * Nx / 2) * qpts * (3 * Nz / 2);
+    ZFLOW = 2 * (3 * Nx / 2) * qpts * (3 * Nz / 2);
+    
+    for (y = 0; y < qpts; ++y){
+        for (z = 0; z < (3 * Nz / 2); ++z){
+            for (x = 0; x < (3 * Nx / 2); ++x){
+                i = (x * qpts + y) * (3 * Nz / 2) + z;
+                num += dudt[i + XFLOW] * v[i + XFLOW] * W[y];
+                den += dudt[i + XFLOW] * dudt[i + XFLOW] * W[y];
+                num += dudt[i + YFLOW] * v[i + YFLOW] * W[y];
+                den += dudt[i + YFLOW] * dudt[i + YFLOW] * W[y];
+                num += dudt[i + ZFLOW] * v[i + ZFLOW] * W[y];
+                den += dudt[i + ZFLOW] * dudt[i + ZFLOW] * W[y];
+            }
+        }
+    }
+    
+    // subtract component of IC_given that is parallel to dCdt
+
+
+    for (z = 0; z < (Nz) * 2 * dimR * (Nx / 2); ++ z) {
+        Re(IC_given[z]) -= (num/den) * Re(dCdt[z]);
+        Im(IC_given[z]) -= (num/den) * Im(dCdt[z]);
+    }
+
+
+    // free memory
+    freecVector(dCdt);
+    freedVector(dudt);
+    freedVector(v);
+	return (num/den);
+}
+
 
 
 /***************************************************************

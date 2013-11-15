@@ -89,6 +89,23 @@ void c_adjoint(int start_step, int end_step,
 %}
 
 
+%apply (mcomplex * INPLACE_ARRAY4, int DIM1, int DIM2, int DIM3, int DIM4)
+      {(mcomplex * IC_given, int Nz_dup, int Nvar_dup, int Ny_dup, int Nx_dup)}
+
+%inline %{
+double c_ddt_project(int i_step,
+        mcomplex *IC_given, int Nz_dup, int Nvar_dup, int Ny_dup, int Nx_dup)
+{
+    assert(Nx_dup == Nx / 2);
+    assert(Ny_dup == dimR);
+    assert(Nz_dup == Nz);
+    assert(Nvar_dup == 2);
+
+    return ddt_project(i_step, IC_given);
+}
+%}
+
+
 %apply (mcomplex ** ARGOUTVIEW_ARRAY4, int * DIM1, int * DIM2, int * DIM3, int * DIM4)
       {(mcomplex ** MC_ptr, int * Nz_ptr, int * Nvar_ptr, int * Ny_ptr, int * Nx_ptr)}
 
