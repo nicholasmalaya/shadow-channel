@@ -46,7 +46,7 @@ void increproject0(int count, int k, int flag, func_force_t force)
     if ((force != NULL)&&(k==0)) {
         memset(Ifa, 0, dimR * sizeof(mcomplex));
         memset(Ifb, 0, dimR * sizeof(mcomplex));
-        force(0, k, 1, Ifa, Ifb);
+        force(count, k, 1, Ifa, Ifb);
 
         /* Solve for forcing cotribution to da/dt, db/dt */
         /* MZ = M0 */
@@ -89,11 +89,6 @@ void increproject0(int count, int k, int flag, func_force_t force)
 
     memset(Ifa, 0, dimR * sizeof(mcomplex));
     memset(Ifb, 0, dimR * sizeof(mcomplex));
-
-//    if (force != NULL) {
-//        //force(n, k, 1, tmp, tmp2);
-//        force(n, k, 1, Ifa, Ifb);
-//    }
 
     /* Create matrices for solving linear system. 
        Right hand side of system:  If this is the first step in the Runge-Kutta
@@ -169,28 +164,6 @@ void increproject0(int count, int k, int flag, func_force_t force)
         Re(IC[0][ALPHA][i][0]) += dt * c[k] * Re(Ifa[i]);
     }
 
-/*    for (i = 0; i < dimR; ++i) {
-        for (j = 0; j < qpts; ++j) {
-            Re(IC[0][ALPHA][i][0]) +=
-                Rw[i][j] * (1 - Qy[j]) * 0.5 * (Re(Uxbt[0][0]) -
-                                                Re(Uxb[0][0]));
-            Im(IC[0][ALPHA][i][0]) +=
-                Rw[i][j] * (1 - Qy[j]) * 0.5 * (Im(Uxbt[0][0]) -
-                                                Im(Uxb[0][0]));
-        }
-    }*/
-
-
-    /*  Re(IC[0][ALPHA][0][0])=Re(IC[0][ALPHA][0][0])+e[0]* Re(Uxbt[0][0])-e[0]* Re(Uxb[0][0]);
-       Re(IC[0][ALPHA][1][0])=Re(IC[0][ALPHA][1][0])+e[1]* Re(Uxbt[0][0])-e[1]* Re(Uxb[0][0]);
-       Re(IC[0][ALPHA][2][0])=Re(IC[0][ALPHA][2][0])+e[2]* Re(Uxbt[0][0])-e[2]* Re(Uxb[0][0]);
-       Re(IC[0][ALPHA][3][0])=Re(IC[0][ALPHA][3][0])+e[3]* Re(Uxbt[0][0])-e[3]* Re(Uxb[0][0]);
-
-       Im(IC[0][ALPHA][0][0])=Im(IC[0][ALPHA][0][0])+e[0]* Im(Uxbt[0][0])-e[0]* Im(Uxb[0][0]);
-       Im(IC[0][ALPHA][1][0])=Im(IC[0][ALPHA][1][0])+e[1]* Im(Uxbt[0][0])-e[1]* Im(Uxb[0][0]);
-       Im(IC[0][ALPHA][2][0])=Im(IC[0][ALPHA][2][0])+e[2]* Im(Uxbt[0][0])-e[2]* Im(Uxb[0][0]);
-       Im(IC[0][ALPHA][3][0])=Im(IC[0][ALPHA][3][0])+e[3]* Im(Uxbt[0][0])-e[3]* Im(Uxb[0][0]); */
-
     /* Compute a's */
     bsolve0(MZ, IC[0][ALPHA], RSDIAG - 1, RSDIAG - 1, dimR);
 
@@ -215,28 +188,6 @@ void increproject0(int count, int k, int flag, func_force_t force)
         Re(IC[0][BETA][i][0]) += dt * c[k] * Re(Ifb[i]);
     }
 
-    /*for (i = 0; i < dimR; ++i) {
-        for (j = 0; j < qpts; ++j) {
-            Re(IC[0][BETA][i][0]) +=
-                Rw[i][j] * (1 - Qy[j]) * 0.5 * (Re(Uzbt[0][0]) -
-                                                Re(Uzb[0][0]));
-            Im(IC[0][BETA][i][0]) +=
-                Rw[i][j] * (1 - Qy[j]) * 0.5 * (Im(Uzbt[0][0]) -
-                                                Im(Uzb[0][0]));
-        }
-    }
-
-       Re(IC[0][BETA][0][0])=Re(IC[0][BETA][0][0])+e[0]*Re(Uzbt[0][0])-e[0]*Re(Uzb[0][0]);
-       Re(IC[0][BETA][1][0])=Re(IC[0][BETA][1][0])+e[1]*Re(Uzbt[0][0])-e[1]*Re(Uzb[0][0]);
-       Re(IC[0][BETA][2][0])=Re(IC[0][BETA][2][0])+e[2]*Re(Uzbt[0][0])-e[2]*Re(Uzb[0][0]);
-       Re(IC[0][BETA][3][0])=Re(IC[0][BETA][3][0])+e[3]*Re(Uzbt[0][0])-e[3]*Re(Uzb[0][0]);
-
-       Im(IC[0][BETA][0][0])=Im(IC[0][BETA][0][0])+e[0]*Im(Uzbt[0][0])-e[0]*Im(Uzb[0][0]);
-       Im(IC[0][BETA][1][0])=Im(IC[0][BETA][1][0])+e[1]*Im(Uzbt[0][0])-e[1]*Im(Uzb[0][0]);
-       Im(IC[0][BETA][2][0])=Im(IC[0][BETA][2][0])+e[2]*Im(Uzbt[0][0])-e[2]*Im(Uzb[0][0]);
-       Im(IC[0][BETA][3][0])=Im(IC[0][BETA][3][0])+e[3]*Im(Uzbt[0][0])-e[3]*Im(Uzb[0][0]); 
-   */
-
     /* Compute b's */
     bsolve0(MZ, IC[0][BETA], RSDIAG - 1, RSDIAG - 1, dimR);
 
@@ -250,7 +201,6 @@ void increproject0(int count, int k, int flag, func_force_t force)
             flux_t += Rw[i][j] * Re(IC[0][ALPHA][i][0]);
         }
     }
-    // printf("Before: incre_flux_t=%f\n", flux_t);
 
     flux_t = - flux_t;
 
@@ -260,14 +210,6 @@ void increproject0(int count, int k, int flag, func_force_t force)
        Im(IC[0][ALPHA][j][0])= Im(IC[0][ALPHA][j][0])+flux_t*Im(add[j]) * 0.5;
        } 
 
-    // flux_t = 0;
-    // for (i = 0; i < dimR; ++i) {
-    //     for (j = 0; j < qpts; ++j) {
-    //         flux_t += Rw[i][j] * Re(IC[0][ALPHA][i][0]);
-    //     }
-    // }
-    // printf("After:  incre_flux_t=%f\n", flux_t);
-
     for (i = 0; i < qpts; ++i) {
         Re(IU[0][XEL][i][0]) = 0.0;
         Im(IU[0][XEL][i][0]) = 0.0;
@@ -275,8 +217,6 @@ void increproject0(int count, int k, int flag, func_force_t force)
             Re(IU[0][XEL][i][0]) += R[i][j] * Re(IC[0][ALPHA][j][0]);
             Im(IU[0][XEL][i][0]) += R[i][j] * Im(IC[0][ALPHA][j][0]);
         }
-        //Re(IU[0][XEL][i][0]) += Re(Uxb[0][0]) * (1 - Qy[i]) * 0.5;
-        //Im(IU[0][XEL][i][0]) += Im(Uxb[0][0]) * (1 - Qy[i]) * 0.5;
     }
 
     /* dIux_hat = Rp*a-c3/2 */
@@ -287,8 +227,6 @@ void increproject0(int count, int k, int flag, func_force_t force)
             Re(IU[0][DXEL][i][0]) += Rp[i][j] * Re(IC[0][ALPHA][j][0]);
             Im(IU[0][DXEL][i][0]) += Rp[i][j] * Im(IC[0][ALPHA][j][0]);
         }
-        //Re(IU[0][DXEL][i][0]) += -Re(Uxb[0][0]) / 2.;
-        //Im(IU[0][DXEL][i][0]) += -Im(Uxb[0][0]) / 2.;
     }
 
     /* Iuy_hat = 0 */

@@ -2,6 +2,8 @@ import sys
 sys.path.append("..")
 import channel
 from numpy import *
+
+'''
 # UNFORCED TANGENT
 
 n_steps = 10
@@ -57,28 +59,31 @@ channel.destroy()
 Re = 2000
 dRe = 1E-6
 ru_steps = 0
-n_steps = 10
+n_steps = 1000
 restart = 'keefe_runup_stage_5.hd5'
-# restart = None
+restart = None
 channel.dt = 0.01
 channel.meanU = 1.0
 # positive perturbation
 channel.Re = Re + dRe
 channel.init(n_steps, ru_steps, restart=restart)
+# channel.primal(channel.get_solution(0) * 0)
 Cp = channel.get_solution(n_steps,copy=True)
 channel.destroy()
 
 # negative perturbation
 channel.Re = Re - dRe
 channel.init(n_steps, ru_steps, restart=restart)
+# channel.primal(channel.get_solution(0) * 0)
 Cm = channel.get_solution(n_steps,copy=True)
 channel.destroy()
 
 # tangent 
 channel.Re = Re
 channel.init(n_steps, ru_steps, restart=restart)
+# channel.primal(channel.get_solution(0) * 0)
 IC = zeros(Cm.shape,complex)
-channel.tangent(0, n_steps, IC,1)
+channel.tangent(0, n_steps, IC, 1)
 
 dC = (1./(2*dRe))*(Cp - Cm)
 
@@ -86,7 +91,6 @@ print(linalg.norm(dC))
 print(linalg.norm(IC))
 print(linalg.norm(dC-IC))
 # channel.destroy()
-'''
 '''
 import numpy
 n = int((channel.Ny - 1) * 3 / 2 + 1)
