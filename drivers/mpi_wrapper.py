@@ -64,7 +64,7 @@ class Wrapper(object):
         self.zeta = zeros(self.n)
         for i in range(self.n):
             vip, eta = self.forward(i, v[i], inhomo)
-            self.zeta[i] = eta / self.dT
+            self.zeta[i] = -eta #/ self.dT
             if i < self.n - 1:
                 R_w[i+1] = v[i+1] - vip
 

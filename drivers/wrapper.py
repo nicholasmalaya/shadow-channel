@@ -21,7 +21,6 @@ class Wrapper(object):
         self._proj(start_step, v1)
         self._tan(start_step, end_step, v1, inhomo)
         eta = self._proj(end_step, v1)
-        #print "fwd", i, norm(v1)
         return v1, eta
         
     def backward(self, i, w0, strength):
@@ -31,7 +30,6 @@ class Wrapper(object):
         self._proj(start_step, w1)
         self._adj(start_step, end_step, w1, 0, strength)
         self._proj(end_step, w1)
-        #print "bwk", i, norm(w1)
         return w1
 
     # ------------------ KKT matvec ----------------------
@@ -48,7 +46,7 @@ class Wrapper(object):
         self.zeta = zeros(self.n)
         for i in range(self.n):
             vip, eta = self.forward(i, v[i], inhomo)
-            self.zeta[i] = eta / self.dT
+            self.zeta[i] = -eta #/ self.dT
             wim = self.backward(i, w[i], strength=1.0)
             if i < self.n - 1:
                 R_w[i] = v[i+1] - vip
@@ -69,7 +67,7 @@ channel.Nz = 16
 channel.dt = 0.01
 
 ru_steps = 0
-n_chunk = 4
+n_chunk = 3
 chunk_steps = 5
 n_steps = n_chunk * chunk_steps + 1 
 
@@ -112,18 +110,36 @@ class Callback:
         self.n += 1
         if self.n == 1 or self.n % 10 == 0:
             resnorm = norm(self.pde.matvec(x, 1))
-            print('iter ', self.n, resnorm)
-            self.hist.append([self.n, resnorm])
+            # Compute Gradient
+            T = self.pde.n * self.pde.dT
+            n_steps = self.pde.nb[-1]
+            uxbar_avg = channel.uxBarAvg(0,n_steps,T,profile=False)
+            grad = channel.uxBarGrad(self.pde.n,self.pde.nb,T,uxbar_avg,self.pde.zeta,profile=False)
+            print('iter ', self.n, resnorm, grad)
+            self.hist.append([self.n, resnorm, grad])
         sys.stdout.flush()
 
 # --- solve with minres (if cg converges this should converge -#
 callback = Callback(pde)
 callback(rhs * 0)
-#vw, info = splinalg.gmres(oper, rhs, tol = 1e-6, maxiter=50, 
-#                           callback=callback)
+
 vw, info = splinalg.minres(oper, rhs, maxiter=100, tol=1E-6,
                            callback=callback)
 
 
 pde.matvec(vw, 1)
 #channel.destroy()
+
+# v and w plots
+
+# gradient plots
+T = n_steps * channel.dt
+uxbar_avg = channel.uxBarAvg(0,n_steps,T,profile=True)
+grad = channel.uxBarGrad(n_chunk,chunk_bounds,T,uxbar_avg,pde.zeta,profile=True)
+
+y,w = channel.quad()
+
+figure()
+mag = 1e6
+plot(uxbar_avg,y,uxbar_avg + mag*grad,y,uxbar_avg - mag*grad,y)
+show()

@@ -189,5 +189,90 @@ def ddt_project(i_step,v):
     '''
     return c_channel.c_ddt_project(int(i_step),v)
 
+def uxBar(i_step,profile=True):
+    '''
+    returns the mean x-velocity profile (or centerline x-velocity) 
+    '''
+    C = get_solution(i_step, copy=True)
+    ux = spec2phys(C)
+    ux = ux[0]
+    uxbar = (ux.mean(2)).mean(0)
+   
+    if not(profile):
+        uxbar = uxbar[c_channel.c_qpts()/2 + 1]
+ 
+    return uxbar
 
+def uxBarAvg(start_step,end_step,T,profile=True):
+    '''
+    returns the time averaged mean x-velocity profile
+    '''
+    if profile:
+        uxbar = np.zeros(c_channel.c_qpts())
+    else:
+        uxbar = 0.0
+
+    assert 0 <= start_step <= end_step <= c_channel.c_nsteps() 
+    for i in range(start_step,end_step):
+        uxbar = uxbar + (dt/T) * uxBar(i,profile) 
+
+    return uxbar
+
+
+
+def vxBar(i_step,profile=True):
+    '''
+    returns the mean x-velocity sensitivity
+    '''
+    IC = c_channel.c_getincresoln(int(i_step))
+    IC = IC.copy()
+    assert IC.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
+                       c_channel.c_Nx() / 2)
+    vx = spec2phys(IC)
+    vx = vx[0]
+    vxbar = (vx.mean(2)).mean(0)
+   
+    if not(profile):
+        vxbar = vxbar[c_channel.c_qpts()/2 + 1]
+ 
+    return vxbar
+
+def vxBarAvg(start_step,end_step,T,profile=True):
+    '''
+    returns the time averaged mean x-velocity sensitivity profile
+    '''
+    if profile:
+        vxbar = np.zeros(c_channel.c_qpts())
+    else:
+        vxbar = 0.0
+
+   
+    assert 0 <= start_step <= end_step <= c_channel.c_nsteps()
+    for i in range(start_step,end_step):
+        vxbar = vxbar + (dt/T) * vxBar(i,profile) 
+
+    return vxbar
+
+def uxBarGrad(n_chunk,chunk_bounds,T,uxbar_avg,zeta,profile=True):
+    '''
+    returns the time averaged sensitivity of the mean x-velocity profile
+    to the reynolds number.  Inputs are the number of time chunks, the 
+    starting and ending step index of each chunk (chunk_bounds), 
+    total simulation time T, the time averaged mean x-velocity profile
+    uxbar_avg, and time dilation terms zeta (length n_chunk vector)
+    if profile = 1, sensitivity of the entire profile is compute, otherwise
+    only the sesitivity of the centerline velocity is computed
+    '''
+    if profile:
+        grad = np.zeros(c_channel.c_qpts())
+    else:
+        grad = 0.0    
+
+    for i in range(n_chunk):
+        start_step = chunk_bounds[i]
+        end_step = chunk_bounds[i+1]
+        vxbar_avg = vxBarAvg(start_step,end_step,T,profile)
+        grad = grad + vxbar_avg + (1./T) * zeta[i]*(uxBar(end_step,profile)-uxbar_avg)
+
+    return grad
 

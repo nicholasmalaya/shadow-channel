@@ -124,6 +124,24 @@ void c_getsoln(int i_step, mcomplex ** MC_ptr,
 }
 %}
 
+%apply (mcomplex ** ARGOUTVIEW_ARRAY4, int * DIM1, int * DIM2, int * DIM3, int * DIM4)
+      {(mcomplex ** MIC_ptr, int * Nz_ptr, int * Nvar_ptr, int * Ny_ptr, int * Nx_ptr)}
+
+/* This is supposed to be used with ARGOUTVIEW_ARRAY4
+   Look for the c_v function in kuramoto.i */
+%inline %{
+void c_getincresoln(int i_step, mcomplex ** MIC_ptr,
+               int * Nz_ptr, int * Nvar_ptr, int * Ny_ptr, int * Nx_ptr)
+{       
+    assert(i_step >= 0 && i_step <= nsteps);
+    (*MIC_ptr) = MIC[i_step * 3][0][0][0];
+    (*Nz_ptr) = Nz;
+    (*Nvar_ptr) = 2;
+    (*Ny_ptr) = dimR;
+    (*Nx_ptr) = Nx / 2;
+}
+%}
+
 
 %apply (mcomplex * INPLACE_ARRAY4, int DIM1, int DIM2, int DIM3, int DIM4)
       {(mcomplex * C_ptr, int Nz_dup, int Nvar_dup, int Ny_dup, int Nx_dup)}
