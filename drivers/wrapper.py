@@ -67,7 +67,7 @@ channel.Nz = 16
 channel.dt = 0.01
 
 ru_steps = 0
-n_chunk = 3
+n_chunk = 4
 chunk_steps = 5
 n_steps = n_chunk * chunk_steps + 1 
 
@@ -83,6 +83,13 @@ restart = "keefe_runup_stage_5"
 #restart = None
 
 channel.init(n_steps,ru_steps, restart = restart)
+
+
+# compute time averaged objective function Jbar
+T = n_steps * channel.dt 
+Jbar = channel.uxBarAvg(0,n_steps,T,profile=False)
+
+print "Total sim time:", T, "Jbar:", Jbar
 
 pde = Wrapper(channel.Nx, channel.Ny, channel.Nz, n_chunk, chunk_bounds, 
               channel.dt * chunk_steps,
@@ -101,9 +108,11 @@ oper = splinalg.LinearOperator((w.size, w.size), matvec=pde.matvec, dtype=float)
 
 class Callback:
     'Convergence monitor'
-    def __init__(self, pde):
+    def __init__(self, pde, T, Jbar):
         self.n = 0
         self.pde = pde
+        self.T = T
+        self.Jbar = Jbar
         self.hist = []
 
     def __call__(self, x):
@@ -111,16 +120,13 @@ class Callback:
         if self.n == 1 or self.n % 10 == 0:
             resnorm = norm(self.pde.matvec(x, 1))
             # Compute Gradient
-            T = self.pde.n * self.pde.dT
-            n_steps = self.pde.nb[-1]
-            uxbar_avg = channel.uxBarAvg(0,n_steps,T,profile=False)
-            grad = channel.uxBarGrad(self.pde.n,self.pde.nb,T,uxbar_avg,self.pde.zeta,profile=False)
+            grad = channel.uxBarGrad(self.pde.n,self.pde.nb,self.T,self.Jbar,self.pde.zeta,profile=False)
             print('iter ', self.n, resnorm, grad)
             self.hist.append([self.n, resnorm, grad])
         sys.stdout.flush()
 
 # --- solve with minres (if cg converges this should converge -#
-callback = Callback(pde)
+callback = Callback(pde,T,Jbar)
 callback(rhs * 0)
 
 vw, info = splinalg.minres(oper, rhs, maxiter=100, tol=1E-6,
