@@ -211,6 +211,33 @@ vw, info = par_minres(oper, rhs, vw, par_dot, maxiter=100, tol=1E-6,
 
 pde.matvec(vw, 1)
 
+# gradient plots
+if mpi_rank == (mpi_size-1):
+    uxbar_avg = channel.uxBarAvg(0,n_steps,T,profile=True)
+else:
+    uxbar_avg = channel.uxBarAvg(0,n_steps-1,T,profile=True)
+
+len = uxbar_avg.shape[0]
+for i in range(len):
+    uxbar_avg[i] = mpi_comm.allreduce(uxbar_avg[i])
+
+nb = chunk_bounds
+if mpi_rank < (mpi_size - 1):
+    nb[-1] = nb[-1] - 1
+
+grad = channel.uxBarGrad(n_chunk,nb,T,uxbar_avg,pde.zeta,profile=True)
+for i in range(len):
+    grad[i] = mpi_comm.allreduce(grad[i])
+
+if mpi_rank == 0:
+    y,w = channel.quad()
+
+    figure()
+    mag = 1e6
+    plot(uxbar_avg,y,uxbar_avg + mag*grad,y,uxbar_avg - mag*grad,y)
+    show()
+
+
 # output data to file with mpi_rank in name...
 
 # clean memory
