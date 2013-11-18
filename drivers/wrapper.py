@@ -2,9 +2,6 @@ import sys
 sys.path.append("..")
 from pylab import *
 from numpy import *
-#from scipy.interpolate import interp1d
-#from scipy.integrate import ode
-#from lssode import *
 
 class Wrapper(object):
     def __init__(self, Nx, Ny, Nz, n, nb, dT, tan, adj, proj):
@@ -21,7 +18,6 @@ class Wrapper(object):
         self._proj(start_step, v1)
         self._tan(start_step, end_step, v1, inhomo)
         eta = self._proj(end_step, v1)
-        #print "fwd", i, norm(v1)
         return v1, eta
         
     def backward(self, i, w0, strength):
@@ -31,7 +27,6 @@ class Wrapper(object):
         self._proj(start_step, w1)
         self._adj(start_step, end_step, w1, 0, strength)
         self._proj(end_step, w1)
-        #print "bwk", i, norm(w1)
         return w1
 
     # ------------------ KKT matvec ----------------------
@@ -48,7 +43,7 @@ class Wrapper(object):
         self.zeta = zeros(self.n)
         for i in range(self.n):
             vip, eta = self.forward(i, v[i], inhomo)
-            self.zeta[i] = eta / self.dT
+            self.zeta[i] = -eta #/ self.dT
             wim = self.backward(i, w[i], strength=1.0)
             if i < self.n - 1:
                 R_w[i] = v[i+1] - vip
@@ -69,7 +64,7 @@ channel.Nz = 16
 channel.dt = 0.01
 
 ru_steps = 0
-n_chunk = 4
+n_chunk = 2
 chunk_steps = 5
 n_steps = n_chunk * chunk_steps + 1 
 
@@ -85,6 +80,13 @@ restart = "keefe_runup_stage_5"
 #restart = None
 
 channel.init(n_steps,ru_steps, restart = restart)
+
+
+# compute time averaged objective function Jbar
+T = n_steps * channel.dt 
+Jbar = channel.uxBarAvg(0,n_steps,T,profile=False)
+
+print "Total sim time:", T, "Jbar:", Jbar
 
 pde = Wrapper(channel.Nx, channel.Ny, channel.Nz, n_chunk, chunk_bounds, 
               channel.dt * chunk_steps,
@@ -103,27 +105,55 @@ oper = splinalg.LinearOperator((w.size, w.size), matvec=pde.matvec, dtype=float)
 
 class Callback:
     'Convergence monitor'
-    def __init__(self, pde):
+    def __init__(self, pde, T, Jbar):
         self.n = 0
         self.pde = pde
+        self.T = T
+        self.Jbar = Jbar
         self.hist = []
 
     def __call__(self, x):
         self.n += 1
         if self.n == 1 or self.n % 10 == 0:
             resnorm = norm(self.pde.matvec(x, 1))
-            print('iter ', self.n, resnorm)
-            self.hist.append([self.n, resnorm])
+            # Compute Gradient
+            grad = channel.uxBarGrad(self.pde.n,self.pde.nb,self.T,self.Jbar,self.pde.zeta,profile=False)
+            print('iter ', self.n, resnorm, grad)
+            self.hist.append([self.n, resnorm, grad])
         sys.stdout.flush()
 
 # --- solve with minres (if cg converges this should converge -#
-callback = Callback(pde)
+callback = Callback(pde,T,Jbar)
 callback(rhs * 0)
-#vw, info = splinalg.gmres(oper, rhs, tol = 1e-6, maxiter=50, 
-#                           callback=callback)
+
 vw, info = splinalg.minres(oper, rhs, maxiter=100, tol=1E-6,
                            callback=callback)
 
 
 pde.matvec(vw, 1)
 #channel.destroy()
+
+# v and w plots
+vxhist = []
+for i in range(0,n_steps):
+    vxhist.append(channel.vxBar(i,profile=True,project=True))
+
+t = channel.dt * arange(n_steps)
+y,w = channel.quad()
+
+figure()
+contourf(y, t, vxhist, 100); colorbar()
+axis([y[0], y[-1], t[0], t[-1]])
+
+
+# gradient plots
+T = n_steps * channel.dt
+uxbar_avg = channel.uxBarAvg(0,n_steps,T,profile=True)
+grad = channel.uxBarGrad(n_chunk,chunk_bounds,T,uxbar_avg,pde.zeta,profile=True)
+
+
+
+figure()
+mag = 1e6
+plot(uxbar_avg,y,uxbar_avg + mag*grad,y,uxbar_avg - mag*grad,y)
+show()

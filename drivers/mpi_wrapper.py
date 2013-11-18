@@ -2,8 +2,6 @@ import sys
 sys.path.append("..")
 from pylab import *
 from numpy import *
-#from scipy.interpolate import interp1d
-#from scipy.integrate import ode
 from mpi4py import MPI
 from pariter import *
 
@@ -22,7 +20,6 @@ class Wrapper(object):
         self._proj(start_step, v1)
         self._tan(start_step, end_step, v1, inhomo)
         eta = self._proj(end_step, v1)
-        #print "fwd", i, norm(v1)
         return v1, eta
 
     def backward(self, i, w0, strength):
@@ -32,7 +29,6 @@ class Wrapper(object):
         self._proj(start_step, w1)
         self._adj(start_step, end_step, w1, 0, strength)
         self._proj(end_step, w1)
-        #print "bwk", i, norm(w1)
         return w1
 
     # ------------------ KKT matvec ----------------------
@@ -64,7 +60,7 @@ class Wrapper(object):
         self.zeta = zeros(self.n)
         for i in range(self.n):
             vip, eta = self.forward(i, v[i], inhomo)
-            self.zeta[i] = eta / self.dT
+            self.zeta[i] = -eta #/ self.dT
             if i < self.n - 1:
                 R_w[i+1] = v[i+1] - vip
 
@@ -101,6 +97,7 @@ import channel
 mpi_comm = MPI.COMM_WORLD
 mpi_rank = mpi_comm.Get_rank()
 mpi_size = mpi_comm.Get_size()
+
 
 # Key Parameters
 # Re, {Nx, Ny, Nz} ru_steps, n_chunk, t_chunk, dt
@@ -145,8 +142,17 @@ if mpi_rank == (mpi_size-1):
     print "Primal Complete!"
 
 # Compute time averaged objective function over all time (and processors), Jbar
-# Jbar = mpi_comm.allreduce(kuramoto.cvar.JBAR)
-# kuramoto.c_assignJBAR(Jbar)
+# Compute Gradient
+T = ((mpi_size - 1) * (n_steps-1) + n_steps)*channel.dt
+if mpi_rank == (mpi_size-1): 
+    Jbar = channel.uxBarAvg(0,n_steps,T,profile=False)
+else:
+    Jbar = channel.uxBarAvg(0,n_steps-1,T,profile=False)
+
+Jbar = mpi_comm.allreduce(Jbar)
+
+if mpi_rank == 0: print "Total sim time:", T, "Jbar:", Jbar
+
 
 pde = Wrapper(channel.Nx, channel.Ny, channel.Nz, n_chunk, chunk_bounds,
               channel.dt * chunk_steps,
@@ -172,27 +178,99 @@ par_norm = lambda vw : sqrt(par_dot(vw, vw))
 
 class Callback:
     'Convergence monitor'
-    def __init__(self, pde):
+    def __init__(self, pde, T, Jbar):
         self.n = 0
         self.pde = pde
+        self.T = T
+        self.Jbar = Jbar
         self.hist = []
 
     def __call__(self, x):
         self.n += 1
         if self.n == 1 or self.n % 10 == 0:
+            mpi_rank = mpi_comm.Get_rank()
+            mpi_size = mpi_comm.Get_size()
             resnorm = par_norm(self.pde.matvec(x, 1))
-            # gradient = mpi_comm.allreduce(kuramoto.c_grad())
-            if mpi_rank == 0: print 'iter ', self.n, resnorm
-            self.hist.append([self.n, resnorm])
+            nb = self.pde.nb.copy()
+            if mpi_rank < (mpi_size - 1):
+                nb[-1] = nb[-1] - 1
+            # Compute Gradient
+            grad = channel.uxBarGrad(self.pde.n,nb,self.T,self.Jbar,self.pde.zeta,profile=False)
+            grad = mpi_comm.allreduce(grad)
+            if mpi_rank == 0: print 'iter ', self.n, resnorm, grad
+            self.hist.append([self.n, resnorm, grad])
         sys.stdout.flush()
 
 # --- solve with minres (if cg converges this should converge -#
-callback = Callback(pde)
+callback = Callback(pde, T, Jbar)
 callback(rhs * 0)
 vw, info = par_minres(oper, rhs, vw, par_dot, maxiter=100, tol=1E-6,
                       callback=callback)
 
 pde.matvec(vw, 1)
+
+# gradient plots
+if mpi_rank == (mpi_size-1):
+    uxbar_avg = channel.uxBarAvg(0,n_steps,T,profile=True)
+else:
+    uxbar_avg = channel.uxBarAvg(0,n_steps-1,T,profile=True)
+
+len = uxbar_avg.shape[0]
+for i in range(len):
+    uxbar_avg[i] = mpi_comm.allreduce(uxbar_avg[i])
+
+nb = chunk_bounds
+
+if mpi_rank < (mpi_size - 1):
+    nb[-1] = nb[-1] - 1
+
+grad = channel.uxBarGrad(n_chunk,nb,T,uxbar_avg,pde.zeta,profile=True)
+for i in range(len):
+    grad[i] = mpi_comm.allreduce(grad[i])
+
+if mpi_rank == 0:
+    y,w = channel.quad()
+
+    figure()
+    plot(uxbar_avg,y)
+    figure()
+    plot(grad,y)
+
+# v and w plots
+
+vxhist = []
+for i in range(nb[0],nb[-1]+1):
+    vxhist.append(channel.vxBar(i,profile=True,project=True))
+
+vxhist = array(vxhist)
+
+# send data to process 0
+tag_vx = 501
+vx_requests = []
+if mpi_rank > 0:
+    vx_requests.append(mpi_comm.Send(vxhist, 0,tag_vx))    
+
+if mpi_rank == 0:
+    # receive data from other processes, append
+    for i in range(1,mpi_size):
+        if i == (mpi_size - 1):
+            vxtmp = zeros([n_steps, len])
+        else:
+            vxtmp = zeros([n_steps-1, len])
+        vx_requests.append(mpi_comm.Recv(vxtmp, i, tag_vx))
+         
+        vxhist = vstack([vxhist,vxtmp]) 
+    
+
+    # plot!
+    t = channel.dt * arange(int(T/channel.dt))
+    y,w = channel.quad()
+
+    figure()
+    contourf(y, t, vxhist, 100); colorbar()
+    axis([y[0], y[-1], t[0], t[-1]])
+    show()
+
 
 # output data to file with mpi_rank in name...
 
