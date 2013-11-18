@@ -1,6 +1,10 @@
 import numpy as np
 import channel.c_channel
 #
+# global lock (per process)
+#
+__is_initialized__ = False
+#
 # default parameters
 #
 # number of pts. 
@@ -73,6 +77,9 @@ def init(n_steps, ru_steps=0, restart=None):
     restart: If None (default), start from a perturbed laminar solution.
              If a filename, read the .hd5 file as the restart file.
     '''
+    assert not __is_initialized__
+    __is_initialized__ = True
+
     assert n_steps >= 0 and ru_steps >= 0
     c_channel.c_init(int(Nx),int(Ny),int(Nz),
                      float(Lx),float(Lz),float(Re),
@@ -104,6 +111,8 @@ def destroy():
     Must be called before calling init again to initialize another channel
     flow simulation.  Cleans up things.
     '''
+    assert __is_initialized__
+    __is_initialized__ = False
     c_channel.c_destroy()
     
 def primal(C_init):

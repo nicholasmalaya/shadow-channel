@@ -40,4 +40,6 @@ for i_stage in range(1000000):
                 vstack([u_mean, u2_mean]).T)
         channel.save_solution(next_restart, channel.get_solution(n_steps))
 
+        channel.destroy()
+
     restart_file = next_restart
