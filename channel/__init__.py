@@ -220,7 +220,7 @@ def uxBarAvg(start_step,end_step,T,profile=True):
 
 
 
-def vxBar(i_step,profile=True):
+def vxBar(i_step,profile=True,project=False):
     '''
     returns the mean x-velocity sensitivity
     '''
@@ -228,6 +228,9 @@ def vxBar(i_step,profile=True):
     IC = IC.copy()
     assert IC.shape == (c_channel.c_Nz(), 2, c_channel.c_dimR(),
                        c_channel.c_Nx() / 2)
+    if project: 
+        ddt_project(i_step,IC)
+
     vx = spec2phys(IC)
     vx = vx[0]
     vxbar = (vx.mean(2)).mean(0)
@@ -249,7 +252,7 @@ def vxBarAvg(start_step,end_step,T,profile=True):
    
     assert 0 <= start_step <= end_step <= c_channel.c_nsteps()
     for i in range(start_step,end_step):
-        vxbar = vxbar + (dt/T) * vxBar(i,profile) 
+        vxbar = vxbar + (dt/T) * vxBar(i,profile,project=False) 
 
     return vxbar
 

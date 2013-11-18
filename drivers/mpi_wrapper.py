@@ -2,8 +2,6 @@ import sys
 sys.path.append("..")
 from pylab import *
 from numpy import *
-#from scipy.interpolate import interp1d
-#from scipy.integrate import ode
 from mpi4py import MPI
 from pariter import *
 
@@ -222,6 +220,7 @@ for i in range(len):
     uxbar_avg[i] = mpi_comm.allreduce(uxbar_avg[i])
 
 nb = chunk_bounds
+
 if mpi_rank < (mpi_size - 1):
     nb[-1] = nb[-1] - 1
 
@@ -233,8 +232,43 @@ if mpi_rank == 0:
     y,w = channel.quad()
 
     figure()
-    mag = 1e6
-    plot(uxbar_avg,y,uxbar_avg + mag*grad,y,uxbar_avg - mag*grad,y)
+    plot(uxbar_avg,y)
+    figure()
+    plot(grad,y)
+
+# v and w plots
+
+vxhist = []
+for i in range(nb[0],nb[-1]+1):
+    vxhist.append(channel.vxBar(i,profile=True,project=True))
+
+vxhist = array(vxhist)
+
+# send data to process 0
+tag_vx = 501
+vx_requests = []
+if mpi_rank > 0:
+    vx_requests.append(mpi_comm.Send(vxhist, 0,tag_vx))    
+
+if mpi_rank == 0:
+    # receive data from other processes, append
+    for i in range(1,mpi_size):
+        if i == (mpi_size - 1):
+            vxtmp = zeros([n_steps, len])
+        else:
+            vxtmp = zeros([n_steps-1, len])
+        vx_requests.append(mpi_comm.Recv(vxtmp, i, tag_vx))
+         
+        vxhist = vstack([vxhist,vxtmp]) 
+    
+
+    # plot!
+    t = channel.dt * arange(int(T/channel.dt))
+    y,w = channel.quad()
+
+    figure()
+    contourf(y, t, vxhist, 100); colorbar()
+    axis([y[0], y[-1], t[0], t[-1]])
     show()
 
 

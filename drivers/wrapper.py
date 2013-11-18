@@ -2,9 +2,6 @@ import sys
 sys.path.append("..")
 from pylab import *
 from numpy import *
-#from scipy.interpolate import interp1d
-#from scipy.integrate import ode
-#from lssode import *
 
 class Wrapper(object):
     def __init__(self, Nx, Ny, Nz, n, nb, dT, tan, adj, proj):
@@ -67,7 +64,7 @@ channel.Nz = 16
 channel.dt = 0.01
 
 ru_steps = 0
-n_chunk = 4
+n_chunk = 2
 chunk_steps = 5
 n_steps = n_chunk * chunk_steps + 1 
 
@@ -137,13 +134,24 @@ pde.matvec(vw, 1)
 #channel.destroy()
 
 # v and w plots
+vxhist = []
+for i in range(0,n_steps):
+    vxhist.append(channel.vxBar(i,profile=True,project=True))
+
+t = channel.dt * arange(n_steps)
+y,w = channel.quad()
+
+figure()
+contourf(y, t, vxhist, 100); colorbar()
+axis([y[0], y[-1], t[0], t[-1]])
+
 
 # gradient plots
 T = n_steps * channel.dt
 uxbar_avg = channel.uxBarAvg(0,n_steps,T,profile=True)
 grad = channel.uxBarGrad(n_chunk,chunk_bounds,T,uxbar_avg,pde.zeta,profile=True)
 
-y,w = channel.quad()
+
 
 figure()
 mag = 1e6
