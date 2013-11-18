@@ -77,6 +77,7 @@ def init(n_steps, ru_steps=0, restart=None):
     restart: If None (default), start from a perturbed laminar solution.
              If a filename, read the .hd5 file as the restart file.
     '''
+    global __is_initialized__
     assert not __is_initialized__
     __is_initialized__ = True
 
@@ -111,6 +112,7 @@ def destroy():
     Must be called before calling init again to initialize another channel
     flow simulation.  Cleans up things.
     '''
+    global __is_initialized__
     assert __is_initialized__
     __is_initialized__ = False
     c_channel.c_destroy()
