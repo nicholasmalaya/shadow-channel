@@ -206,7 +206,7 @@ def z_vel(i_step):
     '''
     C = get_solution(i_step, copy=True)
     uz = spec2phys(C)
-    uz = uz[2]
+    uz = uz[0] # 2
  
     return uz
 
@@ -223,7 +223,7 @@ def z_vel2Avg(start_step,end_step,T,profile=True):
     assert 0 <= start_step <= end_step <= c_channel.c_nsteps() 
     for i in range(start_step,end_step):
         uz = z_vel(i)
-        uz2 = uz * uz
+        uz2 = uz # uz2 = uz * uz
         uz2 = (uz2.mean(2)).mean(0)
         if not(profile): uz2 = (w * uz2).sum()
         uz2avg = uz2avg + (dt/T) * uz2  
@@ -244,7 +244,7 @@ def Iz_vel(i_step,project=False):
         ddt_project(i_step,IC)
 
     vz = spec2phys(IC)
-    vz = vz[2]
+    vz = vz[0] #2
  
     return vz
 
@@ -264,7 +264,7 @@ def dz_vel2Avg(start_step,end_step,T,profile=True):
     for i in range(start_step,end_step):
         uz = z_vel(i)
         vz = Iz_vel(i,project = False)
-        d_uz2 = 2 * uz * vz
+        d_uz2 = vz # d_uz2 = 2 * uz * vz
         d_uz2 = (d_uz2.mean(2)).mean(0)
         if not(profile): d_uz2 = (w * d_uz2).sum()
         d_uz2avg = d_uz2avg + (dt/T) * d_uz2
@@ -292,7 +292,7 @@ def uz2BarGrad(n_chunk,chunk_bounds,T,uz2_avg,zeta,profile=True):
         end_step = chunk_bounds[i+1]
         d_uz2Avg = dz_vel2Avg(start_step,end_step,T,profile)
         uzEnd = (z_vel(end_step).mean(2)).mean(0)
-        uz2End = uzEnd * uzEnd
+        uz2End = uzEnd # uz2End = uzEnd * uzEnd
         if not(profile): uz2End = (w * uz2End).sum()
         grad = grad + d_uz2Avg + (1./T) * zeta[i]*(uz2End-uz2_avg)
 
