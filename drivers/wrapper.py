@@ -84,7 +84,7 @@ channel.init(n_steps,ru_steps, restart = restart)
 
 # compute time averaged objective function Jbar
 T = n_steps * channel.dt 
-Jbar = channel.uxBarAvg(0,n_steps,T,profile=False)
+Jbar = channel.z_vel2Avg(0,n_steps,T,profile=False)
 
 print "Total sim time:", T, "Jbar:", Jbar
 
@@ -114,19 +114,28 @@ class Callback:
 
     def __call__(self, x):
         self.n += 1
+        print linalg.norm(x)
         if self.n == 1 or self.n % 10 == 0:
             resnorm = norm(self.pde.matvec(x, 1))
             # Compute Gradient
-            grad = channel.uxBarGrad(self.pde.n,self.pde.nb,self.T,self.Jbar,self.pde.zeta,profile=False)
+            grad = channel.uz2BarGrad(self.pde.n,self.pde.nb,self.T,self.Jbar,self.pde.zeta,profile=False)
             print('iter ', self.n, resnorm, grad)
             self.hist.append([self.n, resnorm, grad])
         sys.stdout.flush()
 
 # --- solve with minres (if cg converges this should converge -#
-callback = Callback(pde,T,Jbar)
-callback(rhs * 0)
 
-vw, info = splinalg.minres(oper, rhs, maxiter=100, tol=1E-6,
+# read in restart
+
+vw0 = load("vw_array.npy")
+# vw0 = 0 * rhs
+
+callback = Callback(pde,T,Jbar)
+callback(vw0.copy())
+
+
+print linalg.norm(vw0)
+vw, info = splinalg.minres(oper, rhs, x0=vw0, maxiter=20, tol=1E-6,
                            callback=callback)
 
 
@@ -134,26 +143,28 @@ pde.matvec(vw, 1)
 #channel.destroy()
 
 # v and w plots
-vxhist = []
+d_uz2hist = []
 for i in range(0,n_steps):
-    vxhist.append(channel.vxBar(i,profile=True,project=True))
+    d_uz2 = (channel.Iz_vel(i,project=True).mean(2)).mean(0)
+    d_uz2hist.append(d_uz2)
 
 t = channel.dt * arange(n_steps)
 y,w = channel.quad()
 
 figure()
-contourf(y, t, vxhist, 100); colorbar()
+contourf(y, t, d_uz2hist, 100); colorbar()
 axis([y[0], y[-1], t[0], t[-1]])
 
 
 # gradient plots
-T = n_steps * channel.dt
-uxbar_avg = channel.uxBarAvg(0,n_steps,T,profile=True)
-grad = channel.uxBarGrad(n_chunk,chunk_bounds,T,uxbar_avg,pde.zeta,profile=True)
-
-
+uz2bar_avg = channel.z_vel2Avg(0,n_steps,T,profile=True)
+grad = channel.uz2BarGrad(n_chunk,chunk_bounds,T,uz2bar_avg,pde.zeta,profile=True)
 
 figure()
-mag = 1e6
-plot(uxbar_avg,y,uxbar_avg + mag*grad,y,uxbar_avg - mag*grad,y)
+mag = 1e2
+plot(uz2bar_avg,y,uz2bar_avg + mag*grad,y,uz2bar_avg - mag*grad,y)
 show()
+
+# write restart file for vw
+filename = "vw_array"
+save(filename,vw)

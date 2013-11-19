@@ -200,40 +200,41 @@ def ddt_project(i_step,v):
     '''
     return c_channel.c_ddt_project(int(i_step),v)
 
-def uxBar(i_step,profile=True):
+def z_vel(i_step):
     '''
-    returns the mean x-velocity profile (or centerline x-velocity) 
+    returns the z-velocity profile  
     '''
     C = get_solution(i_step, copy=True)
-    ux = spec2phys(C)
-    ux = ux[0]
-    uxbar = (ux.mean(2)).mean(0)
-   
-    if not(profile):
-        uxbar = uxbar[c_channel.c_qpts()/2 + 1]
+    uz = spec2phys(C)
+    uz = uz[2]
  
-    return uxbar
+    return uz
 
-def uxBarAvg(start_step,end_step,T,profile=True):
+def z_vel2Avg(start_step,end_step,T,profile=True):
     '''
-    returns the time averaged mean x-velocity profile
+    returns the time averaged mean square z-velocity profile
     '''
     if profile:
-        uxbar = np.zeros(c_channel.c_qpts())
+        uz2avg = np.zeros(c_channel.c_qpts())
     else:
-        uxbar = 0.0
+        uz2avg = 0.0
+        y, w = quad()
 
     assert 0 <= start_step <= end_step <= c_channel.c_nsteps() 
     for i in range(start_step,end_step):
-        uxbar = uxbar + (dt/T) * uxBar(i,profile) 
+        uz = z_vel(i)
+        uz2 = uz * uz
+        uz2 = (uz2.mean(2)).mean(0)
+        if not(profile): uz2 = (w * uz2).sum()
+        uz2avg = uz2avg + (dt/T) * uz2  
 
-    return uxbar
+    return uz2avg
 
 
 
-def vxBar(i_step,profile=True,project=False):
+def Iz_vel(i_step,project=False):
     '''
-    returns the mean x-velocity sensitivity
+    returns the incremental z-velocity 
     '''
     IC = c_channel.c_getincresoln(int(i_step))
     IC = IC.copy()
@@ -242,32 +243,35 @@ def vxBar(i_step,profile=True,project=False):
     if project: 
         ddt_project(i_step,IC)
 
-    vx = spec2phys(IC)
-    vx = vx[0]
-    vxbar = (vx.mean(2)).mean(0)
-   
-    if not(profile):
-        vxbar = vxbar[c_channel.c_qpts()/2 + 1]
+    vz = spec2phys(IC)
+    vz = vz[2]
  
-    return vxbar
+    return vz
 
-def vxBarAvg(start_step,end_step,T,profile=True):
+def dz_vel2Avg(start_step,end_step,T,profile=True):
     '''
-    returns the time averaged mean x-velocity sensitivity profile
+    returns the time averaged mean squared z-velocity sensitivity profile
     '''
     if profile:
-        vxbar = np.zeros(c_channel.c_qpts())
+        d_uz2avg = np.zeros(c_channel.c_qpts())
     else:
-        vxbar = 0.0
+        d_uz2avg = 0.0
+        y, w = quad()
+
 
    
     assert 0 <= start_step <= end_step <= c_channel.c_nsteps()
     for i in range(start_step,end_step):
-        vxbar = vxbar + (dt/T) * vxBar(i,profile,project=False) 
+        uz = z_vel(i)
+        vz = Iz_vel(i,project = False)
+        d_uz2 = 2 * uz * vz
+        d_uz2 = (d_uz2.mean(2)).mean(0)
+        if not(profile): d_uz2 = (w * d_uz2).sum()
+        d_uz2avg = d_uz2avg + (dt/T) * d_uz2
 
-    return vxbar
+    return d_uz2avg
 
-def uxBarGrad(n_chunk,chunk_bounds,T,uxbar_avg,zeta,profile=True):
+def uz2BarGrad(n_chunk,chunk_bounds,T,uz2_avg,zeta,profile=True):
     '''
     returns the time averaged sensitivity of the mean x-velocity profile
     to the reynolds number.  Inputs are the number of time chunks, the 
@@ -280,13 +284,17 @@ def uxBarGrad(n_chunk,chunk_bounds,T,uxbar_avg,zeta,profile=True):
     if profile:
         grad = np.zeros(c_channel.c_qpts())
     else:
-        grad = 0.0    
+        grad = 0.0 
+        y, w = quad()   
 
     for i in range(n_chunk):
         start_step = chunk_bounds[i]
         end_step = chunk_bounds[i+1]
-        vxbar_avg = vxBarAvg(start_step,end_step,T,profile)
-        grad = grad + vxbar_avg + (1./T) * zeta[i]*(uxBar(end_step,profile)-uxbar_avg)
+        d_uz2Avg = dz_vel2Avg(start_step,end_step,T,profile)
+        uzEnd = (z_vel(end_step).mean(2)).mean(0)
+        uz2End = uzEnd * uzEnd
+        if not(profile): uz2End = (w * uz2End).sum()
+        grad = grad + d_uz2Avg + (1./T) * zeta[i]*(uz2End-uz2_avg)
 
     return grad
 

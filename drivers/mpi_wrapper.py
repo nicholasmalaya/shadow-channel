@@ -1,4 +1,6 @@
 import sys
+import os
+os.environ[ 'MPLCONFIGDIR' ] = '/tmp/'
 sys.path.append("..")
 from pylab import *
 from numpy import *
@@ -108,7 +110,7 @@ channel.Nz = 16
 channel.dt = 0.01
 
 n_chunk = 2
-chunk_steps = 5
+chunk_steps = 25
 n_steps = n_chunk * chunk_steps + 1
 
 # defined vector with indicies of start and end steps for each time chunk
@@ -145,9 +147,9 @@ if mpi_rank == (mpi_size-1):
 # Compute Gradient
 T = ((mpi_size - 1) * (n_steps-1) + n_steps)*channel.dt
 if mpi_rank == (mpi_size-1): 
-    Jbar = channel.uxBarAvg(0,n_steps,T,profile=False)
+    Jbar = channel.z_vel2Avg(0,n_steps,T,profile=False)
 else:
-    Jbar = channel.uxBarAvg(0,n_steps-1,T,profile=False)
+    Jbar = channel.z_vel2Avg(0,n_steps-1,T,profile=False)
 
 Jbar = mpi_comm.allreduce(Jbar)
 
@@ -166,7 +168,7 @@ rhs = -pde.matvec(x, 1) - pde.matvec(x, 0)
 # solve
 from scipy import sparse
 import scipy.sparse.linalg as splinalg
-
+# INITIAL GUESS HERE!
 vw = zeros(rhs.size)
 oper = splinalg.LinearOperator((vw.size, vw.size), matvec=pde.matvec,
                                dtype=float)
@@ -195,7 +197,7 @@ class Callback:
             if mpi_rank < (mpi_size - 1):
                 nb[-1] = nb[-1] - 1
             # Compute Gradient
-            grad = channel.uxBarGrad(self.pde.n,nb,self.T,self.Jbar,self.pde.zeta,profile=False)
+            grad = channel.uz2BarGrad(self.pde.n,nb,self.T,self.Jbar,self.pde.zeta,profile=False)
             grad = mpi_comm.allreduce(grad)
             if mpi_rank == 0: print 'iter ', self.n, resnorm, grad
             self.hist.append([self.n, resnorm, grad])
@@ -204,27 +206,27 @@ class Callback:
 # --- solve with minres (if cg converges this should converge -#
 callback = Callback(pde, T, Jbar)
 callback(rhs * 0)
-vw, info = par_minres(oper, rhs, vw, par_dot, maxiter=100, tol=1E-6,
+vw, info = par_minres(oper, rhs, vw, par_dot, maxiter=500, tol=1E-6,
                       callback=callback)
 
 pde.matvec(vw, 1)
 
 # gradient plots
 if mpi_rank == (mpi_size-1):
-    uxbar_avg = channel.uxBarAvg(0,n_steps,T,profile=True)
+    uz2bar_avg = channel.z_vel2Avg(0,n_steps,T,profile=True)
 else:
-    uxbar_avg = channel.uxBarAvg(0,n_steps-1,T,profile=True)
+    uz2bar_avg = channel.z_vel2Avg(0,n_steps-1,T,profile=True)
 
-len = uxbar_avg.shape[0]
+len = uz2bar_avg.shape[0]
 for i in range(len):
-    uxbar_avg[i] = mpi_comm.allreduce(uxbar_avg[i])
+    uz2bar_avg[i] = mpi_comm.allreduce(uz2bar_avg[i])
 
 nb = chunk_bounds
 
 if mpi_rank < (mpi_size - 1):
     nb[-1] = nb[-1] - 1
 
-grad = channel.uxBarGrad(n_chunk,nb,T,uxbar_avg,pde.zeta,profile=True)
+grad = channel.uz2BarGrad(n_chunk,nb,T,uz2bar_avg,pde.zeta,profile=True)
 for i in range(len):
     grad[i] = mpi_comm.allreduce(grad[i])
 
@@ -232,23 +234,24 @@ if mpi_rank == 0:
     y,w = channel.quad()
 
     figure()
-    plot(uxbar_avg,y)
+    plot(uz2bar_avg,y)
     figure()
     plot(grad,y)
 
 # v and w plots
 
-vxhist = []
+d_uz2hist = []
 for i in range(nb[0],nb[-1]+1):
-    vxhist.append(channel.vxBar(i,profile=True,project=True))
+    d_uz2 = (channel.Iz_vel(i,project=True).mean(2)).mean(0)
+    d_uz2hist.append(d_uz2)   
 
-vxhist = array(vxhist)
+d_uz2hist = array(d_uz2hist)
 
 # send data to process 0
 tag_vx = 501
 vx_requests = []
 if mpi_rank > 0:
-    vx_requests.append(mpi_comm.Send(vxhist, 0,tag_vx))    
+    vx_requests.append(mpi_comm.Send(d_uz2hist, 0,tag_vx))    
 
 if mpi_rank == 0:
     # receive data from other processes, append
@@ -259,7 +262,7 @@ if mpi_rank == 0:
             vxtmp = zeros([n_steps-1, len])
         vx_requests.append(mpi_comm.Recv(vxtmp, i, tag_vx))
          
-        vxhist = vstack([vxhist,vxtmp]) 
+        d_uz2hist = vstack([d_uz2hist,vxtmp]) 
     
 
     # plot!
@@ -267,7 +270,7 @@ if mpi_rank == 0:
     y,w = channel.quad()
 
     figure()
-    contourf(y, t, vxhist, 100); colorbar()
+    contourf(y, t, d_uz2hist, 100); colorbar()
     axis([y[0], y[-1], t[0], t[-1]])
     show()
 
