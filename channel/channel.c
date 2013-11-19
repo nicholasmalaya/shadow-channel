@@ -402,8 +402,8 @@ void primal(int ru_steps, mcomplex *C_given)
 
     /******************restart check ******************************/
     if (C_given != 0) {
-        memcpy(C[0][0][0], C_given,
-               (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+        memmove(C[0][0][0], C_given,
+                (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
         initAlphaBeta2();
     }
     else            // provide laminar solution with perturbations
@@ -428,8 +428,8 @@ void primal(int ru_steps, mcomplex *C_given)
     // destination // source
     memset(MC[0][0][0][0], 0, (nsteps * 3 + 1) *
            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
-    memcpy(MC[0][0][0][0], C[0][0][0],
-           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+    memmove(MC[0][0][0][0], C[0][0][0],
+            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
     /***************solving state and incremental state equations ****/
 
@@ -472,8 +472,8 @@ void primal(int ru_steps, mcomplex *C_given)
     }            /* end for n... */
 
     if (C_given != 0) {  /* copy the final solution back to given buffer */
-        memcpy(C_given, C[0][0][0],
-               (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+        memmove(C_given, C[0][0][0],
+                (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
     }
 }
 
@@ -494,10 +494,10 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
     assert (end_step <= nsteps);
 	assert (IC_given != 0);
 
-    memcpy(C[0][0][0], MC[start_step * 3][0][0][0],
-           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
-    memcpy(IC[0][0][0], IC_given,
-           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+    memmove(C[0][0][0], MC[start_step * 3][0][0][0],
+            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+    memmove(IC[0][0][0], IC_given,
+            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
     // memset(U[0][0][0], 0, (Nz) * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
     // memset(AU[0][0][0], 0, (Nz) * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
@@ -516,15 +516,15 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
     /* forcing function */
     func_force_t forcing0 = NULL;
     func_force_tt forcing = NULL;
-    if (inhomo != 0) {
-        forcing0 = tangent_forcing0;
-        forcing = tangent_forcing;
-    } 
+    // if (inhomo != 0) {
+    //     forcing0 = tangent_forcing0;
+    //     forcing = tangent_forcing;
+    // } 
 
     /***************solving state and incremental state equations ****/
     count = start_step * 3;
-    memcpy(MIC[count][0][0][0], IC[0][0][0],
-           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+    memmove(MIC[count][0][0][0], IC[0][0][0],
+            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
     /* time step for forward problem */
     for (n = start_step; n < end_step; ++n) {
@@ -572,10 +572,18 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
                 project(-1, dctr, z, 0, NULL);
             }
         }        /* end for dctr... */
+
+        if (inhomo) {
+            tangent_manu(n, IAC);
+            for (z = 0; z < (Nz) * 2 * dimR * (Nx / 2); ++z) {
+                Re(IC[0][0][0][z]) += dt * Re(IAC[0][0][0][z]);
+                Im(IC[0][0][0][z]) += dt * Im(IAC[0][0][0][z]);
+            }
+        }
     }            /* end for n... */
  
-    memcpy(IC_given, IC[0][0][0],
-           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+    memmove(IC_given, IC[0][0][0],
+            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 }
 
 
@@ -598,10 +606,10 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
     assert (start_step <= nsteps);
 	assert (AC_given != 0);
 
-    memcpy(C[0][0][0], MC[start_step * 3][0][0][0],
-           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
-    memcpy(AC[0][0][0], AC_given,
-           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+    memmove(C[0][0][0], MC[start_step * 3][0][0][0],
+            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+    memmove(AC[0][0][0], AC_given,
+            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
 
     
@@ -614,8 +622,8 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
     for (n = start_step; n > end_step; --n) {
 
         count = n * 3;
-        memcpy(ICtmp, MIC[count][0][0][0],
-                   (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+        memmove(ICtmp, MIC[count][0][0][0],
+                (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
         ddt_project(n, ICtmp);
         for (z = 0; z < (Nz) * 2 * dimR * (Nx / 2); ++ z) {
             Re(AC[0][0][0][z]) += 0.5 * strength * Re(ICtmp[z]);
@@ -628,7 +636,7 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
 
             /*read data from memery */
             if (dctr < 2) {
-                memcpy(C[0][0][0], MC[count - 1][0][0][0],
+                memmove(C[0][0][0], MC[count - 1][0][0][0],
                         (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
                 /* reconstruct the state and incremental state solution u,
@@ -640,12 +648,12 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
                     n = -1;
                     break;
                 }
-                memcpy(LU[0][0][0], U[0][0][0],
-                       (Nz) * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
+                memmove(LU[0][0][0], U[0][0][0],
+                        (Nz) * 5 * qpts * (Nx / 2) * sizeof(mcomplex));
             }
             /*read data from memery */
-            memcpy(C[0][0][0], MC[count][0][0][0],
-                   (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+            memmove(C[0][0][0], MC[count][0][0][0],
+                    (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
             /*reconstruct the state and incremental state solution u,
               iu from alpha and beta */
@@ -672,8 +680,8 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
         }
 
         count = (n - 1) * 3;
-        memcpy(ICtmp, MIC[count][0][0][0],
-                   (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+        memmove(ICtmp, MIC[count][0][0][0],
+                (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
         ddt_project(n-1, ICtmp);
         for (z = 0; z < (Nz) * 2 * dimR * (Nx / 2); ++ z) {
             Re(AC[0][0][0][z]) += 0.5 * strength * Re(ICtmp[z]);
@@ -682,8 +690,8 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
 
 	}
 
-    memcpy(AC_given, AC[0][0][0],
-           (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+    memmove(AC_given, AC[0][0][0],
+            (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
     freecVector( ICtmp );
 }
 
@@ -873,7 +881,7 @@ void read_solution(char * filename, mcomplex * C_ptr)
     memset(U[Nz / 2][0][0], 0, 5 * qpts * (Nx / 2) * sizeof(mcomplex));
     memset(IU[Nz / 2][0][0], 0, 5 * qpts * (Nx / 2) * sizeof(mcomplex));
 
-    memcpy(C_ptr, C[0][0][0], Nz * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+    memmove(C_ptr, C[0][0][0], Nz * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 }
 
 
@@ -899,7 +907,7 @@ void save_solution(char * filename, mcomplex * C_ptr)
         double im;              /*imaginary part */
     } complex_t;
 
-    memcpy(C[0][0][0], C_ptr, Nz * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
+    memmove(C[0][0][0], C_ptr, Nz * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
 
     /* Compute U from C */
     initAlphaBeta2();

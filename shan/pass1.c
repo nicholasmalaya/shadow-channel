@@ -40,7 +40,7 @@ int pass1(int dctr, int n)
     for (y = 0; y < qpts; ++y)
     {
 
-      /* first compute omega= \nabla x u */
+    /* first compute omega= \nabla x u */
 
 	/* Clear the array CT */
 

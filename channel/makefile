@@ -31,6 +31,7 @@ endif
 
 CC     = gcc -Wall
 CFLAGS = -O3 $(CFLAGS_FPIC) -fPIC
+#CFLAGS = -O0 -g $(CFLAGS_FPIC) -fPIC
 LD     = ld -shared
 endif
 ######################################################################## 
@@ -81,6 +82,7 @@ OBJS = LegendreSetup.o \
        channel_wrap.o \
        tangent_forcing0.o \
        tangent_forcing.o \
+       tangent_manu.o \
        spec2phys.o
 
 .SECONDARY: $(OBJS)
