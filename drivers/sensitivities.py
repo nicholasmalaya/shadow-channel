@@ -91,9 +91,8 @@ def dvel2Avg(dirc,start_step,end_step,T):
     for i in range(start_step,end_step):
         u = vel(dirc,i)
         v = I_vel(dirc,i,project = False)
-        u = (u.mean(2)).mean(0)
-        v = (v.mean(2)).mean(0)
         du2 = 2 * u * v
+        du2 = (du2.mean(2)).mean(0)
         du2avg = du2avg + (dt/T) * du2
 
     return du2avg
