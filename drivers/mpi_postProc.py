@@ -1,8 +1,8 @@
 import sys
-import os
-os.environ[ 'MPLCONFIGDIR' ] = '/tmp/'
+import os # delete
+os.environ[ 'MPLCONFIGDIR' ] = '/tmp/' #delete
 sys.path.append("..")
-from pylab import *
+from pylab import *  # change to scipy
 from numpy import *
 from mpi4py import MPI
 from pariter import *
@@ -67,7 +67,7 @@ class Wrapper(object):
                 R_w[i+1] = v[i+1] - vip
 
         # make sure w is ready, then initiating sending the last vip
-        MPI.Request.waitall(w_requests)
+        MPI.Request.waitall(w_requests) # capitalize
 
         v_requests = []
         if mpi_rank < mpi_size - 1:
@@ -79,11 +79,11 @@ class Wrapper(object):
         # do computation of w while the last vip is going over the network
         R_v = zeros([self.n, self.Nz,2,self.Ny-2,self.Nx/2],complex) 
         for i in range(self.n):
-            wim = self.backward(i, w[i+1], strength=1.0)
+            wim = self.backward(i, w[i+1], strength=0.01)
             R_v[i] = w[i] - wim
         
         # match the last vip
-        MPI.Request.waitall(v_requests)
+        MPI.Request.waitall(v_requests) # capitalize
 
         if mpi_rank > 0:
             R_w[0] = v[0] - v0m
@@ -101,9 +101,8 @@ mpi_rank = mpi_comm.Get_rank()
 mpi_size = mpi_comm.Get_size()
 
 # Directory for restart files
-use_restart = False
-file_address = '/home/blonigan/LSS/shadow-channel/'
-MR_iter = 20
+file_address = '/home/blonigan/LSS/'
+results_dir = 'shadow-channel/'
 
 # Key Parameters
 # Re, {Nx, Ny, Nz} ru_steps, n_chunk, t_chunk, dt
@@ -147,19 +146,6 @@ if mpi_rank < mpi_size - 1:
 if mpi_rank == (mpi_size-1):
     print "Primal Complete!"
 
-# Compute time averaged objective function over all time (and processors), Jbar
-# Compute Gradient
-T = ((mpi_size - 1) * (n_steps-1) + n_steps)*channel.dt
-if mpi_rank == (mpi_size-1): 
-    Jbar = channel.z_vel2Avg(0,n_steps,T,profile=False)
-else:
-    Jbar = channel.z_vel2Avg(0,n_steps-1,T,profile=False)
-
-Jbar = mpi_comm.allreduce(Jbar)
-
-if mpi_rank == 0: print "Total sim time:", T, "Jbar:", Jbar
-
-
 pde = Wrapper(channel.Nx, channel.Ny, channel.Nz, n_chunk, chunk_bounds,
               channel.dt * chunk_steps,
               channel.tangent, channel.adjoint, channel.ddt_project)
@@ -167,76 +153,43 @@ pde = Wrapper(channel.Nx, channel.Ny, channel.Nz, n_chunk, chunk_bounds,
 # construct matrix rhs
 nvw = 2 * pde.n - (1 if mpi_rank == 0 else 0)
 x = zeros(2 * pde.m * nvw)
-rhs = -pde.matvec(x, 1) - pde.matvec(x, 0)
-
-# solve
-from scipy import sparse
-import scipy.sparse.linalg as splinalg
 
 
 # INITIAL GUESS HERE!
-if use_restart:
-    if mpi_rank == 0: print 'Reading Restart File(s)'
-    filename = file_address + 'vw_array{0}.npy'.format(mpi_rank)
-    vw = load(filename)
-    assert (vw.size == rhs.size)
-else:
-    vw = zeros(rhs.size)
-
-oper = splinalg.LinearOperator((vw.size, vw.size), matvec=pde.matvec,
-                               dtype=float)
-
-par_dot = lambda vw1, vw2: mpi_comm.allreduce(dot(vw1, vw2))
-# def par_dot(vw1, vw2):
-#     return mpi_comm.allreduce(dot(vw1, vw2))
-par_norm = lambda vw : sqrt(par_dot(vw, vw))
-
-class Callback:
-    'Convergence monitor'
-    def __init__(self, pde, T, Jbar):
-        self.n = 0
-        self.pde = pde
-        self.T = T
-        self.Jbar = Jbar
-        self.hist = []
-
-    def __call__(self, x):
-        self.n += 1
-        if self.n == 1 or self.n % 10 == 0:
-            mpi_rank = mpi_comm.Get_rank()
-            mpi_size = mpi_comm.Get_size()
-            resnorm = par_norm(self.pde.matvec(x, 1))
-            nb = self.pde.nb.copy()
-            if mpi_rank < (mpi_size - 1):
-                nb[-1] = nb[-1] - 1
-            # Compute Gradient
-            grad = channel.uz2BarGrad(self.pde.n,nb,self.T,self.Jbar,self.pde.zeta,profile=False)
-            grad = mpi_comm.allreduce(grad)
-            if mpi_rank == 0: print 'iter ', self.n, resnorm, grad
-            self.hist.append([self.n, resnorm, grad])
-        sys.stdout.flush()
-
-# --- solve with minres (if cg converges this should converge -#
-callback = Callback(pde, T, Jbar)
-callback(vw)
-vw, info = par_minres(oper, rhs, vw, par_dot, maxiter=MR_iter, tol=1E-6,
-                      callback=callback)
+if mpi_rank == 0: print 'Reading Restart File(s)'
+filename = file_address + results_dir + 'vw_array{0}.npy'.format(mpi_rank)
+vw = load(filename)
+assert (vw.size == x.size)
 
 pde.matvec(vw, 1)
 
 
-# save vw array to file with mpi_rank in name...
-filename = file_address + 'vw_array{0}.npy'.format(mpi_rank)
-save(filename,vw)
+import sensitivities as sens
+T = ((mpi_size - 1) * (n_steps-1) + n_steps)*channel.dt
 
 # gradient plots
 if mpi_rank == (mpi_size-1):
-    uz2bar_avg = channel.z_vel2Avg(0,n_steps,T,profile=True)
+    uxbar_avg = sens.velAvg(0,0,n_steps,T)
+    uybar_avg = sens.velAvg(1,0,n_steps,T)
+    uzbar_avg = sens.velAvg(2,0,n_steps,T)
+    ux2bar_avg = sens.vel2Avg(0,0,n_steps,T)
+    uy2bar_avg = sens.vel2Avg(1,0,n_steps,T)
+    uz2bar_avg = sens.vel2Avg(2,0,n_steps,T)
 else:
-    uz2bar_avg = channel.z_vel2Avg(0,n_steps-1,T,profile=True)
+    uxbar_avg = sens.velAvg(0,0,n_steps-1,T)
+    uybar_avg = sens.velAvg(1,0,n_steps-1,T)
+    uzbar_avg = sens.velAvg(2,0,n_steps-1,T)
+    ux2bar_avg = sens.vel2Avg(0,0,n_steps-1,T)
+    uy2bar_avg = sens.vel2Avg(1,0,n_steps-1,T)
+    uz2bar_avg = sens.vel2Avg(2,0,n_steps-1,T)
 
 len = uz2bar_avg.shape[0]
 for i in range(len):
+    uxbar_avg[i] = mpi_comm.allreduce(uxbar_avg[i])
+    uybar_avg[i] = mpi_comm.allreduce(uybar_avg[i])
+    uzbar_avg[i] = mpi_comm.allreduce(uzbar_avg[i])
+    ux2bar_avg[i] = mpi_comm.allreduce(ux2bar_avg[i])
+    uy2bar_avg[i] = mpi_comm.allreduce(uy2bar_avg[i])
     uz2bar_avg[i] = mpi_comm.allreduce(uz2bar_avg[i])
 
 nb = chunk_bounds
@@ -244,60 +197,107 @@ nb = chunk_bounds
 if mpi_rank < (mpi_size - 1):
     nb[-1] = nb[-1] - 1
 
-grad = channel.uz2BarGrad(n_chunk,nb,T,uz2bar_avg,pde.zeta,profile=True)
+gradux = sens.uBarGrad(0,n_chunk,nb,T,uxbar_avg,pde.zeta)
+graduy = sens.uBarGrad(1,n_chunk,nb,T,uybar_avg,pde.zeta)
+graduz = sens.uBarGrad(2,n_chunk,nb,T,uzbar_avg,pde.zeta)
+gradux2 = sens.u2BarGrad(0,n_chunk,nb,T,ux2bar_avg,pde.zeta)
+graduy2 = sens.u2BarGrad(1,n_chunk,nb,T,uy2bar_avg,pde.zeta)
+graduz2 = sens.u2BarGrad(2,n_chunk,nb,T,uz2bar_avg,pde.zeta)
 for i in range(len):
-    grad[i] = mpi_comm.allreduce(grad[i])
+    gradux[i] = mpi_comm.allreduce(gradux[i])
+    graduy[i] = mpi_comm.allreduce(graduy[i])
+    graduz[i] = mpi_comm.allreduce(graduz[i])
+    gradux2[i] = mpi_comm.allreduce(gradux2[i])
+    graduy2[i] = mpi_comm.allreduce(graduy2[i])
+    graduz2[i] = mpi_comm.allreduce(graduz2[i])
 
 if mpi_rank == 0:
     y,w = channel.quad()
 
     figure()
-    plot(uz2bar_avg,y)
+    plot(uxbar_avg,y)
     figure()
-    plot(grad,y)
+    plot(gradux,y)
     # save data
-    filename = file_address + 'grad_profile.npy'
-    save(filename,grad)
+    filename = file_address + results_dir + 'gradux_profile.npy'
+    save(filename,gradux)
+    filename = file_address + results_dir + 'graduy_profile.npy'
+    save(filename,graduy)
+    filename = file_address + results_dir + 'graduz_profile.npy'
+    save(filename,graduz)
+    filename = file_address + results_dir + 'gradux2_profile.npy'
+    save(filename,gradux2)
+    filename = file_address + results_dir + 'graduy2_profile.npy'
+    save(filename,graduy2)
+    filename = file_address + results_dir + 'graduz2_profile.npy'
+    save(filename,graduz2)
     
 # v and w plots
 
-d_uz2hist = []
+vxhist = []
+vyhist = []
+vzhist = []
 for i in range(nb[0],nb[-1]+1):
-    d_uz2 = (channel.Iz_vel(i,project=True).mean(2)).mean(0)
-    d_uz2hist.append(d_uz2)   
+    vx = (sens.I_vel(0,i,project=True).mean(2)).mean(0)
+    vy = (sens.I_vel(1,i,project=True).mean(2)).mean(0)
+    vz = (sens.I_vel(2,i,project=True).mean(2)).mean(0)
+    vxhist.append(vx)
+    vyhist.append(vy)
+    vzhist.append(vz)   
 
-d_uz2hist = array(d_uz2hist)
+vxhist = array(vxhist)
+vyhist = array(vyhist)
+vzhist = array(vzhist)
 
 # send data to process 0
 tag_vx = 501
+tag_vy = 502
+tag_vz = 503
 vx_requests = []
+vy_requests = []
+vz_requests = []
+
 if mpi_rank > 0:
-    vx_requests.append(mpi_comm.Send(d_uz2hist, 0,tag_vx))    
+    vx_requests.append(mpi_comm.Send(vxhist, 0,tag_vx))    
+    vy_requests.append(mpi_comm.Send(vyhist, 0,tag_vy))
+    vz_requests.append(mpi_comm.Send(vzhist, 0,tag_vz))
 
 if mpi_rank == 0:
     # receive data from other processes, append
     for i in range(1,mpi_size):
         if i == (mpi_size - 1):
             vxtmp = zeros([n_steps, len])
+            vytmp = zeros([n_steps, len])
+            vztmp = zeros([n_steps, len])
         else:
             vxtmp = zeros([n_steps-1, len])
+            vytmp = zeros([n_steps-1, len])
+            vztmp = zeros([n_steps-1, len])
         vx_requests.append(mpi_comm.Recv(vxtmp, i, tag_vx))
-         
-        d_uz2hist = vstack([d_uz2hist,vxtmp]) 
-        # save data
-        filename = file_address + 'tan_hist.npy'
-        save(filename,d_uz2hist)
+        vy_requests.append(mpi_comm.Recv(vytmp, i, tag_vy))
+        vz_requests.append(mpi_comm.Recv(vztmp, i, tag_vz))
 
+        vxhist = vstack([vxhist,vxtmp]) 
+        vyhist = vstack([vyhist,vytmp])       
+        vzhist = vstack([vzhist,vztmp]) 
+ 
     # plot!
     t = channel.dt * arange(int(T/channel.dt))
     y,w = channel.quad()
 
     figure()
-    contourf(y, t, d_uz2hist, 100); colorbar()
+    contourf(y, t, vxhist, 100); colorbar()
     axis([y[0], y[-1], t[0], t[-1]])
     show()
     
-        
+    # save data
+    filename = file_address + results_dir + 'tan_ux_hist.npy'
+    save(filename,vxhist)
+    filename = file_address + results_dir + 'tan_uy_hist.npy'
+    save(filename,vyhist)
+    filename = file_address + results_dir + 'tan_uz_hist.npy'
+    save(filename,vzhist)
+ 
 
 # clean memory
 channel.destroy()

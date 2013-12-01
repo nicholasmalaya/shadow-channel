@@ -99,6 +99,10 @@ def para_init(n_steps, C):
     as an input for the initial condition instead of a restart file.  
     Used in parallel LSS.
     '''
+    global __is_initialized__
+    assert not __is_initialized__
+    __is_initialized__ = True
+
     assert n_steps >= 0 
     c_channel.c_init(int(Nx),int(Ny),int(Nz),
                      float(Lx),float(Lz),float(Re),
