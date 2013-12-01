@@ -516,10 +516,10 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
     /* forcing function */
     func_force_t forcing0 = NULL;
     func_force_tt forcing = NULL;
-    // if (inhomo != 0) {
-    //     forcing0 = tangent_forcing0;
-    //     forcing = tangent_forcing;
-    // } 
+    if (inhomo != 0) {
+        forcing0 = tangent_forcing0;
+        forcing = tangent_forcing;
+    } 
 
     /***************solving state and incremental state equations ****/
     count = start_step * 3;
@@ -573,13 +573,13 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
             }
         }        /* end for dctr... */
 
-        if (inhomo) {
-            tangent_manu(n, IAC);
-            for (z = 0; z < (Nz) * 2 * dimR * (Nx / 2); ++z) {
-                Re(IC[0][0][0][z]) += dt * Re(IAC[0][0][0][z]);
-                Im(IC[0][0][0][z]) += dt * Im(IAC[0][0][0][z]);
-            }
-        }
+        //if (inhomo != 0) {
+        //    tangent_manu(n, IAC);
+        //    for (z = 0; z < (Nz) * 2 * dimR * (Nx / 2); ++z) {
+        //        Re(IC[0][0][0][z]) += dt * Re(IAC[0][0][0][z]);
+        //        Im(IC[0][0][0][z]) += dt * Im(IAC[0][0][0][z]);
+        //    }
+        //}
     }            /* end for n... */
  
     memmove(IC_given, IC[0][0][0],
@@ -626,8 +626,8 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
                 (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
         ddt_project(n, ICtmp);
         for (z = 0; z < (Nz) * 2 * dimR * (Nx / 2); ++ z) {
-            Re(AC[0][0][0][z]) += 0.5 * strength * Re(ICtmp[z]);
-            Im(AC[0][0][0][z]) += 0.5 * strength * Im(ICtmp[z]);
+            Re(AC[0][0][0][z]) -= 0.5 * strength * Re(ICtmp[z]);
+            Im(AC[0][0][0][z]) -= 0.5 * strength * Im(ICtmp[z]);
         }
 
         for (dctr = 0; dctr < 3; ++dctr) {    /* RK steps */
@@ -684,8 +684,8 @@ void adjoint(int start_step, int end_step, mcomplex *AC_given, int inhomo,
                 (Nz) * 2 * dimR * (Nx / 2) * sizeof(mcomplex));
         ddt_project(n-1, ICtmp);
         for (z = 0; z < (Nz) * 2 * dimR * (Nx / 2); ++ z) {
-            Re(AC[0][0][0][z]) += 0.5 * strength * Re(ICtmp[z]);
-            Im(AC[0][0][0][z]) += 0.5 * strength * Im(ICtmp[z]);
+            Re(AC[0][0][0][z]) -= 0.5 * strength * Re(ICtmp[z]);
+            Im(AC[0][0][0][z]) -= 0.5 * strength * Im(ICtmp[z]);
         }
 
 	}
