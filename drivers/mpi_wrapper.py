@@ -45,7 +45,6 @@ class Wrapper(object):
         x = x[::2] + 1j * x[1::2]
         v = x[:n_v].reshape([-1,self.Nz,2,self.Ny-2,self.Nx/2])
         w = x[n_v:].reshape([-1,self.Nz,2,self.Ny-2,self.Nx/2])
-
         # first initiate nonblocking communication of w
         w_requests = []
         if mpi_rank > 0:
@@ -103,17 +102,18 @@ mpi_size = mpi_comm.Get_size()
 # Directory for restart files
 use_restart = False
 file_address = '/home/blonigan/LSS/shadow-channel/'
-MR_iter = 20
+results_dir = 'results/Lam1000/'
+MR_iter = 10
 
 # Key Parameters
 # Re, {Nx, Ny, Nz} ru_steps, n_chunk, t_chunk, dt
-channel.Re = 2000
+channel.Re = 500
 channel.Nx = 16
 channel.Ny = 33
 channel.Nz = 16
 channel.dt = 0.01
 
-n_chunk = 2
+n_chunk = 1
 chunk_steps = 5
 n_steps = n_chunk * chunk_steps + 1
 
@@ -123,6 +123,8 @@ chunk_bounds = chunk_steps * arange(0,n_chunk + 1)
 channel.Lx = 1.6
 channel.Lz = 1.6
 channel.meanU = 1.0
+
+restart = None #  "keefe_runup_stage_5"
 
 ru_steps = 0 if mpi_rank == 0 else 0
 
@@ -137,7 +139,6 @@ if mpi_rank > 0:
     mpi_comm.Recv(u0, mpi_rank - 1, 1)
     channel.para_init(n_steps, u0)
 else:
-    restart = "keefe_runup_stage_5"
     channel.init(n_steps,ru_steps, restart = restart)
 
 if mpi_rank < mpi_size - 1:
@@ -151,9 +152,9 @@ if mpi_rank == (mpi_size-1):
 # Compute Gradient
 T = ((mpi_size - 1) * (n_steps-1) + n_steps)*channel.dt
 if mpi_rank == (mpi_size-1): 
-    Jbar = channel.z_vel2Avg(0,n_steps,T,profile=False)
+    Jbar = channel.velAvg(0,n_steps,T,profile=False)
 else:
-    Jbar = channel.z_vel2Avg(0,n_steps-1,T,profile=False)
+    Jbar = channel.velAvg(0,n_steps-1,T,profile=False)
 
 Jbar = mpi_comm.allreduce(Jbar)
 
@@ -177,7 +178,7 @@ import scipy.sparse.linalg as splinalg
 # INITIAL GUESS HERE!
 if use_restart:
     if mpi_rank == 0: print 'Reading Restart File(s)'
-    filename = file_address + 'vw_array{0}.npy'.format(mpi_rank)
+    filename = file_address + results_dir + 'vw_array{0}.npy'.format(mpi_rank)
     vw = load(filename)
     assert (vw.size == rhs.size)
 else:
@@ -210,7 +211,7 @@ class Callback:
             if mpi_rank < (mpi_size - 1):
                 nb[-1] = nb[-1] - 1
             # Compute Gradient
-            grad = channel.uz2BarGrad(self.pde.n,nb,self.T,self.Jbar,self.pde.zeta,profile=False)
+            grad = channel.uavgGrad(self.pde.n,nb,self.T,self.Jbar,self.pde.zeta,profile=False)
             grad = mpi_comm.allreduce(grad)
             if mpi_rank == 0: print 'iter ', self.n, resnorm, grad
             self.hist.append([self.n, resnorm, grad])
@@ -226,25 +227,26 @@ pde.matvec(vw, 1)
 
 
 # save vw array to file with mpi_rank in name...
-filename = file_address + 'vw_array{0}.npy'.format(mpi_rank)
+filename = file_address + results_dir + 'vw_array{0}.npy'.format(mpi_rank)
 save(filename,vw)
 
 # gradient plots
-if mpi_rank == (mpi_size-1):
-    uz2bar_avg = channel.z_vel2Avg(0,n_steps,T,profile=True)
-else:
-    uz2bar_avg = channel.z_vel2Avg(0,n_steps-1,T,profile=True)
+import sensitivities as sens
+dirc = 0
 
-len = uz2bar_avg.shape[0]
+if mpi_rank == (mpi_size-1):
+    uxbar_avg = sens.velAvg(dirc,0,n_steps,T)
+else:
+    uxbar_avg = sens.velAvg(dirc,0,n_steps-1,T)
+
+len = uxbar_avg.shape[0]
 for i in range(len):
-    uz2bar_avg[i] = mpi_comm.allreduce(uz2bar_avg[i])
+    uxbar_avg[i] = mpi_comm.allreduce(uxbar_avg[i])
 
 nb = chunk_bounds
 
-if mpi_rank < (mpi_size - 1):
-    nb[-1] = nb[-1] - 1
 
-grad = channel.uz2BarGrad(n_chunk,nb,T,uz2bar_avg,pde.zeta,profile=True)
+grad = sens.uBarGrad(dirc,n_chunk,nb,T,uxbar_avg,pde.zeta)
 for i in range(len):
     grad[i] = mpi_comm.allreduce(grad[i])
 
@@ -252,51 +254,83 @@ if mpi_rank == 0:
     y,w = channel.quad()
 
     figure()
-    plot(uz2bar_avg,y)
+    plot(uxbar_avg,y)
     figure()
     plot(grad,y)
     # save data
-    filename = file_address + 'grad_profile.npy'
+    filename = file_address + results_dir + 'grad_profile.npy'
     save(filename,grad)
     
 # v and w plots
 
-d_uz2hist = []
-for i in range(nb[0],nb[-1]+1):
-    d_uz2 = (channel.Iz_vel(i,project=True).mean(2)).mean(0)
-    d_uz2hist.append(d_uz2)   
+vxhist = []
+vxprojhist = []
+strt = nb[0]
+if (mpi_rank == mpi_size - 1):
+    fnsh = nb[-1]
+else:
+    fnsh = nb[-1]-1
 
-d_uz2hist = array(d_uz2hist)
+for i in range(strt,fnsh+1):
+    vx = (sens.I_vel(dirc,i,project=False).mean(2)).mean(0)
+    vxproj = (sens.I_vel(dirc,i,project=True).mean(2)).mean(0)
+    vxhist.append(vx)   
+    vxprojhist.append(vxproj)   
+
+vxhist = array(vxhist)
+vxprojhist = array(vxprojhist)
+zetas = pde.zeta
 
 # send data to process 0
 tag_vx = 501
+tag_vxproj = 502
+tag_zeta = 503
 vx_requests = []
+
 if mpi_rank > 0:
-    vx_requests.append(mpi_comm.Send(d_uz2hist, 0,tag_vx))    
+    vx_requests.append(mpi_comm.Send(vxhist, 0,tag_vx))    
+    vx_requests.append(mpi_comm.Send(vxprojhist, 0,tag_vxproj))  
+    vx_requests.append(mpi_comm.Send(zetas, 0,tag_zeta))  
+
 
 if mpi_rank == 0:
     # receive data from other processes, append
     for i in range(1,mpi_size):
         if i == (mpi_size - 1):
             vxtmp = zeros([n_steps, len])
+            vxprojtmp = zeros([n_steps, len])
         else:
             vxtmp = zeros([n_steps-1, len])
+            vxprojtmp = zeros([n_steps-1, len])
+ 
+        zetatmp = zeros(pde.zeta.size)
         vx_requests.append(mpi_comm.Recv(vxtmp, i, tag_vx))
-         
-        d_uz2hist = vstack([d_uz2hist,vxtmp]) 
-        # save data
-        filename = file_address + 'tan_hist.npy'
-        save(filename,d_uz2hist)
+        vx_requests.append(mpi_comm.Recv(vxprojtmp, i, tag_vxproj))
+        vx_requests.append(mpi_comm.Recv(zetatmp, i, tag_zeta))
 
+        vxhist = vstack([vxhist,vxtmp]) 
+        vxprojhist = vstack([vxprojhist,vxprojtmp]) 
+        zetas = vstack([zetas,zetatmp])
+    
     # plot!
     t = channel.dt * arange(int(T/channel.dt))
     y,w = channel.quad()
 
     figure()
-    contourf(y, t, d_uz2hist, 100); colorbar()
-    axis([y[0], y[-1], t[0], t[-1]])
+    contourf(y, t, vxprojhist, 100); colorbar()
+    axis([-1.0, 1.0, t[0], t[-1]])
     show()
     
+
+    # save data
+    filename = file_address + results_dir + 'tan_hist.npy'
+    save(filename,vxhist)
+    filename = file_address + results_dir + 'tan_proj_hist.npy'
+    save(filename,vxprojhist)
+    filename = file_address + results_dir + 'zetas.npy'            
+    save(filename,zetas)
+
+
         
 
 # clean memory

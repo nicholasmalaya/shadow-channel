@@ -42,50 +42,53 @@ void increproject0(int count, int k, int flag, func_force_t force)
     //mcomplex tmp[dimR], tmp2[dimR], add[dimR];
     mcomplex add[dimR];
 
-    /* Apply Forcing */
-    if ((force != NULL)&&(k==0)) {
-        memset(Ifa, 0, dimR * sizeof(mcomplex));
-        memset(Ifb, 0, dimR * sizeof(mcomplex));
-        force(count, k, 1, Ifa, Ifb);
 
-        /* Solve for forcing cotribution to da/dt, db/dt */
-        /* MZ = M0 */
-        //memset(MZ[0], 0, dimR * 9 * sizeof(double));
-        for (i = 0; i < dimR; ++i) {
-            for (j = 0; j < T_RSDIAG; ++j) {
-                MZ[i][j] = Rs[i][j];
-            }
-        }
-        
-        bsolve_0(MZ, Ifa, RSDIAG - 1, RSDIAG - 1, dimR);
-        
-        for (i = 0; i < dimR; ++i) {
-            for (j = 0; j < T_RSDIAG; ++j) {
-                MZ[i][j] = Rs[i][j];
-            }
-        }
-
-        bsolve_0(MZ, Ifb, RSDIAG - 1, RSDIAG - 1, dimR);
-
-//    f_a_norm = 0.0;
-//    f_b_norm = 0.0;
-//    for (i = 0; i < dimR; ++i) {
-//       f_a_norm += pow(MAGNITUDE(Ifa[i]), 2);
-//       f_b_norm += pow(MAGNITUDE(Ifb[i]), 2);
+/* FORCING FOR REYNOLDS NUMBER SENSITIVITY */
+//    /* Apply Forcing */
+//    if ((force != NULL)&&(k==0)) {
+//        memset(Ifa, 0, dimR * sizeof(mcomplex));
+//        memset(Ifb, 0, dimR * sizeof(mcomplex));
+//        force(count, k, 1, Ifa, Ifb);
+//
+//        /* Solve for forcing cotribution to da/dt, db/dt */
+//        /* MZ = M0 */
+//        //memset(MZ[0], 0, dimR * 9 * sizeof(double));
+//        for (i = 0; i < dimR; ++i) {
+//            for (j = 0; j < T_RSDIAG; ++j) {
+//                MZ[i][j] = Rs[i][j];
+//            }
+//        }
+//        
+//        bsolve_0(MZ, Ifa, RSDIAG - 1, RSDIAG - 1, dimR);
+//        
+//        for (i = 0; i < dimR; ++i) {
+//            for (j = 0; j < T_RSDIAG; ++j) {
+//                MZ[i][j] = Rs[i][j];
+//            }
+//        }
+//
+//        bsolve_0(MZ, Ifb, RSDIAG - 1, RSDIAG - 1, dimR);
+//
+////    f_a_norm = 0.0;
+////    f_b_norm = 0.0;
+////    for (i = 0; i < dimR; ++i) {
+////       f_a_norm += pow(MAGNITUDE(Ifa[i]), 2);
+////       f_b_norm += pow(MAGNITUDE(Ifb[i]), 2);
+////    }
+////    printf("f_a_norm = %e, f_b_norm = %e\n", sqrt(f_a_norm),sqrt(f_b_norm));
+//
+//
+//        for (i = 0; i < dimR; ++i) {
+//            Re(IC[0][ALPHA][i][0]) += dt * Re(Ifa[i]); // re * re
+//            Im(IC[0][ALPHA][i][0]) += dt * Im(Ifa[i]); // re * re
+//            Re(IC[0][BETA][i][0]) += dt * Re(Ifb[i]);  // re * re
+//            Im(IC[0][BETA][i][0]) += dt * Im(Ifb[i]);  // re * re
+//
+//        }
+//
+//
 //    }
-//    printf("f_a_norm = %e, f_b_norm = %e\n", sqrt(f_a_norm),sqrt(f_b_norm));
 
-
-        for (i = 0; i < dimR; ++i) {
-            Re(IC[0][ALPHA][i][0]) += dt * Re(Ifa[i]);
-            Im(IC[0][ALPHA][i][0]) += dt * Im(Ifa[i]);
-            Re(IC[0][BETA][i][0]) += dt * Re(Ifb[i]);
-            Im(IC[0][BETA][i][0]) += dt * Im(Ifb[i]);
-
-        }
-
-
-    }
 
     memset(Ifa, 0, dimR * sizeof(mcomplex));
     memset(Ifb, 0, dimR * sizeof(mcomplex));
@@ -202,7 +205,14 @@ void increproject0(int count, int k, int flag, func_force_t force)
         }
     }
 
-    flux_t = - flux_t;
+
+    /* FORCING FOR MEAN X VELOCITY (meanU) SENSITIVITY */
+    if (force != NULL) {
+        flux_t = 2.0 - flux_t;
+    } else {
+        flux_t = - flux_t;
+    }
+
 
     for (j = 0; j < dimR; ++j)
        {
