@@ -57,7 +57,7 @@ class Wrapper(object):
 import channel 
 # Key Parameters
 # Re, {Nx, Ny, Nz} ru_steps, n_chunk, t_chunk, dt
-channel.Re = 2000
+channel.Re = 500
 channel.Nx = 16
 channel.Ny = 33
 channel.Nz = 16
@@ -76,15 +76,15 @@ channel.Lz = 1.6
 channel.meanU = 1.0
 
 # Initial Condition
-restart = "keefe_runup_stage_5"
-#restart = None
+#restart = "keefe_runup_stage_5"
+restart = None
 
 channel.init(n_steps,ru_steps, restart = restart)
 
 
 # compute time averaged objective function Jbar
 T = n_steps * channel.dt 
-Jbar = channel.z_vel2Avg(0,n_steps,T,profile=False)
+Jbar = channel.velAvg(0,n_steps,T,profile=False)
 
 print "Total sim time:", T, "Jbar:", Jbar
 
@@ -94,7 +94,7 @@ pde = Wrapper(channel.Nx, channel.Ny, channel.Nz, n_chunk, chunk_bounds,
 
 # construct matrix rhs
 x = zeros(2 * pde.m * (2 * pde.n - 1))
-rhs = -pde.matvec(x, 1) - pde.matvec(x, 0)
+rhs = - pde.matvec(x,1) - pde.matvec(x, 0)
 print "RHS norm: ", norm(rhs)
 # solve
 from scipy import sparse
@@ -105,21 +105,22 @@ oper = splinalg.LinearOperator((w.size, w.size), matvec=pde.matvec, dtype=float)
 
 class Callback:
     'Convergence monitor'
-    def __init__(self, pde, T, Jbar):
+    def __init__(self, pde, rhs, T, Jbar):
         self.n = 0
         self.pde = pde
+        self.rhs = rhs
         self.T = T
         self.Jbar = Jbar
         self.hist = []
 
     def __call__(self, x):
         self.n += 1
-        print linalg.norm(x)
         if self.n == 1 or self.n % 10 == 0:
+            resnorm1 = norm(self.pde.matvec(x,0)-self.rhs)
             resnorm = norm(self.pde.matvec(x, 1))
             # Compute Gradient
-            grad = channel.uz2BarGrad(self.pde.n,self.pde.nb,self.T,self.Jbar,self.pde.zeta,profile=False)
-            print('iter ', self.n, resnorm, grad)
+            grad = channel.uavgGrad(self.pde.n,self.pde.nb,self.T,self.Jbar,self.pde.zeta,profile=False)
+            print('iter ', self.n, resnorm, resnorm1, grad)
             self.hist.append([self.n, resnorm, grad])
         sys.stdout.flush()
 
@@ -127,44 +128,68 @@ class Callback:
 
 # read in restart
 
-vw0 = load("vw_array.npy")
-# vw0 = 0 * rhs
+# vw0 = load("vw_array.npy")
+vw0 = 0 * rhs
 
-callback = Callback(pde,T,Jbar)
+callback = Callback(pde,rhs,T,Jbar)
 callback(vw0.copy())
 
 
-print linalg.norm(vw0)
-vw, info = splinalg.minres(oper, rhs, x0=vw0, maxiter=20, tol=1E-6,
+vw, info = splinalg.minres(oper, rhs, x0=vw0, maxiter=10, tol=1E-6,
                            callback=callback)
 
 
 pde.matvec(vw, 1)
 #channel.destroy()
-
 # v and w plots
-d_uz2hist = []
+vxhist = []
 for i in range(0,n_steps):
-    d_uz2 = (channel.Iz_vel(i,project=True).mean(2)).mean(0)
-    d_uz2hist.append(d_uz2)
+    vx = (channel.Ivel(i,project=True).mean(2)).mean(0)
+    vxhist.append(vx)
 
 t = channel.dt * arange(n_steps)
 y,w = channel.quad()
 
 figure()
-contourf(y, t, d_uz2hist, 100); colorbar()
-axis([y[0], y[-1], t[0], t[-1]])
-
+contourf(y, t, vxhist, 100); colorbar()
+axis([-1.0, 1.0, t[0], t[-1]])
 
 # gradient plots
-uz2bar_avg = channel.z_vel2Avg(0,n_steps,T,profile=True)
-grad = channel.uz2BarGrad(n_chunk,chunk_bounds,T,uz2bar_avg,pde.zeta,profile=True)
+uxavg = channel.velAvg(0,n_steps,T,profile=True)
+grad = channel.uavgGrad(n_chunk,chunk_bounds,T,uxavg,pde.zeta,profile=True)
 
 figure()
-mag = 1e2
-plot(uz2bar_avg,y,uz2bar_avg + mag*grad,y,uz2bar_avg - mag*grad,y)
+mag = 1
+#plot(uz2bar_avg,y,uz2bar_avg + mag*grad,y,uz2bar_avg - mag*grad,y)
+plot(grad,y)
 show()
+'''
+import sensitivities as sens
+dirc = 0
+y,w = channel.quad()
+# gradient plots
+ux2bar_avg = sens.vel2Avg(dirc,0,n_steps,T)
+gradu2 = sens.u2BarGrad(dirc,n_chunk,chunk_bounds,T,ux2bar_avg,pde.zeta)
 
-# write restart file for vw
-filename = "vw_array"
-save(filename,vw)
+uxbar_avg = sens.velAvg(dirc,0,n_steps,T)
+gradu = sens.uBarGrad(dirc,n_chunk,chunk_bounds,T,uxbar_avg,pde.zeta)
+ 
+        
+figure()
+plot(gradu2,y,gradu,y)
+
+# v plot
+vxhist = []
+for i in range(0,n_steps):
+    vx = (sens.I_vel(0,i,project=True).mean(2)).mean(0)
+    vxhist.append(vx)
+ 
+vxhist = array(vxhist)
+t = channel.dt * arange(n_steps)
+
+figure()
+title('U')
+contourf(y, t, vxhist, 100); colorbar()
+axis([-1.0, 1.0, t[0], t[-1]])
+'''
+

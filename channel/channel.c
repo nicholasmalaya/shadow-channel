@@ -518,7 +518,7 @@ void tangent(int start_step, int end_step, mcomplex *IC_given, int inhomo)
     func_force_tt forcing = NULL;
     if (inhomo != 0) {
         forcing0 = tangent_forcing0;
-        forcing = tangent_forcing;
+        //forcing = tangent_forcing;
     } 
 
     /***************solving state and incremental state equations ****/

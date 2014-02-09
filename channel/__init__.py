@@ -204,41 +204,40 @@ def ddt_project(i_step,v):
     '''
     return c_channel.c_ddt_project(int(i_step),v)
 
-def z_vel(i_step):
+def vel(i_step):
     '''
-    returns the z-velocity profile  
+    returns the x velocity   
     '''
     C = get_solution(i_step, copy=True)
-    uz = spec2phys(C)
-    uz = uz[0] # 2
+    u = spec2phys(C)
+    u = u[0] 
  
-    return uz
+    return u
 
-def z_vel2Avg(start_step,end_step,T,profile=True):
+def velAvg(start_step,end_step,T,profile=True):
     '''
-    returns the time averaged mean square z-velocity profile
+    returns the time averaged velocity profile
     '''
     if profile:
-        uz2avg = np.zeros(c_channel.c_qpts())
+        uavg = np.zeros(c_channel.c_qpts())
     else:
-        uz2avg = 0.0
+        uavg = 0.0
         y, w = quad()
 
     assert 0 <= start_step <= end_step <= c_channel.c_nsteps() 
     for i in range(start_step,end_step):
-        uz = z_vel(i)
-        uz2 = uz # uz2 = uz * uz
-        uz2 = (uz2.mean(2)).mean(0)
-        if not(profile): uz2 = (w * uz2).sum()
-        uz2avg = uz2avg + (dt/T) * uz2  
+        u = vel(i)
+        u = (u.mean(2)).mean(0)
+        if not(profile): u = u[c_channel.c_qpts()/2 + 1]
+        uavg = uavg + (dt/T) * u  
 
-    return uz2avg
-
+    return uavg
 
 
-def Iz_vel(i_step,project=False):
+
+def Ivel(i_step,project=False):
     '''
-    returns the incremental z-velocity 
+    returns the incremental velocity 
     '''
     IC = c_channel.c_getincresoln(int(i_step))
     IC = IC.copy()
@@ -247,41 +246,39 @@ def Iz_vel(i_step,project=False):
     if project: 
         ddt_project(i_step,IC)
 
-    vz = spec2phys(IC)
-    vz = vz[0] #2
+    v = spec2phys(IC)
+    v = v[0] 
  
-    return vz
+    return v
 
-def dz_vel2Avg(start_step,end_step,T,profile=True):
+def IvelAvg(start_step,end_step,T,profile=True):
     '''
-    returns the time averaged mean squared z-velocity sensitivity profile
+    returns the time averaged mean velocity sensitivity profile
     '''
     if profile:
-        d_uz2avg = np.zeros(c_channel.c_qpts())
+        vavg = np.zeros(c_channel.c_qpts())
     else:
-        d_uz2avg = 0.0
+        vavg = 0.0
         y, w = quad()
 
 
    
     assert 0 <= start_step <= end_step <= c_channel.c_nsteps()
     for i in range(start_step,end_step):
-        uz = z_vel(i)
-        vz = Iz_vel(i,project = False)
-        d_uz2 = vz # d_uz2 = 2 * uz * vz
-        d_uz2 = (d_uz2.mean(2)).mean(0)
-        if not(profile): d_uz2 = (w * d_uz2).sum()
-        d_uz2avg = d_uz2avg + (dt/T) * d_uz2
+        v = Ivel(i,project = False)
+        v = (v.mean(2)).mean(0)
+        if not(profile): v = v[c_channel.c_qpts()/2 + 1]
+        vavg = vavg + (dt/T) * v
 
-    return d_uz2avg
+    return vavg
 
-def uz2BarGrad(n_chunk,chunk_bounds,T,uz2_avg,zeta,profile=True):
+def uavgGrad(n_chunk,chunk_bounds,T,uavg,zeta,profile=True):
     '''
     returns the time averaged sensitivity of the mean x-velocity profile
-    to the reynolds number.  Inputs are the number of time chunks, the 
+    to the mass averaged velocity.  Inputs are the number of time chunks, the 
     starting and ending step index of each chunk (chunk_bounds), 
     total simulation time T, the time averaged mean x-velocity profile
-    uxbar_avg, and time dilation terms zeta (length n_chunk vector)
+    uavg, and time dilation terms zeta (length n_chunk vector)
     if profile = 1, sensitivity of the entire profile is compute, otherwise
     only the sesitivity of the centerline velocity is computed
     '''
@@ -294,11 +291,10 @@ def uz2BarGrad(n_chunk,chunk_bounds,T,uz2_avg,zeta,profile=True):
     for i in range(n_chunk):
         start_step = chunk_bounds[i]
         end_step = chunk_bounds[i+1]
-        d_uz2Avg = dz_vel2Avg(start_step,end_step,T,profile)
-        uzEnd = (z_vel(end_step).mean(2)).mean(0)
-        uz2End = uzEnd # uz2End = uzEnd * uzEnd
-        if not(profile): uz2End = (w * uz2End).sum()
-        grad = grad + d_uz2Avg + (1./T) * zeta[i]*(uz2End-uz2_avg)
+        vavg = IvelAvg(start_step,end_step,T,profile)
+        uEnd = (vel(end_step).mean(2)).mean(0)
+        if not(profile): uEnd = uEnd[c_channel.c_qpts()/2 + 1]
+        grad = grad + vavg + (1./T) * zeta[i]*(uEnd-uavg)
 
     return grad
 
