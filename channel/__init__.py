@@ -1,5 +1,5 @@
 import numpy as np
-import channel.c_channel
+import c_channel
 #
 # global lock (per process)
 #

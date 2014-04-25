@@ -19,7 +19,7 @@ HDFDIR =/opt/apps/hdf5/1.8.3
 HDFLIB =-L$(HDF5_DIR)/lib -lhdf5
 HDFINC =-I$(HDF5_DIR)/include
 
-PYINC = $(shell python-config --includes) $(shell python3-config --includes)
+PYINC = $(shell python-config --includes) # $(shell python3-config --includes)
 
 ifeq ($(LBITS),64)
     # do 64 bit stuff here, like set some CFLAGS

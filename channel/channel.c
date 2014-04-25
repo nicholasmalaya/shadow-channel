@@ -413,11 +413,11 @@ void primal(int ru_steps, mcomplex *C_given)
             Re(U[0][XEL][i][0]) = (1.0 - Qy[i] * Qy[i]) * flux * 3./4;
             Im(U[0][XEL][i][0]) = 0.0;
         }
-        // // perturbation
-        // for (i = 0; i < qpts; i++) {
-        //     Re(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
-        //     Im(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
-        // }
+        // perturbation
+        for (i = 0; i < qpts; i++) {
+            Re(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
+            Im(U[1][XEL][i][1]) = (rand() / (double)RAND_MAX - 0.5);
+        }
         initAlphaBeta();
     }
 

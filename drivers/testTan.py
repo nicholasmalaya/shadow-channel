@@ -6,13 +6,24 @@ from numpy import *
 '''
 # UNFORCED TANGENT
 
-n_steps = 10
+channel.Re = 20000
+n_steps = 1000
 
-channel.init(n_steps, ru_steps=100, restart=None)
+channel.init(n_steps, ru_steps=1000, restart=None)
 # initial condition
 
 C = channel.get_solution(0, copy=True)
 C1 = channel.get_solution(n_steps, copy=True)
+
+U = channel.spec2phys(C)
+U1 = channel.spec2phys(C1)
+
+n = int((channel.Ny - 1) * 3 / 2 + 1)
+y, w = numpy.polynomial.legendre.leggauss(n)
+
+plot(y, U[0].mean(0).mean(1))
+plot(y, U1[0].mean(0).mean(1))
+
 print("Primal")
 for i in range(0,n_steps):
     Ctmp = channel.get_solution(i, copy=True)
